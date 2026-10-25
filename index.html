@@ -772,7 +772,7 @@ document.addEventListener('keydown',e=>{if(e.key==='Escape'&&sheetOpen)closeCal(
 window.addEventListener('resize',()=>{placeWeek(false);if(sheetShown){sheetH=sheet.offsetHeight;if(!sheetOpen)sheetSp.set(sheetH);}});
 // 下に引っ張って更新（一番上で下に引くと紫の帯が伸び、離すと読み直す）
 (function pullToRefresh(){
-  const wrap=document.querySelector('.wrap'),bar=$('ptr'),icon=bar.firstChild,GO=96,HOLD=56; // GO：帯がここまで伸びたら読み込む（指で約230px引っ張る）。届くまではマークを薄く表示
+  const wrap=document.querySelector('.wrap'),bar=$('ptr'),icon=bar.firstChild,GO=rubber(450,400),HOLD=56; // GO：指で450px引っ張ると読み込む（帯の高さに直した値）。届くまではマークを薄く表示
   let y0=null,x0=0,lock=false,busy=false,top0=0;
   const sp=Spring(d=>{
     wrap.style.transform=d>.5?'translate3d(0,'+d+'px,0)':'';
