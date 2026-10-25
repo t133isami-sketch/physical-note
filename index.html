@@ -171,10 +171,13 @@ svg text{font-family:inherit}
 .keyc input:focus{outline:2px solid var(--p600);outline-offset:1px}
 .keyc button{width:100%;margin-top:12px;padding:13px 0;border-radius:14px;background:var(--p800);color:#fff;font-weight:700;font-size:15px}
 .keyc .kerr{color:var(--o700);min-height:1.5em}
+.demo-bar{position:sticky;top:0;z-index:44;background:var(--o100);color:var(--o700);font-size:12px;font-weight:700;text-align:center;padding:calc(6px + env(safe-area-inset-top)) 12px 6px}
+.demo-bar[hidden]{display:none}
 </style>
 </head>
 <body>
 <div class="load" id="load"></div>
+<div class="demo-bar" id="demoBar" hidden>見本データで表示しています（実際の記録ではありません）</div>
 <div class="keyp" id="keyPanel" hidden>
   <form class="keyc" id="keyForm" autocomplete="off">
     <h2>フィジカルノート</h2>
@@ -300,7 +303,39 @@ document.getElementById('keyForm').addEventListener('submit',e=>{
   document.getElementById('keyPanel').hidden=true;
   refresh();
 });
+// ?demo で開くと、記録の代わりに架空の見本データで動く（友達に見せる用）
+const DEMO=/[?&]demo\b/.test(location.search);
+function demoMonth(ym){
+  let seed=0;for(const ch of ym)seed=(seed*31+ch.charCodeAt(0))>>>0;
+  const rnd=()=>{seed=(seed*1664525+1013904223)>>>0;return seed/4294967296;};
+  const now=new Date(),pad2=n=>('0'+n).slice(-2);
+  const today=now.getFullYear()+'-'+pad2(now.getMonth()+1)+'-'+pad2(now.getDate());
+  const n=new Date(Date.UTC(+ym.slice(0,4),+ym.slice(5,7),0)).getUTCDate();
+  const settings={kcal:2600,p:140,f:70,c:350,weight:68};
+  const menu=[['朝食','オートミール・ヨーグルト・バナナ',520,28,12,78],['昼食','鶏むね肉の定食',760,48,18,96],['トレーニング後','プロテイン1杯',130,25,2,4],['夕食','鮭の塩焼き・ご飯・味噌汁',690,38,20,84],['間食','ミックスナッツ30g',180,5,16,6]];
+  const parts=['胸','背中','脚','肩','腕'];
+  const meals=[],weights=[],training=[],body=[],days=[];
+  let w=70.4-(+ym.slice(5,7))*0.15;
+  for(let d=1;d<=n;d++){
+    const k=ym+'-'+pad2(d);
+    if(k>today){days.push({date:k,am:null,pm:null,kcal:null,p:null,f:null,c:null,meals:0,done:false,training:'',minutes:null,sets:null});continue;}
+    const ms=menu.filter(()=>rnd()>0.15);
+    ms.forEach((m,i)=>meals.push({id:k+'-'+i,date:k,time:'',kind:m[0],content:m[1],kcal:Math.round(m[2]*(0.9+rnd()*0.25)),p:m[3],f:m[4],c:m[5],status:'推定'}));
+    w+=(rnd()-0.55)*0.3;const am=Math.round(w*10)/10,pm=Math.round((w+0.6+rnd()*0.3)*10)/10;
+    weights.push({date:k,when:'朝',kg:am,note:''});if(rnd()>0.3)weights.push({date:k,when:'夜',kg:pm,note:''});
+    const dow=new Date(Date.UTC(+ym.slice(0,4),+ym.slice(5,7)-1,d)).getUTCDay();
+    let tr='';
+    if(dow!==0&&dow!==3){const part=parts[(d+dow)%parts.length],sets=12+Math.floor(rnd()*10),min=60+Math.floor(rnd()*4)*15;
+      training.push({date:k,kind:'筋トレ',part,minutes:min,memo:'',sets,detail:part+sets+'セット'});tr=part;}
+    if(dow===1)body.push({monday:k,measured:k,weight:am,fat:Math.round((15+rnd()*2)*10)/10,muscle:Math.round((54+rnd())*10)/10,status:'測定済み'});
+    const sum=f=>meals.filter(m=>m.date===k).reduce((a,m)=>a+m[f],0);
+    days.push({date:k,am,pm:weights.some(x=>x.date===k&&x.when==='夜')?pm:null,kcal:sum('kcal'),p:sum('p'),f:sum('f'),c:sum('c'),meals:ms.length,done:k<today,training:tr,minutes:null,sets:null});
+  }
+  const recipes=[{name:'鶏むね肉のトマト煮',ver:2,kcal:420,p:42,f:9,c:38,servings:4,status:'確定'},{name:'プロテインオーツ',ver:1,kcal:380,p:30,f:8,c:48,servings:1,status:'確定'}];
+  return {ym,today,settings,meals,weights,training,body,days,recipes};
+}
 async function apiLoad(ym){
+  if(DEMO)return demoMonth(ym);
   const k=appKey();
   if(!k){askKey();throw new Error('合言葉が未設定です');}
   const res=await fetch(API+'?k='+encodeURIComponent(k)+'&ym='+encodeURIComponent(ym),{cache:'no-store'});
@@ -312,6 +347,7 @@ async function apiLoad(ym){
   }
   return d;
 }
+if(DEMO)document.getElementById('demoBar').hidden=false;
 const google={script:{get run(){
   const h={};const r={
     withSuccessHandler(f){h.ok=f;return r;},
@@ -321,7 +357,7 @@ const google={script:{get run(){
 
 const TYPES=['選択日の食事','日別まとめ','食事','朝夜体重','月曜体組成','レシピ','トレーニング'];
 const WD='日月火水木金土';
-const LS='physicalnote.month';
+const LS=DEMO?'physicalnote.demo':'physicalnote.month';
 const LSORT='physicalnote.sort';
 const S={view:'day',date:null,today:null,year:null,listYm:null,graphYm:null,calYm:null,type:'選択日の食事',desc:true,
   cache:{},pending:{},failed:{},loading:0,lastFetch:0,touched:false,weekStart:null,suppressUntil:0};
