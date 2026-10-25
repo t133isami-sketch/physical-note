@@ -73,6 +73,10 @@ button:disabled{opacity:.35;transform:none;cursor:default}
 .bar{height:8px;border-radius:4px;background:var(--p100);overflow:hidden;margin-top:4px}
 .bar span{display:block;height:100%;width:0;background:var(--p600);border-radius:4px;transition:width .45s cubic-bezier(.2,.8,.2,1),background-color .2s}
 .bar span.over{background:var(--o500)}
+.pfc .rest{font-size:11.5px;color:var(--sub);text-align:right;margin-top:2px;min-height:1.4em}
+.pfc .rest b{color:var(--p800);font-size:13px}
+.pfc .rest.over,.pfc .rest.over b{color:var(--o700)}
+.pfc .rest.done{color:var(--p600);font-weight:700}
 .note{font-size:11.5px;color:var(--sub);margin-top:10px;letter-spacing:.01em}
 .note:empty{display:none}
 .wt{display:flex;gap:10px}
@@ -509,7 +513,7 @@ function applyDate(k){S.date=clampDate(k);S.listYm=S.graphYm=ymOf(S.date);}
 const ringSp=Spring(p=>{const c=2*Math.PI*46,a=$('ringArc');a.setAttribute('stroke-dasharray',(c*p/100)+' '+c);a.style.opacity=p>.5?1:0;});
 const weekSp=Spring(x=>{$('wsel').style.transform='translate3d('+x+'px,0,0)';});
 function buildPfc(){$('pfc').innerHTML=[['p','P たんぱく質'],['f','F 脂質'],['c','C 炭水化物']].map(([f,l])=>
-  `<div class="l"><span>${l}</span><b class="num" id="pv-${f}">—</b></div><div class="bar"><span id="pb-${f}"></span></div>`).join('');}
+  `<div class="l"><span>${l}</span><b class="num" id="pv-${f}">—</b></div><div class="bar"><span id="pb-${f}"></span></div><div class="rest num" id="pr-${f}"></div>`).join('');}
 function paintDay(){
   const k=S.date;$('dayTitle').textContent=dayLabel(k);
   drawWeek();
@@ -529,7 +533,11 @@ function paintDay(){
   $('ringSub').textContent=kcal==null?'kcal':(over?'超過 '+fmt(kcal-g):'残り '+fmt(g-kcal));
   ['p','f','c'].forEach(f=>{const v=val(f),gg=st[f];
     $('pv-'+f).textContent=fmt(v)+' / '+fmt(gg)+' g';
-    const b=$('pb-'+f);b.style.width=(v!=null&&gg?Math.min(v/gg,1)*100:0)+'%';b.classList.toggle('over',!!(v!=null&&gg&&v>gg));});
+    const b=$('pb-'+f);b.style.width=(v!=null&&gg?Math.min(v/gg,1)*100:0)+'%';b.classList.toggle('over',!!(v!=null&&gg&&v>gg));
+    // あと何g食べればいいか（四捨五入した値どうしで比べる）
+    const r=$('pr-'+f),left=gg?Math.round(gg)-Math.round(v||0):null;
+    r.className='rest num'+(left!=null&&left<0?' over':left===0?' done':'');
+    r.innerHTML=left==null?'':left>0?'あと <b>'+fmt(left)+'</b> g':left<0?'<b>'+fmt(-left)+'</b> g オーバー':'目標ぴったり';});
   $('nutNote').textContent=!meals.length?'この日の食事はまだ記録されていません。':(meals.some(m=>['kcal','p','f','c'].some(f=>m[f]==null))?'栄養が未入力の食事があるため、記録済みの分だけの合計です。':'');
   $('wGoal').textContent='目標 '+fmt1(st.weight)+' kg';
   $('wAm').textContent=row.am!=null?fmt1(row.am)+' kg':'未記録';
