@@ -412,9 +412,20 @@ const project=(v,d=.998)=>(v/1000)*d/(1-d);
 const rubber=(o,dim,c=.55)=>(o*dim*c)/(dim+c*Math.abs(o));
 const fade=el=>el.animate&&el.animate([{opacity:.3},{opacity:1}],{duration:180,easing:'ease-out'});
 
-// 指の動きを追う（10px動いてから縦か横かを決める）
+// 指の動きを追う（少し動いてから縦か横かを決める。斜めでも横寄りなら横として扱う）
+const isX=(dx,dy)=>Math.abs(dx)>Math.abs(dy)*.7;
 function gesture(el,o){
-  let id=null,x0=0,y0=0,lock=null,h=[];
+  let id=null,x0=0,y0=0,lock=null,h=[],t0=null,tLock=null;
+  // iPhoneは斜めに動くとすぐ縦スクロールを始めるので、横と決めたら先に縦スクロールを止める
+  el.addEventListener('touchstart',e=>{tLock=null;t0=e.touches.length===1?[e.touches[0].clientX,e.touches[0].clientY,e]:null;},{passive:true});
+  el.addEventListener('touchmove',e=>{
+    if(!t0)return;
+    if(!tLock){
+      const dx=e.touches[0].clientX-t0[0],dy=e.touches[0].clientY-t0[1];if(Math.hypot(dx,dy)<5)return;
+      tLock=isX(dx,dy)&&o.axes(t0[2]).includes('x')?'x':'y';
+    }
+    if(tLock==='x'&&e.cancelable)e.preventDefault();
+  },{passive:false});
   el.addEventListener('pointerdown',e=>{
     if(!e.isPrimary||e.pointerType==='mouse')return;
     id=e.pointerId;x0=e.clientX;y0=e.clientY;lock=null;h=[[e.clientX,e.clientY,e.timeStamp]];
@@ -425,7 +436,7 @@ function gesture(el,o){
     h.push([e.clientX,e.clientY,e.timeStamp]);while(h.length>2&&e.timeStamp-h[0][2]>100)h.shift();
     if(!lock){
       const dx=e.clientX-x0,dy=e.clientY-y0;if(Math.hypot(dx,dy)<10)return;
-      const ax=Math.abs(dx)>Math.abs(dy)?'x':'y';
+      const ax=e.pointerType==='touch'&&tLock?tLock:isX(dx,dy)?'x':'y';
       if(!o.axes(e).includes(ax)){id=null;o.end(null,0,0,0,0,true);return;}
       lock=ax;x0=e.clientX;y0=e.clientY;
       try{el.setPointerCapture(id);}catch(_){}
@@ -751,6 +762,7 @@ window.addEventListener('resize',()=>{placeWeek(false);if(sheetShown){sheetH=she
   },{passive:true});
   document.addEventListener('touchmove',e=>{
     if(y0==null)return;
+    if(e.defaultPrevented){y0=null;return;} // 横スワイプ中は引っ張って更新にしない
     const t=e.touches[0],dy=t.clientY-y0,dx=t.clientX-x0;
     if(!lock){
       if(Math.hypot(dx,dy)<10)return;
