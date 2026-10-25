@@ -10,6 +10,8 @@
 <meta name="apple-mobile-web-app-title" content="フィジカルノート">
 <meta name="theme-color" content="#4b2e83">
 <meta name="referrer" content="no-referrer">
+<link rel="preconnect" href="https://script.google.com" crossorigin>
+<link rel="preconnect" href="https://script.googleusercontent.com" crossorigin>
 <link rel="apple-touch-icon" href="icon-180.png">
 <link rel="icon" type="image/png" href="icon-180.png">
 <style>
@@ -146,8 +148,8 @@ body{overscroll-behavior-y:none}
 .ptr svg{opacity:0}
 .ptr.spin svg{opacity:1;animation:ptrspin .8s linear infinite}
 @keyframes ptrspin{to{transform:rotate(360deg)}}
-.load{position:fixed;top:env(safe-area-inset-top);left:0;right:0;height:3px;z-index:40;opacity:0;transition:opacity .2s;background:linear-gradient(90deg,transparent,var(--o500),transparent);background-size:200% 100%;animation:ld 1.1s linear infinite}
-.load.on{opacity:1}
+.load{position:fixed;top:env(safe-area-inset-top);left:0;right:0;height:3px;z-index:40;opacity:0;transition:opacity .2s;background:linear-gradient(90deg,transparent,var(--o500),transparent);background-size:200% 100%}
+.load.on{opacity:1;animation:ld 1.1s linear infinite} /* 読み込み中だけ動かす（ずっと動かすと画面が重くなる） */
 @keyframes ld{from{background-position:100% 0}to{background-position:-100% 0}}
 .err{margin:12px 16px 0;padding:12px 14px;border-radius:14px;background:var(--o100);color:var(--o700);font-size:13px;display:none;align-items:center;gap:10px}
 .err.on{display:flex}
@@ -342,32 +344,27 @@ function demoMonth(ym){
   return {ym,today,settings,meals,weights,training,body,days,recipes};
 }
 async function apiLoad(ym){
-  if(DEMO)return demoMonth(ym);
+  if(DEMO){const d=demoMonth(ym);return {d,text:JSON.stringify(d)};}
   const k=appKey();
   if(!k){askKey();throw new Error('合言葉が未設定です');}
   const res=await fetch(API+'?k='+encodeURIComponent(k)+'&ym='+encodeURIComponent(ym),{cache:'no-store'});
   if(!res.ok)throw new Error('通信エラー（'+res.status+'）');
-  const d=await res.json();
+  const text=await res.text(),d=JSON.parse(text);
   if(d&&d.error){
     if(d.error==='unauthorized'){askKey('合言葉が違うようです。もう一度貼り付けてください。');throw new Error('合言葉が違います');}
     throw new Error(d.error);
   }
-  return d;
+  return {d,text};
 }
 if(DEMO)document.getElementById('demoBar').hidden=false;
-const google={script:{get run(){
-  const h={};const r={
-    withSuccessHandler(f){h.ok=f;return r;},
-    withFailureHandler(f){h.ng=f;return r;},
-    app_loadMonth(ym){apiLoad(ym).then(d=>h.ok&&h.ok(d),e=>h.ng&&h.ng(e));}
-  };return r;}}};
 
 const TYPES=['選択日の食事','日別まとめ','食事','朝夜体重','月曜体組成','レシピ','トレーニング'];
 const WD='日月火水木金土';
-const LS=DEMO?'physicalnote.demo':'physicalnote.month';
+const LS_OLD='physicalnote.month'; // 以前の保存形式（今月だけ）
+const LSM=DEMO?null:'physicalnote.months'; // 読み込んだ月をすべて保存しておき、次に開いたときすぐ出す
 const LSORT='physicalnote.sort';
 const S={view:'day',date:null,today:null,year:null,listYm:null,graphYm:null,calYm:null,type:'選択日の食事',desc:true,
-  cache:{},pending:{},failed:{},loading:0,lastFetch:0,touched:false,weekStart:null,suppressUntil:0};
+  cache:{},raw:{},at:{},pending:{},jobs:{},failed:{},loading:0,lastFetch:0,touched:false,weekStart:null,suppressUntil:0};
 const $=id=>document.getElementById(id);
 const RM=matchMedia('(prefers-reduced-motion: reduce)');
 const fmt=n=>n==null?'—':Math.round(n).toLocaleString('ja-JP');
@@ -493,31 +490,59 @@ function Pager(box,pane,o){
 
 // ---------- データ ----------
 function setLoading(n){S.loading+=n;$('load').classList.toggle('on',S.loading>0);}
-function fetchMonth(ym){
-  if(S.pending[ym])return S.pending[ym];
+// 何回も届いた結果を、次の描画で1回だけまとめて描く
+let paintRaf=0;
+function schedulePaint(){if(!paintRaf)paintRaf=requestAnimationFrame(()=>{paintRaf=0;paintAll();});}
+let saveT=0;
+function saveCache(){
+  if(!LSM)return;clearTimeout(saveT);
+  saveT=setTimeout(()=>{try{const o={};Object.keys(S.raw).filter(inYear).forEach(ym=>o[ym]=S.raw[ym]);localStorage.setItem(LSM,JSON.stringify(o));localStorage.removeItem(LS_OLD);}catch(_){}},400);
+}
+// 読み込みは同時に2件まで。今見ている月を先に、となりの月は後回し
+const queue=[];let active=0;
+function pump(){
+  while(active<2&&queue.length){const j=queue.shift();delete S.jobs[j.ym];active++;
+    apiLoad(j.ym).then(j.ok,j.ng).finally(()=>{active--;pump();});}
+}
+function fetchMonth(ym,low){
+  if(S.pending[ym]){const j=S.jobs[ym];if(j&&!low&&j.low){queue.splice(queue.indexOf(j),1);j.low=false;queue.unshift(j);}return S.pending[ym];}
   setLoading(1);
   return S.pending[ym]=new Promise(res=>{
-    google.script.run.withSuccessHandler(d=>{
-      delete S.pending[ym];setLoading(-1);S.cache[ym]=d;delete S.failed[ym];S.lastFetch=Date.now();
-      syncToday(d);if(d.ym===ymOf(S.today)){try{localStorage.setItem(LS,JSON.stringify(d));}catch(_){}}
-      if(!Object.keys(S.failed).length)$('err').classList.remove('on');
-      paintAll();res(d);
-    }).withFailureHandler(e=>{
-      delete S.pending[ym];setLoading(-1);S.failed[ym]=true;
-      $('errText').textContent='読み込みに失敗しました（'+(e&&e.message||e)+'）';$('err').classList.add('on');
-      paintAll();res(null);
-    }).app_loadMonth(ym);
+    const j=S.jobs[ym]={ym,low:!!low,
+      ok:({d,text})=>{
+        delete S.pending[ym];setLoading(-1);delete S.failed[ym];S.at[ym]=S.lastFetch=Date.now();
+        const changed=S.raw[ym]!==text;S.cache[ym]=d;S.raw[ym]=text;
+        const moved=syncToday(d);
+        if(!Object.keys(S.failed).length)$('err').classList.remove('on');
+        if(changed)saveCache();
+        if(changed||moved)schedulePaint(); // 前回と同じ内容なら描き直さない
+        res(d);
+      },
+      ng:e=>{
+        delete S.pending[ym];setLoading(-1);S.failed[ym]=true;
+        $('errText').textContent=(S.cache[ym]?'最新の記録を読み込めませんでした。前回の内容を表示しています':'読み込みに失敗しました')+'（'+(e&&e.message||e)+'）';$('err').classList.add('on');
+        schedulePaint();res(null);
+      }};
+    if(low)queue.push(j);else queue.unshift(j);
+    pump();
   });
 }
-function need(ym){if(!inYear(ym))return null;const d=S.cache[ym];if(!d&&!S.failed[ym])fetchMonth(ym);return d||null;}
+// 保存してある内容があればすぐ返し、まだこの起動で読み直していなければ裏で最新を取りにいく
+function need(ym,low){
+  if(!inYear(ym))return null;const d=S.cache[ym];
+  if(!S.at[ym]&&!S.failed[ym])fetchMonth(ym,low);
+  return d||null;
+}
 function refresh(){S.failed={};$('err').classList.remove('on');
-  const yms=new Set(Object.keys(S.cache).concat([ymOf(S.date),S.listYm,S.graphYm]).filter(inYear));
-  return Promise.all([...yms].map(fetchMonth));}
+  Object.keys(S.at).forEach(ym=>S.at[ym]=0); // ほかの月は次に見たときに読み直す
+  const yms=new Set([ymOf(S.date),S.view==='list'?S.listYm:null,S.view==='graph'?S.graphYm:null,sheetShown?S.calYm:null].filter(ym=>ym&&inYear(ym)));
+  return Promise.all([...yms].map(ym=>fetchMonth(ym)));}
 function syncToday(d){
-  if(!d.today||d.today===S.today)return;
+  if(!d.today||d.today===S.today)return false;
   const follow=S.date===S.today||!S.touched;
   S.today=d.today;S.year=+d.today.slice(0,4);
   if(follow)applyDate(d.today);
+  return true;
 }
 function hasRecord(k){const d=S.cache[ymOf(k)];if(!d)return false;const r=d.days.find(x=>x.date===k);return !!(r&&(r.meals>0||r.am!=null||r.pm!=null||r.training));}
 function applyDate(k){S.date=clampDate(k);S.listYm=S.graphYm=ymOf(S.date);}
@@ -530,8 +555,8 @@ function buildPfc(){$('pfc').innerHTML=[['p','P たんぱく質'],['f','F 脂質
 function paintDay(){
   const k=S.date;$('dayTitle').textContent=dayLabel(k);
   drawWeek();
-  need(ymOf(addDays(k,-7)));need(ymOf(addDays(k,7)));
   const d=need(ymOf(k));
+  need(ymOf(addDays(k,-7)),true);need(ymOf(addDays(k,7)),true);
   $('dayPane').classList.toggle('loading',!d);
   if(!d){$('nutNote').textContent=S.failed[ymOf(k)]?'読み込めませんでした。上の「再読み込み」を押してください。':'読み込み中…';return;}
   const st=d.settings,row=d.days.find(x=>x.date===k)||{};
@@ -564,7 +589,7 @@ function mealItem(m){return `<div class="item"><span class="tag ${kindTag(m.kind
 function drawWeek(){
   const k=S.date,start=addDays(k,-parse(k).getUTCDay());
   const keys=[...Array(7)].map((_,i)=>addDays(start,i));
-  keys.forEach(x=>need(ymOf(x)));
+  keys.forEach(x=>need(ymOf(x),true));
   $('week').innerHTML=keys.map(x=>{const d=parse(x);
     return `<button data-k="${x}" class="${x===k?'sel':''} ${x===S.today?'tdy':''}" ${inYear(ymOf(x))?'':'disabled'} aria-label="${dayLabel(x)}">${WD[d.getUTCDay()]}<b class="num">${d.getUTCDate()}</b><i class="${hasRecord(x)?'on':''}"></i></button>`;}).join('');
   placeWeek(S.weekStart===start);S.weekStart=start;
@@ -748,10 +773,10 @@ window.addEventListener('resize',()=>{placeWeek(false);if(sheetShown){sheetH=she
 // 下に引っ張って更新（一番上で下に引くと紫の帯が伸び、離すと読み直す）
 (function pullToRefresh(){
   const wrap=document.querySelector('.wrap'),bar=$('ptr'),icon=bar.firstChild,GO=64,HOLD=52;
-  let y0=null,x0=0,lock=false,busy=false;
+  let y0=null,x0=0,lock=false,busy=false,top0=0;
   const sp=Spring(d=>{
     wrap.style.transform=d>.5?'translate3d(0,'+d+'px,0)':'';
-    bar.style.height=(d>.5?d+wrap.offsetTop:0)+'px'; // 見本の帯がある時はその分も埋める
+    bar.style.height=(d>.5?d+top0:0)+'px'; // 見本の帯がある時はその分も埋める
     if(!busy){icon.style.opacity=Math.min(1,d/GO);icon.style.transform='rotate('+(d/GO*270)+'deg)';}
   });
   const free=()=>window.scrollY<=0&&!sheetShown&&$('keyPanel').hidden;
@@ -767,7 +792,7 @@ window.addEventListener('resize',()=>{placeWeek(false);if(sheetShown){sheetH=she
     if(!lock){
       if(Math.hypot(dx,dy)<10)return;
       if(dy<=0||Math.abs(dx)>Math.abs(dy)||window.scrollY>0){y0=null;return;}
-      lock=true;y0=t.clientY;
+      lock=true;y0=t.clientY;top0=wrap.offsetTop; // 毎コマ測ると重いので最初に1回だけ
     }
     e.preventDefault();
     const d=Math.max(0,t.clientY-y0);sp.set(rubber(d,280));
@@ -793,8 +818,14 @@ document.addEventListener('visibilitychange',()=>{if(document.visibilityState===
   const now=new Date();S.today=now.getFullYear()+'-'+pad(now.getMonth()+1)+'-'+pad(now.getDate());S.year=now.getFullYear();
   applyDate(S.today);buildPfc();
   try{S.desc=localStorage.getItem(LSORT)!=='asc';}catch(_){}
-  try{const c=JSON.parse(localStorage.getItem(LS)||'null');if(c&&c.ym===ymOf(S.today))S.cache[c.ym]=c;}catch(_){}
-  paintAll();fetchMonth(ymOf(S.today));
+  if(LSM){
+    try{const o=JSON.parse(localStorage.getItem(LSM)||'null')||{};
+      Object.keys(o).filter(inYear).forEach(ym=>{try{S.cache[ym]=JSON.parse(o[ym]);S.raw[ym]=o[ym];}catch(_){}});}catch(_){}
+    try{const t=localStorage.getItem(LS_OLD),c=t&&JSON.parse(t);if(c&&c.ym&&inYear(c.ym)&&!S.cache[c.ym]){S.cache[c.ym]=c;S.raw[c.ym]=t;}}catch(_){}
+  }
+  paintAll(); // ここで今月の最新読み込みも始まる
+  // アプリ本体も端末に保存して、電波が弱くてもすぐ開けるようにする
+  if('serviceWorker' in navigator&&location.protocol==='https:')addEventListener('load',()=>navigator.serviceWorker.register('sw.js').catch(()=>{}));
 })();
 </script>
 </body>
