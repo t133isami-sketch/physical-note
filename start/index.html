@@ -154,6 +154,19 @@ footer span a+a{margin-left:16px}
 @media (prefers-reduced-motion: reduce){html{scroll-behavior:auto}.rv,.phone.side.rv{opacity:1;transform:none;transition:none}}
 .toast{position:fixed;left:50%;bottom:calc(24px + env(safe-area-inset-bottom));transform:translate(-50%,20px);opacity:0;background:var(--ink);color:var(--bg);font-size:15px;padding:10px 18px;border-radius:980px;transition:opacity .2s,transform .3s var(--ease-out);pointer-events:none;z-index:30}
 .toast.on{opacity:1;transform:translate(-50%,0)}
+.loginway{background:var(--tile);border-radius:28px;padding:32px clamp(22px,5vw,40px);margin-top:48px;text-align:left}
+section:not(.alt) .loginway{background:var(--alt)}
+.lsteps{list-style:none;counter-reset:l;display:grid;gap:18px}
+.lsteps li{counter-increment:l;display:grid;grid-template-columns:36px 1fr;column-gap:14px}
+.lsteps li::before{content:counter(l);grid-row:span 2;width:32px;height:32px;border-radius:50%;background:var(--ink);color:var(--bg);display:grid;place-items:center;font-weight:700;font-size:15px}
+.lsteps b{font-size:19px;letter-spacing:-.01em}
+.lsteps span{color:var(--sub);font-size:15px}
+.loginway .acts{margin-top:26px}
+.manual{margin-top:40px}
+.manual>summary{cursor:pointer;color:var(--link);font-size:17px;text-align:center;list-style:none}
+.manual>summary::-webkit-details-marker{display:none}
+.nologin .manual>summary{display:none}
+.nologin .manual{margin-top:0}
 </style>
 </head>
 <body>
@@ -215,7 +228,18 @@ footer span a+a{margin-left:16px}
   <section class="alt" id="setup">
     <div class="wn">
       <h2 class="h2 rv">はじめかた</h2>
-      <p class="sub rv">パソコンで10分ほどです。Googleアカウントがあれば無料で使えます。</p>
+      <p class="sub rv" id="setupSub">パソコンで10分ほどです。Googleアカウントがあれば無料で使えます。</p>
+      <div class="loginway rv" id="loginWay" hidden>
+        <ol class="lsteps">
+          <li><b>Googleでログイン</b><span>自分のGoogleドライブに記録シートが自動でできます。</span></li>
+          <li><b>ホーム画面に追加</b><span>iPhoneは 共有 → ホーム画面に追加、Androidは ⋮ → ホーム画面に追加。</span></li>
+          <li><b>シートに記録する</b><span>アプリ上部の「記録シートを開く」から。AIに頼むこともできます。</span></li>
+        </ol>
+        <div class="acts"><a class="btn" href="../app/">Googleでログインしてはじめる</a></div>
+        <p class="note">アプリが触れるのは、このアプリが作った記録シートだけです。ドライブのほかのファイルは見えません。</p>
+      </div>
+      <details class="manual" id="manualWay" open>
+      <summary>Apps Script で自分で設置する方法（パソコン向け）</summary>
       <ol class="steps">
         <li class="step rv">
           <div class="num">1</div>
@@ -283,6 +307,7 @@ footer span a+a{margin-left:16px}
           </div>
         </li>
       </ol>
+      </details>
     </div>
   </section>
 
@@ -291,7 +316,7 @@ footer span a+a{margin-left:16px}
       <h2 class="h2 rv">よくある質問</h2>
       <div class="faq rv">
         <details><summary>お金はかかりますか？</summary><div><p>かかりません。Googleスプレッドシート、Apps Script、このアプリはすべて無料です。</p></div></details>
-        <details><summary>記録はどこに保存されますか？</summary><div><p>自分のGoogleドライブにあるスプレッドシートだけです。アプリはシートを直接読みに行くので、間にほかのサーバーはありません。読むには合言葉が必要です。</p></div></details>
+        <details><summary>記録はどこに保存されますか？</summary><div><p>自分のGoogleドライブにあるスプレッドシートだけです。アプリはシートを直接読みに行くので、間にほかのサーバーはありません。読めるのは、自分のGoogleアカウントでログインしたとき（または自分だけが知っている合言葉があるとき）だけです。</p></div></details>
         <details><summary>iPhoneでもAndroidでも使えますか？</summary><div><p>どちらでも使えます。ブラウザで開いてホーム画面に追加すると、アプリとして使えます。パソコンでも見られます。</p></div></details>
         <details><summary>記録はどうやって書きますか？</summary><div><p>スマホのGoogleスプレッドシートのアプリから、1行に1件ずつ書きます。書き方はシートの「使い方」タブにあります。</p><p>GeminiやChatGPTなど、Googleドライブにつなげられる AI に頼むこともできます。最初に下の文を渡しておくと、決まった形で書き込んでくれます。</p>
           <pre class="prompt" id="aiPrompt">あなたは私の記録係です。Googleドライブの「Physical Note」というスプレッドシートに、私の食事・体重・トレーニングを書き込んでください。
@@ -326,10 +351,14 @@ footer span a+a{margin-left:16px}
 <script>
 // コピーしてもらう記録シート（見出しだけの空のシート）
 const TEMPLATE_ID='1ZHexd7e-ptnQTPAuvt2wNOPoO-Uw_cTVHhsFFYPEi2U';
+// Googleログインではじめる方式（app/ の GCLIENT を設定したら true にする）
+const LOGIN_READY=false;
 const APP_URL=new URL('../app/',location.href).href;
 const API_RE=/^https:\/\/script\.google\.com\/(?:a\/macros\/[\w.-]+|macros)\/s\/[\w-]+\/exec$/;
 const $=id=>document.getElementById(id);
 
+if(LOGIN_READY){$('loginWay').hidden=false;$('manualWay').open=false;$('setupSub').textContent='スマホだけで、1分ではじめられます。Googleアカウントがあれば無料です。';}
+else document.documentElement.classList.add('nologin');
 $('copyBtn').href='https://docs.google.com/spreadsheets/d/'+TEMPLATE_ID+'/copy';
 
 let toastT;
