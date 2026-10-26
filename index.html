@@ -181,6 +181,16 @@ svg text{font-family:inherit}
 .keyc input:focus{outline:2px solid var(--p600);outline-offset:1px}
 .keyc button{width:100%;margin-top:12px;padding:13px 0;border-radius:14px;background:var(--p800);color:#fff;font-weight:700;font-size:15px}
 .keyc .kerr{color:var(--o700);min-height:1.5em}
+/* 見る年の切り替え */
+.yrchip{font-size:12px;font-weight:700;color:#fff;opacity:.9;padding:4px 10px;border-radius:999px;background:rgba(255,255,255,.16)}
+.keyc .yrs{display:flex;flex-wrap:wrap;gap:8px;margin-top:14px}
+.keyc .yrs button{width:auto;margin:0;padding:8px 14px;border-radius:18px;font-size:13px;background:var(--bg);color:var(--p800);border:1px solid #d9cfe9}
+.keyc .yrs button.on{background:var(--p800);color:#fff;border-color:var(--p800)}
+.keyc .sub{background:transparent;color:var(--p800);border:1px solid #d9cfe9}
+.ybar{margin:12px 16px 0;padding:12px 14px;border-radius:14px;background:var(--p100);color:var(--p800);font-size:13px;display:flex;align-items:center;gap:10px}
+.ybar[hidden]{display:none}
+.ybar span{flex:1}
+.ybar button{flex:none;background:#fff;color:var(--p800);font-weight:700;padding:7px 12px;border-radius:14px}
 .demo-bar{position:sticky;top:0;z-index:44;background:var(--o100);color:var(--o700);font-size:12px;font-weight:700;text-align:center;padding:calc(6px + env(safe-area-inset-top)) 12px 6px}
 .demo-bar[hidden]{display:none}
 /* iPhoneのホーム画面アプリで下に固定した部品が浮くずれを打ち消す（--gapは画面の下端とのずれをJSで測った値） */
@@ -229,12 +239,21 @@ svg text{font-family:inherit}
     <p><a href="demo.html" style="color:var(--p600);font-weight:700">見本データで試す ›</a></p>
   </form>
 </div>
+<div class="keyp" id="yearPanel" hidden>
+  <div class="keyc">
+    <h2>見る年</h2>
+    <p>記録は1年に1つのファイルです。アプリがふだん読むのは今年のファイルだけで、前の年は選んだときだけ読み込みます。</p>
+    <div class="yrs" id="yearList"></div>
+    <p>新しい年のファイル（「フィジカルノート｜2027」または「栄養・増量管理 2027年」）ができると、ここに自動で加わります。</p>
+    <button type="button" class="sub" id="yearClose">閉じる</button>
+  </div>
+</div>
 <div class="wrap">
 
 <!-- 日ごと -->
 <section id="v-day">
   <div class="top">
-    <div class="trow"><span class="t">フィジカルノート</span></div>
+    <div class="trow"><span class="t">フィジカルノート</span><button class="yrchip num" id="yearPick" aria-label="見る年を選ぶ">—</button></div>
     <div class="datebar">
       <button class="round" id="prevDay" aria-label="前の日">‹</button>
       <div class="d num" id="dayTitle">—</div>
@@ -247,6 +266,7 @@ svg text{font-family:inherit}
     <div class="week"><span class="wsel" id="wsel"></span><div class="wbtns" id="week"></div></div>
   </div>
   <div class="err" id="err"><span id="errText"></span><button data-act="refresh">再読み込み</button></div>
+  <div class="ybar" id="yearBar" hidden><span id="yearText"></span><button id="yearBack">今年に戻る</button></div>
   <div class="pager" id="dayBox"><div class="pane" id="dayPane">
     <div class="card">
       <h3><span>栄養</span><span class="num" id="kcalGoal"></span></h3>
@@ -382,6 +402,7 @@ async function apiLoad(ym){
   const text=await res.text(),d=JSON.parse(text);
   if(d&&d.error){
     if(d.error==='unauthorized'){askKey('合言葉が違うようです。もう一度貼り付けてください。');throw new Error('合言葉が違います');}
+    if(d.error==='no_file')throw new Error(ym.slice(0,4)+'年の記録ファイルが見つかりません');
     throw new Error(d.error);
   }
   return {d,text};
@@ -526,7 +547,7 @@ function schedulePaint(){if(!paintRaf)paintRaf=requestAnimationFrame(()=>{paintR
 let saveT=0;
 function saveCache(){
   if(!LSM)return;clearTimeout(saveT);
-  saveT=setTimeout(()=>{try{const o={};Object.keys(S.raw).filter(inYear).forEach(ym=>o[ym]=S.raw[ym]);localStorage.setItem(LSM,JSON.stringify(o));localStorage.removeItem(LS_OLD);}catch(_){}},400);
+  saveT=setTimeout(()=>{try{const o={};Object.keys(S.raw).filter(ym=>ym.slice(0,4)===S.today.slice(0,4)).forEach(ym=>o[ym]=S.raw[ym]);localStorage.setItem(LSM,JSON.stringify(o));localStorage.removeItem(LS_OLD);}catch(_){}},400);
 }
 // 読み込みは同時に2件まで。今見ている月を先に、となりの月は後回し
 const queue=[];let active=0;
@@ -569,13 +590,35 @@ function refresh(){S.failed={};$('err').classList.remove('on');
   return Promise.all([...yms].map(ym=>fetchMonth(ym)));}
 function syncToday(d){
   if(!d.today||d.today===S.today)return false;
-  const follow=S.date===S.today||!S.touched;
-  S.today=d.today;S.year=+d.today.slice(0,4);
-  if(follow)applyDate(d.today);
+  const follow=S.date===S.today||!S.touched,wasThis=S.year===+String(S.today).slice(0,4);
+  S.today=d.today;
+  if(wasThis||follow){S.year=+d.today.slice(0,4);applyDate(follow?d.today:S.date);} // 前の年を見ているときはそのまま
+  paintYear();
   return true;
 }
 function hasRecord(k){const d=S.cache[ymOf(k)];if(!d)return false;const r=d.days.find(x=>x.date===k);return !!(r&&(r.meals>0||r.am!=null||r.pm!=null||r.training));}
 function applyDate(k){S.date=clampDate(k);S.listYm=S.graphYm=ymOf(S.date);}
+// ---------- 見る年 ----------
+// 記録は1年に1ファイル。読み取り口が、年ごとのファイルを選んで返す（今年のファイル以外は、選んだときだけ読む）
+const FIRST_YEAR=2026; // 記録がある最初の年
+const thisYear=()=>+S.today.slice(0,4);
+function setYear(y){
+  if(!y||y===S.year)return;
+  S.year=y;S.touched=y!==thisYear();
+  applyDate(y===thisYear()?S.today:keyOf(parse(y+S.today.slice(4)))); // 前の年は、今日と同じ月日から
+  if(sheetShown)closeCal();
+  paintAll();paintYear();
+}
+function paintYear(){
+  $('yearPick').textContent=S.year+'年';
+  const past=S.year!==thisYear();
+  $('yearBar').hidden=!past;if(past)$('yearText').textContent=S.year+'年の記録を見ています';
+}
+function openYears(){
+  const ys=[];for(let y=thisYear();y>=Math.min(FIRST_YEAR,thisYear());y--)ys.push(y);
+  $('yearList').innerHTML=ys.map(y=>`<button type="button" data-year="${y}" class="${y===S.year?'on':''}">${y}年${y===thisYear()?'（今年）':''}</button>`).join('');
+  $('yearPanel').hidden=false;
+}
 
 // ---------- 日ごと ----------
 const ringSp=Spring(p=>{const c=2*Math.PI*46,a=$('ringArc');a.setAttribute('stroke-dasharray',(c*p/100)+' '+c);a.style.opacity=p>.5?1:0;});
@@ -785,9 +828,13 @@ document.addEventListener('click',e=>{
   if(b.closest('.nav')){if(b.dataset.v!==S.view)show(b.dataset.v);return;}
   if(b.dataset.act==='refresh')return refresh();
   if(b.id==='prevDay'||b.id==='nextDay'){S.touched=true;return dayPager.go(b.id==='nextDay'?1:-1);}
-  if(b.id==='goToday')return jumpDay(S.today);
+  if(b.id==='goToday'){if(S.year!==thisYear())return setYear(thisYear());return jumpDay(S.today);}
+  if(b.id==='yearPick')return openYears();
+  if(b.id==='yearBack')return setYear(thisYear());
+  if(b.id==='yearClose'){$('yearPanel').hidden=true;return;}
+  if(b.dataset.year){$('yearPanel').hidden=true;return setYear(+b.dataset.year);}
   if(b.id==='openCal')return openCal();
-  if(b.id==='calToday'){closeCal();return jumpDay(S.today);}
+  if(b.id==='calToday'){closeCal();if(S.year!==thisYear())return setYear(thisYear());return jumpDay(S.today);}
   if(b.id==='toList'){S.type='選択日の食事';return show('list');}
   if(b.dataset.k&&b.closest('#week'))return jumpDay(b.dataset.k);
   if(b.dataset.k&&b.closest('#cal')){closeCal();return jumpDay(b.dataset.k);}
@@ -809,7 +856,7 @@ window.addEventListener('resize',()=>{placeWeek(false);if(sheetShown){sheetH=she
     bar.style.height=(d>.5?d+top0:0)+'px'; // 見本の帯がある時はその分も埋める
     if(!busy){icon.style.opacity=d>=GO?1:Math.min(.45,d/GO*.45);icon.style.transform='rotate('+(Math.min(d,GO)/GO*270)+'deg) scale('+(d>=GO?1.15:1)+')';}
   });
-  const free=()=>window.scrollY<=0&&!sheetShown&&$('keyPanel').hidden;
+  const free=()=>window.scrollY<=0&&!sheetShown&&$('keyPanel').hidden&&$('yearPanel').hidden;
   document.addEventListener('touchstart',e=>{
     y0=null;lock=false;
     if(busy||e.touches.length!==1||!free())return;
@@ -853,7 +900,7 @@ document.addEventListener('visibilitychange',()=>{if(document.visibilityState===
       Object.keys(o).filter(inYear).forEach(ym=>{try{S.cache[ym]=JSON.parse(o[ym]);S.raw[ym]=o[ym];}catch(_){}});}catch(_){}
     try{const t=localStorage.getItem(LS_OLD),c=t&&JSON.parse(t);if(c&&c.ym&&inYear(c.ym)&&!S.cache[c.ym]){S.cache[c.ym]=c;S.raw[c.ym]=t;}}catch(_){}
   }
-  paintAll(); // ここで今月の最新読み込みも始まる
+  paintAll();paintYear(); // ここで今月の最新読み込みも始まる
   // アプリ本体も端末に保存して、電波が弱くてもすぐ開けるようにする
   if('serviceWorker' in navigator&&location.protocol==='https:')addEventListener('load',()=>navigator.serviceWorker.register('sw.js').catch(()=>{}));
 })();
