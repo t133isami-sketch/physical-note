@@ -206,6 +206,7 @@ svg text{font-family:inherit}
     <div id="gBox" hidden>
       <p>Googleでログインすると、あなたのGoogleドライブに記録シートができて、すぐに使えます。アプリが触れるのは、このアプリが作ったシートだけです。<a href="../start/privacy.html" style="color:var(--p600)">プライバシーポリシー</a></p>
       <button type="button" id="gBtn" class="gbtn"><svg width="18" height="18" viewBox="0 0 48 48" aria-hidden="true"><path fill="#FFC107" d="M43.6 20.5H42V20H24v8h11.3C33.7 32.7 29.2 36 24 36c-6.6 0-12-5.4-12-12s5.4-12 12-12c3.1 0 5.8 1.2 7.9 3.1l5.7-5.7C34 6.1 29.3 4 24 4 12.9 4 4 12.9 4 24s8.9 20 20 20 20-8.9 20-20c0-1.3-.1-2.4-.4-3.5z"/><path fill="#FF3D00" d="M6.3 14.7l6.6 4.8C14.7 15.1 19 12 24 12c3.1 0 5.8 1.2 7.9 3.1l5.7-5.7C34 6.1 29.3 4 24 4 16.3 4 9.7 8.3 6.3 14.7z"/><path fill="#4CAF50" d="M24 44c5.2 0 9.9-2 13.4-5.2l-6.2-5.2C29.2 35.1 26.7 36 24 36c-5.2 0-9.6-3.3-11.3-7.9l-6.5 5C9.5 39.6 16.2 44 24 44z"/><path fill="#1976D2" d="M43.6 20.5H42V20H24v8h11.3c-.8 2.2-2.2 4.2-4.1 5.6l6.2 5.2C37 39.2 44 34 44 24c0-1.3-.1-2.4-.4-3.5z"/></svg>Googleでログインしてはじめる</button>
+      <p class="kerr" id="gWarn"></p>
       <p class="or">接続リンクをお持ちの方は、下に貼り付けてください。</p>
     </div>
     <p id="linkHint">最初の1回だけ、発行ページで作った接続リンクを貼り付けてください。</p>
@@ -415,24 +416,37 @@ const G_TITLE='Physical Note 記録シート';
 const LS_GTOK='pn.app.gtok',LS_SHEET='pn.app.sheet';
 let gSheet='';try{gSheet=localStorage.getItem(LS_SHEET)||'';}catch(_){}
 const GMODE=()=>!DEMO&&!!GCLIENT&&(!!gSheet||!API);
-let gClient=null,gWait=null,gGis=null;
-function gLoadGis(){
-  if(gGis)return gGis;
-  return gGis=new Promise((ok,ng)=>{const s=document.createElement('script');s.src='https://accounts.google.com/gsi/client';s.async=true;
-    s.onload=()=>{gClient=google.accounts.oauth2.initTokenClient({client_id:GCLIENT,scope:G_SCOPE,callback:r=>{
-      const w=gWait;gWait=null;if(!w)return;
-      if(r&&r.access_token){try{localStorage.setItem(LS_GTOK,JSON.stringify({t:r.access_token,exp:Date.now()+(+r.expires_in||3600)*1000-60000}));}catch(_){}w.ok(r.access_token);}
-      else w.ng(new Error('Googleにログインできませんでした'));
-    },error_callback:e=>{const w=gWait;gWait=null;if(w)w.ng(new Error(e&&e.type==='popup_closed'?'ログインが閉じられました':'Googleにログインできませんでした'));}});ok();};
-    s.onerror=()=>{gGis=null;ng(new Error('Googleのログイン画面を読み込めませんでした'));};document.head.appendChild(s);});
+// ログインは別ウィンドウを使わず、Googleの画面へ移って戻ってくる方式（スマホのブラウザやLINEから開いても止まらない）
+const G_BACK=location.origin+location.pathname.replace(/index\.html$/,''); // OAuth クライアントの「承認済みのリダイレクト URI」に登録するURL
+const SS_GSTATE='pn.app.gstate';
+function gRedirect(prompt){
+  const st=Math.random().toString(36).slice(2)+Date.now().toString(36);
+  try{sessionStorage.setItem(SS_GSTATE,st);}catch(_){}
+  const q=new URLSearchParams({client_id:GCLIENT,redirect_uri:G_BACK,response_type:'token',scope:G_SCOPE,include_granted_scopes:'true',state:st});
+  if(prompt)q.set('prompt',prompt);
+  location.href='https://accounts.google.com/o/oauth2/v2/auth?'+q;
+  return new Promise(()=>{}); // ページを離れるので、そのまま待つ
 }
 function gCached(){try{const o=JSON.parse(localStorage.getItem(LS_GTOK)||'null');return o&&o.exp>Date.now()?o.t:'';}catch(_){return '';}}
-// トークンが切れていたら、ボタンを押したとき（ユーザーの操作中）だけGoogleの確認を出す
+// Googleから戻ってきたとき（#access_token=…）にトークンを受け取る
+let gBackErr='';
+if(GCLIENT&&!DEMO&&/[#&](access_token|error)=/.test(location.hash)){
+  const h=new URLSearchParams(location.hash.slice(1));
+  let st='';try{st=sessionStorage.getItem(SS_GSTATE)||'';sessionStorage.removeItem(SS_GSTATE);}catch(_){}
+  history.replaceState(null,'',location.pathname+location.search);
+  if(h.get('access_token')&&(!st||h.get('state')===st)){
+    try{
+      localStorage.setItem(LS_GTOK,JSON.stringify({t:h.get('access_token'),exp:Date.now()+(+h.get('expires_in')||3600)*1000-60000}));
+      if(!gSheet){API='';localStorage.removeItem(LS_API);localStorage.removeItem(LS_KEY);localStorage.removeItem('pn.app.months');}
+    }catch(_){}
+  }else gBackErr=h.get('error')==='access_denied'?'ログインがキャンセルされました':'Googleにログインできませんでした';
+}
+// トークンが切れていたら、ボタンを押したとき（ユーザーの操作中）だけGoogleの確認へ移る
 function gToken(){
   const t=gCached();if(t)return Promise.resolve(t);
   const tap=navigator.userActivation?navigator.userActivation.isActive:false;
-  if(!gClient||!tap){gLoadGis().catch(()=>{});return Promise.reject(Object.assign(new Error('Googleへの接続が切れました。「再読み込み」を押してください'),{relogin:true}));}
-  return new Promise((ok,ng)=>{gWait={ok,ng};gClient.requestAccessToken({prompt:''});});
+  if(!tap)return Promise.reject(Object.assign(new Error('Googleへの接続が切れました。「再読み込み」を押してください'),{relogin:true}));
+  return gRedirect('');
 }
 async function gFetch(url,opt){
   const t=await gToken();
@@ -479,6 +493,7 @@ async function gEnsureSheet(){
     id=made.spreadsheetId;
   }
   gSheet=id;try{localStorage.setItem(LS_SHEET,id);}catch(_){}
+  showSheetLink();
   return id;
 }
 // シート全体は1回読んで少しの間使い回す（となりの月をまとめて読むため）
@@ -532,18 +547,7 @@ async function gLoad(ym){
 }
 function gSheetUrl(){return gSheet?'https://docs.google.com/spreadsheets/d/'+gSheet+'/edit':'';}
 // ログインボタン（最初の1回）
-async function gStart(){
-  const err=document.getElementById('keyErr');err.textContent='';
-  try{
-    await new Promise((ok,ng)=>{gWait={ok,ng};gClient.requestAccessToken({prompt:'consent'});});
-    err.textContent='記録シートを準備しています…';
-    API='';try{localStorage.removeItem(LS_API);localStorage.removeItem(LS_KEY);localStorage.removeItem('pn.app.months');}catch(_){}
-    await gEnsureSheet();
-    S.cache={};S.raw={};S.failed={};S.at={};
-    document.getElementById('keyPanel').hidden=true;
-    showSheetLink();refresh();
-  }catch(e){err.textContent=e&&e.message||'うまくいきませんでした';}
-}
+function gStart(){document.getElementById('keyErr').textContent='Googleに移動しています…';gRedirect('select_account');}
 function showSheetLink(){const a=document.getElementById('sheetLink');if(a&&gSheet){a.href=gSheetUrl();a.hidden=false;document.getElementById('gemLink').hidden=false;}}
 // Gemini に貼る指示文（gemini.txt）に、この人の記録シートとアプリのURLを入れて出す
 let gemTpl=null;
@@ -566,11 +570,10 @@ document.getElementById('gemCopy').addEventListener('click',async()=>{
 ['touchstart','touchmove','touchend'].forEach(t=>document.getElementById('gemPanel').addEventListener(t,e=>e.stopPropagation(),{passive:true}));
 if(GCLIENT&&!DEMO){
   document.getElementById('gBox').hidden=false;
-  gLoadGis().catch(e=>{document.getElementById('keyErr').textContent=e.message;});
-  document.getElementById('gBtn').addEventListener('click',()=>{
-    if(!gClient){document.getElementById('keyErr').textContent='少し待ってからもう一度押してください';gLoadGis();return;}
-    gStart();
-  });
+  document.getElementById('gBtn').addEventListener('click',gStart);
+  // LINEなどアプリ内のブラウザでは、Googleがログインを受け付けない
+  if(/ Line\/|FBAN|FBAV|Instagram/i.test(navigator.userAgent))document.getElementById('gWarn').textContent='LINEなどのアプリ内ではGoogleにログインできません。右上（または右下）のメニューから「ブラウザで開く」を選んでください。';
+  if(gBackErr){askKey();document.getElementById('keyErr').textContent=gBackErr;}
   if(gSheet)showSheetLink();
 }
 

@@ -1,6 +1,6 @@
 // アプリ本体（画面のファイル）を端末に保存しておき、開いたらすぐ表示する。
 // 裏で新しい版を取りにいき、次に開いたときに反映される。記録データ（Apps Script）は扱わない。
-const CACHE='physicalnote-app-v3';
+const CACHE='physicalnote-app-v4';
 self.addEventListener('install',e=>{
   self.skipWaiting();
   e.waitUntil(caches.open(CACHE).then(c=>c.addAll(['./','../icon-180.png'])).catch(()=>{}));
