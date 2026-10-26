@@ -172,7 +172,7 @@ footer span a+a{margin-left:16px}
         <li><a href="#cal"><span class="n">3</span>カレンダー</a></li>
         <li><a href="#list"><span class="n">4</span>記録一覧</a></li>
         <li><a href="#graph"><span class="n">5</span>グラフ</a></li>
-        <li><a href="#gem"><span class="n">6</span>Gemini・指示文</a></li>
+        <li><a href="#gem"><span class="n">6</span>Gemini・指示文・設定</a></li>
         <li><a href="#mng"><span class="n">7</span>記録シート（年・リセット）</a></li>
         <li><a href="#common"><span class="n">8</span>どの画面でも</a></li>
         <li><a href="#trouble"><span class="n">9</span>困ったとき</a></li>
@@ -207,7 +207,7 @@ footer span a+a{margin-left:16px}
       <h3>上半分：日付と栄養</h3>
       <div class="scr">
         <figure class="phone"><div class="screen"><img src="img/use-day.jpg" width="780" height="1688" loading="lazy" alt="今日の画面の上半分。日付、カレンダーのボタン、曜日の帯、栄養の輪とPFCの棒があります。">
-          <span class="mk" style="left:14.9%;top:5.5%">1</span><span class="mk" style="left:29.2%;top:17.5%">2</span><span class="mk" style="left:25.4%;top:11.8%">3</span><span class="mk" style="left:74.6%;top:11.8%">4</span><span class="mk" style="left:8.7%;top:36.5%">5</span><span class="mk" style="left:35.9%;top:37.4%">6</span><span class="mk" style="left:38%;top:3.1%">7</span></div></figure>
+          <span class="mk" style="left:14.9%;top:5.5%">1</span><span class="mk" style="left:29.2%;top:17.5%">2</span><span class="mk" style="left:25.4%;top:11.8%">3</span><span class="mk" style="left:74.6%;top:11.8%">4</span><span class="mk" style="left:8.7%;top:36.5%">5</span><span class="mk" style="left:35.9%;top:37.4%">6</span><span class="mk" style="left:64.5%;top:4.6%">7</span></div></figure>
         <ol class="keys">
           <li data-k="1"><span class="k" aria-hidden="true">1</span><div><b>‹ ›（前の日・次の日）</b><p>1日ずつ動きます。画面を左右にスワイプしても動きます。</p></div></li>
           <li data-k="2"><span class="k" aria-hidden="true">2</span><div><b>曜日の帯</b><p>その週の日を押すと、その日に移ります。数字の下の点は、記録がある日です。</p></div></li>
@@ -220,7 +220,13 @@ footer span a+a{margin-left:16px}
               <tr><th>○ g オーバー</th><td>目標を○g超えています。棒がオレンジになります。</td></tr>
               <tr><th>目標ぴったり</th><td>目標と同じ量です。</td></tr>
             </tbody></table></div></li>
-          <li data-k="7"><span class="k" aria-hidden="true">7</span><div><b>上の3つのボタン</b><p>「Gemini」はGeminiを開きます。「指示文」と「記録シート」は、<a href="#gem">6</a> と <a href="#mng">7</a> で説明します。</p></div></li>
+          <li data-k="7"><span class="k" aria-hidden="true">7</span><div><b>上の4つのボタン</b>
+            <table class="tbl"><tbody>
+              <tr><th>Gemini</th><td>Geminiアプリが開きます（入っていなければウェブ版）。<a href="#gem">6へ</a></td></tr>
+              <tr><th>指示文</th><td>Geminiに貼る指示文をコピーします。<a href="#gem">6へ</a></td></tr>
+              <tr><th>記録シート</th><td>シートを開く、年を変える、リセットする。<a href="#mng">7へ</a></td></tr>
+              <tr><th>歯車</th><td>「Gemini」ボタンで開くチャットを決めます。<a href="#set">6へ</a></td></tr>
+            </tbody></table></div></li>
         </ol>
       </div>
       <h3>下半分：体重・トレーニング・食事</h3>
@@ -293,8 +299,23 @@ footer span a+a{margin-left:16px}
 
     <!-- 6 Gemini・指示文 -->
     <section class="part rv" id="gem">
-      <header><div class="num" aria-hidden="true">6</div><div><span class="kicker">今日の画面の上「指示文」</span><h2>Gemini・指示文</h2></div></header>
-      <p class="lead">Geminiに記録を頼むための指示文を、この画面からコピーできます。指示文には、自分の記録シートとアプリのURLが入っています。</p>
+      <header><div class="num" aria-hidden="true">6</div><div><span class="kicker">今日の画面の上「Gemini」「指示文」「歯車」</span><h2>Gemini・指示文・設定</h2></div></header>
+      <p class="lead">Geminiで記録するときに使う3つのボタンです。</p>
+      <h3 id="set">「Gemini」ボタンと設定（歯車）</h3>
+      <p>「Gemini」を押すと、Geminiアプリが開きます。アプリが入っていないときは、ウェブ版のGeminiが開きます。</p>
+      <p>いつも使うチャット（またはGem）を開きたいときは、右上の歯車で、そのチャットのリンクを保存します。</p>
+      <div class="path" aria-label="押す順番"><span class="k2">今日</span><span class="ar" aria-hidden="true"></span><span class="k2">歯車</span><span class="ar" aria-hidden="true"></span><span class="k2">リンクを貼り付け</span><span class="ar" aria-hidden="true"></span><span class="k2 go">保存</span></div>
+      <div class="scr">
+        <figure class="phone"><div class="screen"><img src="img/use-set.jpg" width="780" height="1688" loading="lazy" alt="設定の画面。Geminiボタンで開くチャットのリンクを貼る欄と、保存のボタンがあります。">
+          <span class="mk" style="left:86.2%;top:54.6%">1</span><span class="mk" style="left:86.2%;top:61.7%">2</span></div></figure>
+        <ol class="keys">
+          <li data-k="1"><span class="k" aria-hidden="true">1</span><div><b>チャットのリンク</b><p>ブラウザでGeminiのチャットを開いたときのアドレスを貼ります。https://gemini.google.com/ か https://g.co/gemini/ で始まるリンクだけ保存できます。</p></div></li>
+          <li data-k="2"><span class="k" aria-hidden="true">2</span><div><b>保存</b><p>保存すると、「Gemini」ボタンでそのチャットが開きます。欄を空にして保存すると、Geminiアプリを開くだけに戻ります。</p></div></li>
+        </ol>
+      </div>
+      <p class="note">リンクは、使っているスマホやパソコンのブラウザに保存されます。別の端末では、もう一度保存します。</p>
+      <h3>指示文</h3>
+      <p>Geminiに記録を頼むための指示文を、この画面からコピーできます。指示文には、自分の記録シートとアプリのURLが入っています。</p>
       <div class="path" aria-label="開く順番"><span class="k2">今日</span><span class="ar" aria-hidden="true"></span><span class="k2 go">指示文</span></div>
       <div class="scr">
         <figure class="phone"><div class="screen"><img src="img/use-gem.jpg" width="780" height="1688" loading="lazy" alt="Gemini用の指示文の画面。指示文の欄と、コピーのボタンがあります。">
@@ -305,7 +326,7 @@ footer span a+a{margin-left:16px}
       </div>
       <div class="blk where">
         <span class="lbl"><svg viewBox="0 0 24 24" aria-hidden="true"><path d="M12 21s-7-6.2-7-11.5A7 7 0 0 1 19 9.5C19 14.8 12 21 12 21z"/><circle cx="12" cy="9.5" r="2.5"/></svg>Geminiへの貼り方</span>
-        <p>コピーした指示文の使い方と、Geminiの設定は <a href="guide.html">Gemini導入ガイド</a> にあります。今日の画面の「Gemini」を押すと、Geminiが開きます。</p>
+        <p>コピーした指示文の使い方と、Geminiの設定は <a href="guide.html">Gemini導入ガイド</a> にあります。</p>
       </div>
     </section>
 

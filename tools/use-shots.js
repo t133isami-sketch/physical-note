@@ -14,7 +14,7 @@ const W=390,H=844;
     const p=await b.newPage({viewport:{width:W,height:H},deviceScaleFactor:2,isMobile:true,hasTouch:true,colorScheme:'light'});
     await p.goto(BASE+url);await p.waitForTimeout(2000);
     await p.addStyleTag({content:'.demo-bar{display:none!important}*{transition:none!important;animation:none!important}'});
-    await p.evaluate(()=>{['gemOpen','gemLink','sheetLink'].forEach(id=>document.getElementById(id).hidden=false);});
+    await p.evaluate(()=>{['gemOpen','gemLink','sheetLink','setLink'].forEach(id=>document.getElementById(id).hidden=false);});
     await p.waitForTimeout(300);return p;
   }
   // 印の位置：要素の中心（または左上寄り）を画像に対する%で出す
@@ -25,7 +25,7 @@ const W=390,H=844;
       if(!r){console.error('no element',name,sel);continue;}
       // R/L：要素の右端・左端の内側、OL：左の外、TL/TR：角
       const [x,y,w,h]=r;let px=x+w/2,py=y+h/2;
-      if(at==='R')px=x+w-18;if(at==='L')px=x+18;if(at==='OL')px=x-16;if(at==='OR')px=x+w+16;
+      if(at==='R')px=x+w-18;if(at==='L')px=x+18;if(at==='OL')px=x-16;if(at==='OR')px=x+w+16;if(at==='B')py=y+h;
       if(at==='TL'){px=x+2;py=y+2;}if(at==='TR'){px=x+w-2;py=y+2;}
       pts.push([+(px/W*100).toFixed(1),+(py/H*100).toFixed(1)]);
     }
@@ -37,7 +37,7 @@ const W=390,H=844;
   await shoot(p,'use-start',[['#gBtn','R'],['#keyIn','R']]);await p.close();
 
   p=await page('?demo');
-  await shoot(p,'use-day',[['#prevDay','TR'],['#week button.sel','TR'],['#openCal','TL'],['#goToday','TR'],['.kc svg','TL'],['#pfc .rest','OL'],['.links','OL']]);
+  await shoot(p,'use-day',[['#prevDay','TR'],['#week button.sel','TR'],['#openCal','TL'],['#goToday','TR'],['.kc svg','TL'],['#pfc .rest','OL'],['.links','B']]);
   await p.evaluate(()=>window.scrollTo(0,document.body.scrollHeight));await p.waitForTimeout(400);
   await shoot(p,'use-day2',[['.wt','TL'],['#train','R'],['#toList','OL'],['.nav button[data-v="day"] svg','TR']]);
   await p.evaluate(()=>window.scrollTo(0,0));await p.waitForTimeout(300);
@@ -51,6 +51,11 @@ const W=390,H=844;
   await shoot(p,'use-list',[['#lPrev','TL'],['#tabs button','TL'],['#sortBtn','OL'],['#listBody .tag.p','OR']]);
   await p.click('.nav button[data-v="graph"]');await p.waitForTimeout(700);
   await shoot(p,'use-graph',[['#gPrev','TL'],['#chartW','TR'],['#chartK','TR']]);
+  await p.close();
+
+  p=await page('?demo');
+  await p.click('#setLink');await p.waitForTimeout(500);
+  await shoot(p,'use-set',[['#setGem','R'],['#setSave','R']]);
   await p.close();
 
   p=await page('?demo');
