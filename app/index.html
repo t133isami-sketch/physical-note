@@ -194,20 +194,37 @@ svg text{font-family:inherit}
 .gemc .sub{background:transparent;color:var(--p800);border:1px solid #d9cfe9}
 .demo-bar{position:sticky;top:0;z-index:44;background:var(--o100);color:var(--o700);font-size:12px;font-weight:700;text-align:center;padding:calc(6px + env(safe-area-inset-top)) 12px 6px}
 .demo-bar[hidden]{display:none}
+/* iPhoneのホーム画面アプリで下に固定した部品が浮くずれを打ち消す（--gapは画面の下端とのずれをJSで測った値） */
+.nav{bottom:calc(0px - var(--gap,0px))}
+.sheet{bottom:calc(-40px - var(--gap,0px))}
+.dim,.keyp{bottom:calc(0px - var(--gap,0px))}
 </style>
 </head>
 <body>
 <script>
-// iPhoneのホーム画面アプリでは、中身が画面より短いと下のタブバーが上に浮いてすき間ができる。
-// 中身の高さを常に画面いっぱい以上にして、どの画面でもタブバーやシートが一番下にくるようにする
+// iPhoneのホーム画面アプリでは、中身が短い画面などで、下に固定したタブバーやシートが上に浮いてすき間ができることがある。
+// 中身の高さを常に画面いっぱい以上にしたうえで、それでも残るずれを毎回測って打ち消す（--gap）
 (function(){
   if(!(navigator.standalone||matchMedia('(display-mode: standalone)').matches))return;
+  const probe=document.createElement('div');
+  probe.style.cssText='position:fixed;top:0;bottom:0;left:0;width:0;visibility:hidden;pointer-events:none';
+  document.body.appendChild(probe);
+  let raf=0;
   const fit=()=>{
+    raf=0;
     const land=matchMedia('(orientation: landscape)').matches;
     const h=land?Math.min(screen.width,screen.height):Math.max(screen.width,screen.height);
     document.body.style.minHeight=Math.max(innerHeight,h)+'px';
+    // 固定部品の基準になる枠の下端が画面の下端より上にあれば、その分だけ下げる（キーボードなど大きな差は対象外）
+    const gap=Math.round(h-probe.getBoundingClientRect().bottom);
+    document.documentElement.style.setProperty('--gap',(gap>0&&gap<=100?gap:0)+'px');
   };
-  fit();addEventListener('resize',fit);addEventListener('orientationchange',()=>setTimeout(fit,300));
+  const later=()=>{if(!raf)raf=requestAnimationFrame(fit);};
+  fit();
+  addEventListener('resize',later);addEventListener('scroll',later,{passive:true});addEventListener('pageshow',later);
+  addEventListener('orientationchange',()=>setTimeout(fit,300));
+  document.addEventListener('visibilitychange',later);
+  if(window.ResizeObserver)new ResizeObserver(later).observe(document.body);
 })();
 </script>
 <div class="load" id="load"></div>
