@@ -66,6 +66,9 @@ img{display:block;max-width:100%}
 .btn.ghost{background:transparent;color:var(--link);border:1px solid var(--link)}
 .btn.ghost:hover{background:color-mix(in srgb,var(--link) 8%,transparent)}
 .btn[disabled]{opacity:.4;pointer-events:none}
+.demo-cta{display:flex;flex-direction:column;align-items:center;gap:10px;margin:22px 0 30px}
+.demo-cta span{color:var(--sub);font-size:15px}
+.btn.big{font-size:19px;padding:14px 30px;min-height:52px}
 .more{font-size:17px}
 .more::after{content:" ›"}
 
@@ -194,6 +197,7 @@ section:not(.alt) .loginway{background:var(--alt)}
   <div class="w">
     <a class="brand" href="#top"><img src="../icon-180.png" alt="">Physical Note</a>
     <nav aria-label="ページ内">
+      <a href="../app/?demo">見本</a>
       <a href="#setup">はじめる</a>
       <a href="guide.html">Gemini導入ガイド</a>
       <a href="features.html">アプリの使い方</a>
@@ -207,24 +211,21 @@ section:not(.alt) .loginway{background:var(--alt)}
   <div class="hero">
     <div class="w">
       <h1><span class="nb">Physical Note</span> <span class="nb">導入ページ</span></h1>
+      <div class="demo-cta"><a class="btn big" href="../app/?demo">見本のアプリを見る</a><span>ログインなしで開けます。<span class="nb">記録は架空のものです。</span></span></div>
       <p class="lead">やりたいことを選んでください。</p>
     </div>
     <div class="w">
       <ul class="choose">
-        <li><a class="choice" href="../app/?demo">
-          <span class="cn">1</span>
-          <span class="ct"><b>見本のアプリを見る</b><span>ログインなしで開けます。架空の記録で、すべての画面を触れます。</span></span>
-          <span class="go" aria-hidden="true">›</span></a></li>
         <li><a class="choice" href="#setup">
-          <span class="cn">2</span>
+          <span class="cn">1</span>
           <span class="ct"><b><span class="nb">Physical Note</span> <span class="nb">をはじめる</span></b><span>Googleでログインして、Geminiに話しかけるだけで記録できるようにします。</span></span>
           <span class="go" aria-hidden="true">›</span></a></li>
         <li><a class="choice" href="guide.html">
-          <span class="cn">3</span>
+          <span class="cn">2</span>
           <span class="ct"><b>Geminiの設定を見る</b><span>Geminiに記録を頼めるようにする手順を、画面つきで説明します。</span></span>
           <span class="go" aria-hidden="true">›</span></a></li>
         <li><a class="choice" href="features.html">
-          <span class="cn">4</span>
+          <span class="cn">3</span>
           <span class="ct"><b>アプリの使い方を見る</b><span>Geminiで記録した内容を、アプリで確かめる方法です。</span></span>
           <span class="go" aria-hidden="true">›</span></a></li>
         <li><a class="choice" href="#faq">
