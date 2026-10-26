@@ -41,6 +41,7 @@ a:hover{text-decoration:underline}
 img{display:block;max-width:100%;height:auto}
 :where(a,button,summary,input,[tabindex]):focus-visible{outline:3px solid color-mix(in srgb,var(--blue) 70%,transparent);outline-offset:3px;border-radius:8px}
 .btn:focus-visible{border-radius:980px}
+section[tabindex="-1"]:focus{outline:none}
 .w{max-width:980px;margin:0 auto;padding:0 16px}
 .wn{max-width:720px;margin:0 auto;padding:0 16px}
 .nb{display:inline-block}
@@ -78,6 +79,8 @@ img{display:block;max-width:100%;height:auto}
 .btn.done{background:var(--blue);color:#fff;border-color:var(--blue)}
 
 /* 見出し */
+.back{text-align:left;margin:-24px 0 20px;font-size:15px}
+.back a{display:inline-flex;align-items:center;min-height:44px}
 .hero{background:var(--bg);text-align:center;padding:48px 0 40px}
 .hero h1{font-size:clamp(36px,7vw,64px);line-height:1.1;letter-spacing:-.03em;font-weight:600}
 .hero .tag{font-size:clamp(19px,2.6vw,24px);line-height:1.4;font-weight:500;margin-top:10px}
@@ -257,6 +260,7 @@ footer span a+a{margin-left:16px}
 <main id="top">
   <div class="hero">
     <div class="w">
+      <p class="back"><a href="./">‹ 導入ページに戻る</a></p>
       <h1>導入ガイド</h1>
       <p class="tag"><span class="nb">フィジカルノート 完全導入マニュアル</span></p>
       <p class="lead"><span class="nb">Gemini Skills版｜</span><span class="nb">初期設定・接続確認・記録開始ガイド</span></p>
@@ -1366,12 +1370,27 @@ TEST-GEMINI-実行日8桁-任意の識別文字列
 <footer>
   <div class="w">
     <span>Physical Note</span>
-    <span><a href="./">配布ページ</a><a href="../app/?openExternalBrowser=1">アプリ</a><a href="features.html">アプリの使い方</a><a href="privacy.html">プライバシーポリシー</a></span>
+    <span><a href="./">導入ページに戻る</a><a href="../app/?openExternalBrowser=1">アプリ</a><a href="features.html">アプリの使い方</a><a href="privacy.html">プライバシーポリシー</a></span>
   </div>
 </footer>
 <div class="toast" id="toast" role="status" aria-live="polite"></div>
 
 <script>
+// ===== ページ内の移動は履歴に積まない =====
+// 目次や前後のリンクで #s1 などへ移るたびに履歴が増えると、「戻る」がページ内を行き来するだけになり、
+// 前のページ（導入ページ）に戻れなくなる。ページ内の移動は今の履歴を書き換えるだけにする。
+document.addEventListener('click',e=>{
+  const a=e.target.closest('a[href^="#"]');
+  if(!a||e.defaultPrevented||e.button!==0||e.metaKey||e.ctrlKey||e.shiftKey||e.altKey)return;
+  const id=decodeURIComponent(a.getAttribute('href').slice(1));
+  const t=id?document.getElementById(id):document.body;
+  if(!t)return;
+  e.preventDefault();
+  history.replaceState(history.state,'',id?'#'+id:location.pathname+location.search);
+  t.scrollIntoView({behavior:matchMedia('(prefers-reduced-motion: reduce)').matches?'auto':'smooth',block:'start'});
+  if(t!==document.body){if(!t.hasAttribute('tabindex'))t.setAttribute('tabindex','-1');t.focus({preventScroll:true});}
+});
+
 // ===== 設定 =====
 // 記録原本（現在の検証用の設定値）。IDはここにだけ書き、ページ内のファイルID・URL・プロンプトにはこの値が入る。
 // 利用者ごとの原本に切り替えるときは、ここを変えるか、ページの「管理者から別の記録原本を案内された場合」
