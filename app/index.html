@@ -212,6 +212,7 @@ svg text{font-family:inherit}
 .ybar button{flex:none;background:#fff;color:var(--p800);font-weight:700;padding:7px 12px;border-radius:14px}
 .demo-bar{position:sticky;top:0;z-index:44;background:var(--o100);color:var(--o700);font-size:12px;font-weight:700;text-align:center;padding:calc(6px + env(safe-area-inset-top)) 12px 6px}
 .demo-bar[hidden]{display:none}
+.demo-bar a{display:block;margin-top:2px;color:var(--p800);text-decoration:underline}
 /* iPhoneのホーム画面アプリで下に固定した部品が浮くずれを打ち消す（--gapは画面の下端とのずれをJSで測った値） */
 .nav{bottom:calc(0px - var(--gap,0px))}
 .sheet{bottom:calc(-40px - var(--gap,0px))}
@@ -247,7 +248,7 @@ svg text{font-family:inherit}
 </script>
 <div class="load" id="load"></div>
 <div class="ptr" id="ptr" aria-hidden="true"><svg width="22" height="22" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.4" stroke-linecap="round" stroke-linejoin="round"><path d="M20 11a8 8 0 1 0-2.3 5.7"/><path d="M20 4v7h-7"/></svg></div>
-<div class="demo-bar" id="demoBar" hidden>見本データで表示しています（実際の記録ではありません）</div>
+<div class="demo-bar" id="demoBar" hidden>見本データで表示しています（実際の記録ではありません）<a href="../start/#setup">自分の記録ではじめる ›</a></div>
 <div class="keyp" id="keyPanel" hidden>
   <form class="keyc" id="keyForm" autocomplete="off">
     <h2>Physical Note</h2>
@@ -261,7 +262,7 @@ svg text{font-family:inherit}
     <input id="keyIn" type="text" inputmode="text" autocapitalize="off" autocorrect="off" spellcheck="false" aria-label="接続リンクまたは合言葉">
     <button type="submit">はじめる</button>
     <p class="kerr" id="keyErr"></p>
-    <p><a href="../demo.html" style="color:var(--p600);font-weight:700">見本データで試す ›</a>　<a href="../start/#setup" style="color:var(--p600);font-weight:700">はじめかた ›</a>　<a href="../start/features.html" style="color:var(--p600);font-weight:700">使い方 ›</a></p>
+    <p><a href="./?demo" style="color:var(--p600);font-weight:700">見本データで試す ›</a>　<a href="../start/#setup" style="color:var(--p600);font-weight:700">はじめかた ›</a>　<a href="../start/features.html" style="color:var(--p600);font-weight:700">使い方 ›</a></p>
   </form>
 </div>
 <div class="keyp" id="gemPanel" hidden>
