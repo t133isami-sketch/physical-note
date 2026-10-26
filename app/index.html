@@ -187,6 +187,8 @@ svg text{font-family:inherit}
 .sheetlink{font-size:12px;font-weight:700;color:#fff;opacity:.9;text-decoration:none;padding:4px 10px;border-radius:999px;background:rgba(255,255,255,.16)}
 .sheetlink[hidden]{display:none}
 .trow .links{display:flex;gap:6px}
+.sheetlink.gear{display:flex;align-items:center;padding:4px 7px}
+.sheetlink.gear[hidden]{display:none}
 .gemc{max-height:100%;overflow-y:auto;-webkit-overflow-scrolling:touch}
 .gemc ol{font-size:13px;color:var(--sub);margin:8px 0 0 1.3em}
 .gemc li{margin-top:4px}
@@ -259,7 +261,7 @@ svg text{font-family:inherit}
     <input id="keyIn" type="text" inputmode="text" autocapitalize="off" autocorrect="off" spellcheck="false" aria-label="接続リンクまたは合言葉">
     <button type="submit">はじめる</button>
     <p class="kerr" id="keyErr"></p>
-    <p><a href="../demo.html" style="color:var(--p600);font-weight:700">見本データで試す ›</a>　<a href="../start/#setup" style="color:var(--p600);font-weight:700">はじめかた ›</a></p>
+    <p><a href="../demo.html" style="color:var(--p600);font-weight:700">見本データで試す ›</a>　<a href="../start/#setup" style="color:var(--p600);font-weight:700">はじめかた ›</a>　<a href="../start/features.html" style="color:var(--p600);font-weight:700">使い方 ›</a></p>
   </form>
 </div>
 <div class="keyp" id="gemPanel" hidden>
@@ -303,12 +305,24 @@ svg text{font-family:inherit}
     <button type="button" class="sub" id="mngClose">閉じる</button>
   </div>
 </div>
+<div class="keyp" id="setPanel" hidden>
+  <div class="keyc gemc">
+    <h2>設定</h2>
+    <h3 style="font-size:14px;margin-top:16px">「Gemini」ボタンで開くチャット</h3>
+    <p>いつも使う Gemini のチャット（または Gem）のリンクを貼り付けると、「Gemini」ボタンでそのチャットが開きます。空欄なら Gemini アプリが開きます。</p>
+    <p>リンクは、ブラウザで Gemini のチャットを開いたときのアドレス（https://gemini.google.com/ で始まるもの）です。</p>
+    <input id="setGem" type="url" inputmode="url" autocapitalize="off" autocorrect="off" spellcheck="false" placeholder="https://gemini.google.com/app/…" aria-label="Geminiのチャットのリンク">
+    <button type="button" id="setSave">保存</button>
+    <button type="button" class="sub" id="setClose">閉じる</button>
+    <p class="kerr" id="setErr"></p>
+  </div>
+</div>
 <div class="wrap">
 
 <!-- 日ごと -->
 <section id="v-day">
   <div class="top">
-    <div class="trow"><span class="t">Physical Note</span><span class="links"><a class="sheetlink" id="gemOpen" hidden href="https://gemini.google.com/app" target="_blank" rel="noopener">Gemini</a><button class="sheetlink" id="gemLink" hidden>指示文</button><button class="sheetlink" id="sheetLink" hidden>記録シート</button></span></div>
+    <div class="trow"><span class="t">Physical Note</span><span class="links"><a class="sheetlink" id="gemOpen" hidden href="https://gemini.google.com/app" rel="noopener">Gemini</a><button class="sheetlink" id="gemLink" hidden>指示文</button><button class="sheetlink" id="sheetLink" hidden>記録シート</button><button class="sheetlink gear" id="setLink" hidden aria-label="設定"><svg width="15" height="15" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.2" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><circle cx="12" cy="12" r="3"/><path d="M19.4 15a1.7 1.7 0 0 0 .3 1.8l.1.1a2 2 0 1 1-2.8 2.8l-.1-.1a1.7 1.7 0 0 0-1.8-.3 1.7 1.7 0 0 0-1 1.5V21a2 2 0 1 1-4 0v-.1a1.7 1.7 0 0 0-1.1-1.5 1.7 1.7 0 0 0-1.8.3l-.1.1a2 2 0 1 1-2.8-2.8l.1-.1a1.7 1.7 0 0 0 .3-1.8 1.7 1.7 0 0 0-1.5-1H3a2 2 0 1 1 0-4h.1a1.7 1.7 0 0 0 1.5-1.1 1.7 1.7 0 0 0-.3-1.8l-.1-.1a2 2 0 1 1 2.8-2.8l.1.1a1.7 1.7 0 0 0 1.8.3H9a1.7 1.7 0 0 0 1-1.5V3a2 2 0 1 1 4 0v.1a1.7 1.7 0 0 0 1 1.5 1.7 1.7 0 0 0 1.8-.3l.1-.1a2 2 0 1 1 2.8 2.8l-.1.1a1.7 1.7 0 0 0-.3 1.8V9a1.7 1.7 0 0 0 1.5 1H21a2 2 0 1 1 0 4h-.1a1.7 1.7 0 0 0-1.5 1z"/></svg></button></span></div>
     <div class="datebar">
       <button class="round" id="prevDay" aria-label="前の日">‹</button>
       <div class="d num" id="dayTitle">—</div>
@@ -719,7 +733,7 @@ async function gLoad(ym){
 function gSheetUrl(){return gSheet?'https://docs.google.com/spreadsheets/d/'+gSheet+'/edit':'';}
 // ログインボタン（最初の1回）
 function gStart(){document.getElementById('keyErr').textContent='Googleに移動しています…';gRedirect('select_account');}
-function showSheetLink(){const a=document.getElementById('sheetLink');if(a&&gSheet){a.hidden=false;document.getElementById('gemLink').hidden=false;document.getElementById('gemOpen').hidden=false;}}
+function showSheetLink(){const a=document.getElementById('sheetLink');if(a&&gSheet){a.hidden=false;document.getElementById('gemLink').hidden=false;document.getElementById('gemOpen').hidden=false;document.getElementById('setLink').hidden=false;}}
 // Gemini に貼る指示文（gemini.txt）に、この人の記録シートとアプリのURLを入れて出す
 let gemTpl=null;
 async function openGem(){
@@ -732,6 +746,40 @@ async function openGem(){
   }catch(_){err.textContent='指示文を読み込めませんでした。通信を確認してもう一度開いてください';}
 }
 document.getElementById('gemLink').addEventListener('click',openGem);
+// 「Gemini」ボタン：設定したチャットがあればそこへ、なければ Gemini アプリを開く（アプリがなければウェブ版）
+const LS_GEMURL='pn.app.gemurl',GEM_RE=/^https:\/\/(gemini\.google\.com|g\.co\/gemini)\//;
+function gemUrl(){try{const u=localStorage.getItem(LS_GEMURL)||'';return GEM_RE.test(u)?u:'';}catch(_){return '';}}
+document.getElementById('gemOpen').addEventListener('click',e=>{
+  e.preventDefault();
+  const chat=gemUrl(),web=chat||'https://gemini.google.com/app',ua=navigator.userAgent;
+  if(/Android/i.test(ua)){
+    // Android は Gemini アプリ（com.google.android.apps.bard）で開き、入っていなければブラウザで開く
+    location.href='intent://'+web.replace(/^https:\/\//,'')+'#Intent;scheme=https;package=com.google.android.apps.bard;S.browser_fallback_url='+encodeURIComponent(web)+';end';
+    return;
+  }
+  if(/iPhone|iPad|iPod/i.test(ua)||(/Macintosh/.test(ua)&&navigator.maxTouchPoints>1)){
+    if(chat){location.href=chat;return;} // チャットのリンクは、入っていれば Gemini アプリが受け取る
+    // アプリを開く。入っていなくて画面が残ったままなら、ウェブ版へ
+    let gone=false;const off=()=>{if(document.hidden)gone=true;};
+    document.addEventListener('visibilitychange',off);
+    setTimeout(()=>{document.removeEventListener('visibilitychange',off);if(!gone&&!document.hidden)location.href=web;},1500);
+    location.href='googlegemini://';
+    return;
+  }
+  window.open(web,'_blank','noopener');
+});
+// 設定
+function openSet(){document.getElementById('setGem').value=gemUrl();document.getElementById('setErr').textContent='';document.getElementById('setPanel').hidden=false;}
+document.getElementById('setLink').addEventListener('click',openSet);
+document.getElementById('setGem').addEventListener('input',()=>{document.getElementById('setErr').textContent='';});
+document.getElementById('setClose').addEventListener('click',()=>{document.getElementById('setPanel').hidden=true;});
+document.getElementById('setSave').addEventListener('click',()=>{
+  const v=document.getElementById('setGem').value.trim(),err=document.getElementById('setErr');
+  if(v&&!GEM_RE.test(v)){err.textContent='https://gemini.google.com/ で始まるリンクを貼り付けてください';return;}
+  try{v?localStorage.setItem(LS_GEMURL,v):localStorage.removeItem(LS_GEMURL);}catch(_){}
+  document.getElementById('setPanel').hidden=true;
+});
+['touchstart','touchmove','touchend'].forEach(t=>document.getElementById('setPanel').addEventListener(t,e=>e.stopPropagation(),{passive:true}));
 document.getElementById('gemClose').addEventListener('click',()=>{document.getElementById('gemPanel').hidden=true;});
 document.getElementById('gemCopy').addEventListener('click',async()=>{
   const ta=document.getElementById('gemText'),b=document.getElementById('gemCopy');if(!ta.value)return;
@@ -1235,7 +1283,7 @@ window.addEventListener('resize',()=>{placeWeek(false);if(sheetShown){sheetH=she
     bar.style.height=(d>.5?d+top0:0)+'px'; // 見本の帯がある時はその分も埋める
     if(!busy){icon.style.opacity=d>=GO?1:Math.min(.45,d/GO*.45);icon.style.transform='rotate('+(Math.min(d,GO)/GO*270)+'deg) scale('+(d>=GO?1.15:1)+')';}
   });
-  const free=()=>window.scrollY<=0&&!sheetShown&&$('keyPanel').hidden&&$('gemPanel').hidden&&$('mngPanel').hidden;
+  const free=()=>window.scrollY<=0&&!sheetShown&&$('keyPanel').hidden&&$('gemPanel').hidden&&$('setPanel').hidden&&$('mngPanel').hidden;
   document.addEventListener('touchstart',e=>{
     y0=null;lock=false;
     if(busy||e.touches.length!==1||!free())return;

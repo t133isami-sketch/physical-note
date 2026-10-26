@@ -81,6 +81,24 @@ img{display:block;max-width:100%}
 .phone.side{flex-basis:230px;translate:0 28px}
 @media (max-width:640px){.phone.side{display:none}.phone{flex-basis:250px}}
 .hero-fade{height:56px;background:linear-gradient(transparent,var(--bg));margin-top:-56px;position:relative}
+/* 入口：やりたいことを選ぶ */
+.hero{padding-bottom:56px}
+.hero h1{font-size:clamp(32px,6vw,56px);letter-spacing:-.03em}
+.choose{list-style:none;display:grid;gap:12px;max-width:640px;margin:28px auto 0;text-align:left}
+.choice{display:grid;grid-template-columns:40px 1fr 20px;gap:14px;align-items:center;background:var(--alt);border-radius:20px;padding:18px 18px;color:var(--ink);border:1px solid transparent;transition:border-color .15s,transform .1s}
+.choice:hover{text-decoration:none;border-color:var(--blue)}
+.choice:active{transform:scale(.99)}
+.choice .cn{width:36px;height:36px;border-radius:50%;background:var(--ink);color:var(--bg);display:grid;place-items:center;font-weight:600}
+.choice b{display:block;font-size:19px;letter-spacing:-.01em;line-height:1.35}
+.choice .ct>span{display:block;color:var(--sub);font-size:15px;margin-top:2px}
+.choice .go{font-size:28px;color:var(--link);line-height:1}
+/* 押す順番（ボタンのような形で並べる） */
+.path{display:flex!important;flex-wrap:wrap;align-items:center;gap:6px 4px;margin-top:8px;grid-column:2}
+.path .k{display:inline-flex;align-items:center;min-height:32px;padding:3px 11px;border-radius:10px;background:var(--bg);border:1px solid var(--line);box-shadow:0 1px 0 var(--line);font-size:14px;font-weight:600;color:var(--ink)}
+.path .k.app{background:transparent;border:0;box-shadow:none;color:var(--sub);padding-left:0;min-width:5em}
+.path .k.go{background:var(--blue);border-color:var(--blue);color:#fff;box-shadow:none}
+.path .ar{color:var(--faint);padding:0 2px}
+.path .ar::before{content:"›"}
 
 /* セクション */
 section{padding:88px 0}
@@ -158,7 +176,8 @@ footer span a+a{margin-left:16px}
 section:not(.alt) .loginway{background:var(--alt)}
 .lsteps{list-style:none;counter-reset:l;display:grid;gap:18px}
 .lsteps li{counter-increment:l;display:grid;grid-template-columns:36px 1fr;column-gap:14px}
-.lsteps li::before{content:counter(l);grid-row:span 2;width:32px;height:32px;border-radius:50%;background:var(--ink);color:var(--bg);display:grid;place-items:center;font-weight:700;font-size:15px}
+.lsteps li>*{grid-column:2}
+.lsteps li::before{content:counter(l);grid-column:1;grid-row:1 / span 4;align-self:start;width:32px;height:32px;border-radius:50%;background:var(--ink);color:var(--bg);display:grid;place-items:center;font-weight:700;font-size:15px}
 .lsteps b{font-size:19px;letter-spacing:-.01em}
 .lsteps span{color:var(--sub);font-size:15px}
 .loginway .acts{margin-top:26px}
@@ -175,65 +194,55 @@ section:not(.alt) .loginway{background:var(--alt)}
   <div class="w">
     <a class="brand" href="#top"><img src="../icon-180.png" alt="">Physical Note</a>
     <nav aria-label="ページ内">
-      <a href="#features">できること</a>
-      <a href="#setup">はじめかた</a>
+      <a href="#setup">アプリをはじめる</a>
+      <a href="guide.html">Gemini導入ガイド</a>
+      <a href="features.html">アプリの使い方</a>
       <a href="#faq">よくある質問</a>
     </nav>
-    <a class="btn cta" href="#setup">はじめる</a>
+    <a class="btn cta" href="guide.html">導入ガイド</a>
   </div>
 </header>
 
 <main id="top">
   <div class="hero">
     <div class="w">
-      <h1>Physical Note</h1>
-      <p class="tag"><span class="nb">食事・体重・トレーニングの</span><span class="nb">記録を、</span><span class="nb">スマホで見られるアプリ。</span></p>
-      <p class="lead"><span class="nb">記録は自分の</span><span class="nb">Googleスプレッドシートに</span><span class="nb">残ります。</span><span class="nb">無料です。</span></p>
-      <div class="ctas">
-        <a class="btn" href="#setup">はじめる</a>
-        <a class="more" href="../demo.html">見本で試す</a>
-      </div>
+      <h1><span class="nb">Physical Note</span> <span class="nb">導入ページ</span></h1>
+      <p class="lead">やりたいことを選んでください。</p>
     </div>
-    <div class="phones">
-      <div class="phone side rv"><img src="img/list.jpg" alt="記録一覧の画面" loading="lazy" width="390" height="844"></div>
-      <div class="phone rv"><img src="img/day.jpg" alt="今日の栄養・体重・トレーニングを表示する画面" width="390" height="844"></div>
-      <div class="phone side rv"><img src="img/graph.jpg" alt="体重とカロリーのグラフ画面" loading="lazy" width="390" height="844"></div>
-    </div>
-    <div class="hero-fade"></div>
-  </div>
-
-  <section id="features">
     <div class="w">
-      <h2 class="h2 rv">できること</h2>
-      <ul class="feats">
-        <li class="rv">
-          <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" aria-hidden="true"><circle cx="12" cy="12" r="9"/><path d="M12 3a9 9 0 0 1 9 9"/></svg>
-          <h3>今日あと何g食べるか</h3>
-          <p>目標のカロリーとP・F・Cまで、残りの量が出ます。</p>
-        </li>
-        <li class="rv">
-          <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><path d="M3 20h18"/><path d="M5 16l5-6 4 3 6-8"/></svg>
-          <h3>体重とカロリーのグラフ</h3>
-          <p>朝と夜の体重、毎日のカロリーを月ごとに見られます。</p>
-        </li>
-        <li class="rv">
-          <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" aria-hidden="true"><path d="M6.5 6.5v11M17.5 6.5v11M3 9.5v5M21 9.5v5M6.5 12h11"/></svg>
-          <h3>トレーニングの記録</h3>
-          <p>部位・時間・セット数を、その日の食事と並べて表示します。</p>
-        </li>
+      <ul class="choose">
+        <li><a class="choice" href="#setup">
+          <span class="cn">1</span>
+          <span class="ct"><b>記録を見るアプリをはじめる</b><span>Googleでログインすると、記録シートが自分のドライブにできます。</span></span>
+          <span class="go" aria-hidden="true">›</span></a></li>
+        <li><a class="choice" href="guide.html">
+          <span class="cn">2</span>
+          <span class="ct"><b>Geminiで記録できるようにする</b><span>Gemini Skills の設定から、書き込みテストまでの導入ガイドです。</span></span>
+          <span class="go" aria-hidden="true">›</span></a></li>
+        <li><a class="choice" href="features.html">
+          <span class="cn">3</span>
+          <span class="ct"><b>アプリの使い方を見る</b><span>画面ごとに、押す場所とできることをまとめています。</span></span>
+          <span class="go" aria-hidden="true">›</span></a></li>
+        <li><a class="choice" href="#faq">
+          <span class="cn">?</span>
+          <span class="ct"><b>よくある質問</b><span>お金・保存場所・記録の書き方など。</span></span>
+          <span class="go" aria-hidden="true">›</span></a></li>
       </ul>
     </div>
-  </section>
+  </div>
 
   <section class="alt" id="setup">
     <div class="wn">
-      <h2 class="h2 rv">はじめかた</h2>
+      <h2 class="h2 rv">記録を見るアプリをはじめる</h2>
       <p class="sub rv" id="setupSub">パソコンで10分ほどです。Googleアカウントがあれば無料で使えます。</p>
       <div class="loginway rv" id="loginWay" hidden>
         <ol class="lsteps">
-          <li><b>Googleでログイン</b><span>自分のGoogleドライブに記録シートが自動でできます。</span></li>
-          <li><b>ホーム画面に追加</b><span>iPhoneは 共有 → ホーム画面に追加、Androidは ⋮ → ホーム画面に追加。</span></li>
-          <li><b>シートに記録する</b><span>アプリ上部の「記録シートを開く」から。AIに頼むこともできます。</span></li>
+          <li><b>Googleでログイン</b><span>下の青いボタンを押します。自分のGoogleドライブに記録シートが自動でできます。</span>
+            <span class="path" aria-label="押す順番"><span class="k go">Googleでログインしてはじめる</span><span class="ar" aria-hidden="true"></span><span class="k">アカウントを選ぶ</span><span class="ar" aria-hidden="true"></span><span class="k">許可</span></span></li>
+          <li><b>ホーム画面に追加</b><span>開いたアプリの画面で、次の順に押します。</span>
+            <span class="path" aria-label="iPhoneで押す順番"><span class="k app">iPhone</span><span class="k">共有</span><span class="ar" aria-hidden="true"></span><span class="k go">ホーム画面に追加</span></span>
+            <span class="path" aria-label="Androidで押す順番"><span class="k app">Android</span><span class="k">⋮</span><span class="ar" aria-hidden="true"></span><span class="k go">ホーム画面に追加</span></span></li>
+          <li><b>シートに記録する</b><span>アプリ上部の「記録シート」から書きます。Geminiに頼む場合は <a href="guide.html">導入ガイド</a> の順に設定します。</span></li>
         </ol>
         <div class="acts"><a class="btn" href="../app/?openExternalBrowser=1">Googleでログインしてはじめる</a></div>
         <p class="note">アプリが触れるのは、このアプリが作った記録シートだけです。ドライブのほかのファイルは見えません。</p>
@@ -318,7 +327,7 @@ section:not(.alt) .loginway{background:var(--alt)}
         <details><summary>お金はかかりますか？</summary><div><p>かかりません。Googleスプレッドシート、Apps Script、このアプリはすべて無料です。</p></div></details>
         <details><summary>記録はどこに保存されますか？</summary><div><p>自分のGoogleドライブにあるスプレッドシートだけです。アプリはシートを直接読みに行くので、間にほかのサーバーはありません。読めるのは、自分のGoogleアカウントでログインしたとき（または自分だけが知っている合言葉があるとき）だけです。</p></div></details>
         <details><summary>iPhoneでもAndroidでも使えますか？</summary><div><p>どちらでも使えます。ブラウザで開いてホーム画面に追加すると、アプリとして使えます。パソコンでも見られます。</p></div></details>
-        <details><summary>記録はどうやって書きますか？</summary><div><p>スマホのGoogleスプレッドシートのアプリから、1行に1件ずつ書きます。書き方はシートの「使い方」タブにあります。</p><p>GeminiやChatGPTなど、Googleドライブにつなげられる AI に頼むこともできます。最初に下の文を渡しておくと、決まった形で書き込んでくれます。</p>
+        <details><summary>記録はどうやって書きますか？</summary><div><p>スマホのGoogleスプレッドシートのアプリから、1行に1件ずつ書きます。書き方はシートの「使い方」タブにあります。</p><p>GeminiやChatGPTなど、Googleドライブにつなげられる AI に頼むこともできます。Geminiを使う場合は、<a href="guide.html">導入ガイド</a>の順に設定すると、読み取り・書き込みのテストまで確認できます。ほかのAIでは、最初に下の文を渡しておくと、決まった形で書き込んでくれます。</p>
           <pre class="prompt" id="aiPrompt">あなたは私の記録係です。Googleドライブの「Physical Note」というスプレッドシートに、私の食事・体重・トレーニングを書き込んでください。
 
 ・1件を1行で、各タブの最後の行の下に追加する。1行目の見出しと列の順番は変えない
@@ -342,7 +351,7 @@ section:not(.alt) .loginway{background:var(--alt)}
 <footer>
   <div class="w">
     <span>Physical Note</span>
-    <span><a href="../demo.html">見本で試す</a><a href="../setup/physical-note.gs" target="_blank" rel="noopener">読み取り用のコード</a><a href="privacy.html">プライバシーポリシー</a></span>
+    <span><a href="guide.html">導入ガイド</a><a href="features.html">アプリの使い方</a><a href="../demo.html">見本で試す</a><a href="../setup/physical-note.gs" target="_blank" rel="noopener">読み取り用のコード</a><a href="privacy.html">プライバシーポリシー</a></span>
   </div>
 </footer>
 <div class="toast" id="toast" role="status" aria-live="polite"></div>
