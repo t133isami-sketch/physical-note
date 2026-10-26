@@ -75,7 +75,7 @@ img{display:block;max-width:100%;height:auto}
 .btn.ghost{background:transparent;color:var(--link);border:1px solid var(--link)}
 .btn.ghost:hover{background:color-mix(in srgb,var(--link) 8%,transparent)}
 .btn.sm{min-height:40px;padding:6px 16px;font-size:15px}
-.btn.done{background:var(--ok);color:#fff;border-color:var(--ok)}
+.btn.done{background:var(--blue);color:#fff;border-color:var(--blue)}
 
 /* 見出し */
 .hero{background:var(--bg);text-align:center;padding:48px 0 40px}
@@ -95,7 +95,7 @@ img{display:block;max-width:100%;height:auto}
 .toc li a:hover{background:var(--alt);text-decoration:none}
 .toc li a[aria-current="true"]{background:var(--alt)}
 .toc .n{width:28px;height:28px;border-radius:50%;border:1.5px solid var(--line);display:grid;place-items:center;font-size:13px;font-weight:600;color:var(--sub);font-variant-numeric:tabular-nums}
-.toc li.ok .n{background:var(--ok);border-color:var(--ok);color:#fff;font-size:0}
+.toc li.ok .n{background:var(--blue);border-color:var(--blue);color:#fff;font-size:0}
 .toc li.ok .n::before{content:"";width:10px;height:5px;border-left:2px solid #fff;border-bottom:2px solid #fff;transform:translateY(-1px) rotate(-45deg)}
 .toc .sm{font-size:15px;line-height:1.4}
 
@@ -123,16 +123,16 @@ th{font-weight:600;color:var(--sub);font-size:13px}
 td:first-child{white-space:nowrap}
 
 /* 種類ごとの枠：どこで操作するか／何を入れるか／どうなれば成功か／注意 */
-.blk{margin-top:16px;border-radius:16px;padding:14px 16px;background:var(--alt);border-left:4px solid var(--c,var(--line))}
+.blk{margin-top:16px;border-radius:16px;padding:14px 16px;background:var(--alt);border-left:4px solid var(--bc,var(--c,var(--line)))}
 .blk>.lbl{display:flex;align-items:center;gap:6px;font-size:13px;font-weight:700;letter-spacing:.04em;color:var(--c,var(--sub))}
 .blk>.lbl svg{width:16px;height:16px;flex:none;fill:none;stroke:currentColor;stroke-width:2;stroke-linecap:round;stroke-linejoin:round}
 .blk>p:first-of-type,.blk>ol:first-of-type,.blk>ul:first-of-type{margin-top:6px}
 .blk.where{--c:var(--link)}
 .blk.input{--c:var(--p2)}
-.blk.check{--c:var(--ok)}
-.blk.warn{--c:var(--ng);background:color-mix(in srgb,var(--ng) 9%,var(--tile))}
-.blk.trouble{--c:var(--faint)}
-.blk.key{--c:var(--ng);background:color-mix(in srgb,var(--ng) 9%,var(--tile));font-weight:600}
+.blk.check{--c:var(--ink);--bc:var(--sub)}
+.blk.warn,.blk.key{--c:var(--ink);--bc:var(--ink);background:color-mix(in srgb,var(--ink) 8%,var(--tile));border-left-width:6px}
+.blk.key{font-weight:600}
+.blk.trouble{--c:var(--sub);--bc:var(--line)}
 
 /* 押す順番（ボタンのような形で並べる） */
 .path{display:flex;flex-wrap:wrap;align-items:center;gap:6px 4px;margin-top:10px;list-style:none;padding:0;counter-reset:none}
@@ -140,7 +140,7 @@ td:first-child{white-space:nowrap}
 .path .k{display:inline-flex;align-items:center;min-height:34px;padding:4px 12px;border-radius:10px;background:var(--tile);border:1px solid var(--line);box-shadow:0 1px 0 var(--line);font-size:15px;font-weight:600;color:var(--ink);line-height:1.3}
 .path .k.app{background:transparent;border-style:dashed;box-shadow:none;color:var(--sub)}
 .path .k.go{background:var(--blue);border-color:var(--blue);color:#fff;box-shadow:none}
-.path .k.on::after{content:"";width:30px;height:18px;margin-left:8px;border-radius:9px;background:radial-gradient(circle at 21px 9px,#fff 6px,transparent 6.5px) var(--ok);flex:none}
+.path .k.on::after{content:"";width:30px;height:18px;margin-left:8px;border-radius:9px;background:radial-gradient(circle at 21px 9px,#fff 6px,transparent 6.5px) var(--blue);flex:none}
 .part ol.path{margin:10px 0 0}
 .path .ar{color:var(--faint);font-size:15px;padding:0 2px}
 .path .ar::before{content:"›"}
@@ -165,7 +165,7 @@ td:first-child{white-space:nowrap}
 .cp details[open]+.pv,.cp .pv[hidden]{display:none}
 .copy{flex:none;display:inline-flex;align-items:center;gap:4px;min-height:40px;padding:6px 14px;border-radius:980px;border:1px solid var(--link);background:var(--bg);color:var(--link);font:inherit;font-size:14px;font-weight:600;cursor:pointer}
 .copy:hover{background:color-mix(in srgb,var(--link) 8%,var(--bg))}
-.copy.ok{border-color:var(--ok);color:var(--ok)}
+.copy.ok{background:var(--link);border-color:var(--link);color:#fff}
 .copy svg{width:15px;height:15px;fill:none;stroke:currentColor;stroke-width:2;stroke-linecap:round;stroke-linejoin:round}
 
 /* 開閉 */
@@ -197,7 +197,7 @@ details.more>div{padding:0 16px 16px}
 .chk{list-style:none;margin:16px 0 0!important}
 .chk li{margin:0}
 .chk label{display:flex;gap:12px;align-items:flex-start;padding:10px 4px;min-height:44px;border-bottom:1px solid var(--line);cursor:pointer}
-.chk input{flex:none;width:22px;height:22px;margin-top:3px;accent-color:var(--ok)}
+.chk input{flex:none;width:22px;height:22px;margin-top:3px;accent-color:var(--blue)}
 .chk input:checked+span{color:var(--sub)}
 .chk-sum{margin-top:12px;font-weight:600}
 
@@ -215,7 +215,7 @@ details.more>div{padding:0 16px 16px}
 .sheetform input:focus{outline:0;border-color:var(--blue);box-shadow:0 0 0 4px color-mix(in srgb,var(--blue) 22%,transparent)}
 .msg{font-size:14px;margin-top:8px;min-height:1.4em}
 .msg.ng{color:var(--ng)} .msg.ok{color:var(--ok)}
-.banner{background:color-mix(in srgb,var(--ng) 10%,var(--bg));border-bottom:1px solid color-mix(in srgb,var(--ng) 40%,transparent);font-size:14px}
+.banner{background:var(--alt);border-bottom:2px solid var(--ink);font-size:14px}
 .banner .w{display:flex;gap:12px;align-items:center;flex-wrap:wrap;padding-top:8px;padding-bottom:8px}
 .banner button{font:inherit;color:var(--link);background:none;border:0;cursor:pointer;min-height:36px;font-weight:600}
 
@@ -270,7 +270,7 @@ footer span a+a{margin-left:16px}
         <a class="btn" href="#intro">はじめる</a>
         <a href="../app/?openExternalBrowser=1">閲覧アプリを開く ›</a>
       </div>
-      <noscript><p class="note" style="color:var(--ng)">このページのコピーボタンと記録原本のID表示にはJavaScriptが必要です。ブラウザの設定でJavaScriptをオンにしてください。</p></noscript>
+      <noscript><p class="note" style="color:var(--ink)">このページのコピーボタンと記録原本のID表示にはJavaScriptが必要です。ブラウザの設定でJavaScriptをオンにしてください。</p></noscript>
     </div>
   </div>
 
@@ -281,11 +281,11 @@ footer span a+a{margin-left:16px}
       <ul class="legend" aria-label="このページの見方">
         <li style="--c:var(--link)"><b>操作する場所</b><span>開くアプリや画面</span></li>
         <li style="--c:var(--p2)"><b>入力する内容</b><span>「コピー」で貼り付ける文</span></li>
-        <li style="--c:var(--ok)"><b>成功の確認</b><span>こうなればOK</span></li>
-        <li style="--c:var(--ng)"><b>注意</b><span>必ず読んでください</span></li>
+        <li style="--c:var(--sub)"><b style="color:var(--ink)">成功の確認</b><span>こうなればOK</span></li>
+        <li style="--c:var(--ink);border-left-width:6px;background:color-mix(in srgb,var(--ink) 8%,var(--tile))"><b>注意</b><span>必ず読んでください</span></li>
       </ul>
       <p class="path" aria-hidden="true" style="margin-top:12px"><span class="k app">アプリ</span><span class="ar"></span><span class="k">押す場所</span><span class="ar"></span><span class="k go">最後に押す</span></p>
-      <p class="note" style="margin-top:4px">点線の枠は開くアプリです。そのあと白い枠を左から順に押します。青い枠が最後に押す場所、緑のスイッチはオンにする項目です。</p>
+      <p class="note" style="margin-top:4px">点線の枠は開くアプリです。そのあと白い枠を左から順に押します。青い枠が最後に押す場所、青いスイッチはオンにする項目です。</p>
       <ol id="tocList">
         <li><a href="#intro"><span class="n" aria-hidden="true">0</span><span class="sm">はじめに</span></a></li>
         <li data-s="1"><a href="#s1"><span class="n">1</span><span class="sm">Googleアカウントを準備する</span></a></li>
@@ -1534,7 +1534,7 @@ if('IntersectionObserver' in window){
   function sum(){
     const n=inputs.filter(i=>i.checked).length;
     $('chkSum').textContent=n===inputs.length?'すべて確認できました。日常の記録を開始できます。':n+' / '+inputs.length+' 確認済み';
-    $('chkSum').style.color=n===inputs.length?'var(--ok)':'';
+    
   }
   box.addEventListener('change',()=>{store.set('pn-guide-check',JSON.stringify(inputs.filter(i=>i.checked).map(i=>i.value)));sum();});
   sum();
