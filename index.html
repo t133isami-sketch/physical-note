@@ -183,6 +183,7 @@ svg text{font-family:inherit}
 .keyc .kerr{color:var(--o700);min-height:1.5em}
 .links{display:flex;gap:6px}
 .links[hidden]{display:none}
+.sheetlink.gear{display:flex;align-items:center;padding:4px 7px}
 .sheetlink{font-size:12px;font-weight:700;color:#fff;opacity:.9;text-decoration:none;padding:4px 10px;border-radius:999px;background:rgba(255,255,255,.16)}
 .sheetlink[hidden]{display:none}
 .gemc{max-height:100%;overflow-y:auto;-webkit-overflow-scrolling:touch}
@@ -253,12 +254,24 @@ svg text{font-family:inherit}
     <p class="kerr" id="gptErr"></p>
   </div>
 </div>
+<div class="keyp" id="setPanel" hidden>
+  <div class="keyc gemc">
+    <h2>設定</h2>
+    <h3 style="font-size:14px;margin-top:16px">「ChatGPT」ボタンで開くチャット</h3>
+    <p>いつも使う ChatGPT のチャットのリンクを貼り付けると、「ChatGPT」ボタンでそのチャットが開きます。空欄なら「フィジカルノート」プロジェクトが開きます。</p>
+    <p>リンクは、ブラウザで ChatGPT のチャットを開いたときのアドレス（https://chatgpt.com/ で始まるもの）です。</p>
+    <input id="setGpt" type="url" inputmode="url" autocapitalize="off" autocorrect="off" spellcheck="false" placeholder="https://chatgpt.com/…" aria-label="ChatGPTのチャットのリンク">
+    <button type="button" id="setSave">保存</button>
+    <button type="button" class="sub" id="setClose">閉じる</button>
+    <p class="kerr" id="setErr"></p>
+  </div>
+</div>
 <div class="wrap">
 
 <!-- 日ごと -->
 <section id="v-day">
   <div class="top">
-    <div class="trow"><span class="t">フィジカルノート</span><span class="links" id="gptLinks"><a class="sheetlink" id="gptOpen" target="_blank" rel="noopener">ChatGPT</a><button class="sheetlink" id="gptLink">指示文</button></span></div>
+    <div class="trow"><span class="t">フィジカルノート</span><span class="links" id="gptLinks"><a class="sheetlink" id="gptOpen" rel="noopener">ChatGPT</a><button class="sheetlink" id="gptLink">指示文</button><button class="sheetlink gear" id="setLink" aria-label="設定"><svg width="15" height="15" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.2" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><circle cx="12" cy="12" r="3"/><path d="M19.4 15a1.7 1.7 0 0 0 .3 1.8l.1.1a2 2 0 1 1-2.8 2.8l-.1-.1a1.7 1.7 0 0 0-1.8-.3 1.7 1.7 0 0 0-1 1.5V21a2 2 0 1 1-4 0v-.1a1.7 1.7 0 0 0-1.1-1.5 1.7 1.7 0 0 0-1.8.3l-.1.1a2 2 0 1 1-2.8-2.8l.1-.1a1.7 1.7 0 0 0 .3-1.8 1.7 1.7 0 0 0-1.5-1H3a2 2 0 1 1 0-4h.1a1.7 1.7 0 0 0 1.5-1.1 1.7 1.7 0 0 0-.3-1.8l-.1-.1a2 2 0 1 1 2.8-2.8l.1.1a1.7 1.7 0 0 0 1.8.3H9a1.7 1.7 0 0 0 1-1.5V3a2 2 0 1 1 4 0v.1a1.7 1.7 0 0 0 1 1.5 1.7 1.7 0 0 0 1.8-.3l.1-.1a2 2 0 1 1 2.8 2.8l-.1.1a1.7 1.7 0 0 0-.3 1.8V9a1.7 1.7 0 0 0 1.5 1H21a2 2 0 1 1 0 4h-.1a1.7 1.7 0 0 0-1.5 1z"/></svg></button></span></div>
     <div class="datebar">
       <button class="round" id="prevDay" aria-label="前の日">‹</button>
       <div class="d num" id="dayTitle">—</div>
@@ -415,7 +428,28 @@ if(DEMO)document.getElementById('demoBar').hidden=false;
 // ChatGPT の「フィジカルノート」プロジェクトへ飛ぶボタンと、そこに入れている指示文（chatgpt.txt）
 // chatgpt.com のリンクは、iPhone に ChatGPT アプリが入っていればアプリで開く
 const CHATGPT_URL='https://chatgpt.com/g/g-p-6adacd56cec48191952dcab46fca562a';
+const LS_GPTURL='physicalnote.gpturl',GPT_RE=/^https:\/\/(chatgpt\.com|chat\.openai\.com)\//;
+function gptUrl(){try{const u=localStorage.getItem(LS_GPTURL)||'';return GPT_RE.test(u)?u:'';}catch(_){return '';}}
 document.getElementById('gptOpen').href=CHATGPT_URL;
+document.getElementById('gptOpen').addEventListener('click',e=>{
+  e.preventDefault();
+  const url=gptUrl()||CHATGPT_URL,ua=navigator.userAgent;
+  // Android は ChatGPT アプリ（com.openai.chatgpt）で開き、入っていなければブラウザで開く
+  if(/Android/i.test(ua)){location.href='intent://'+url.replace(/^https:\/\//,'')+'#Intent;scheme=https;package=com.openai.chatgpt;S.browser_fallback_url='+encodeURIComponent(url)+';end';return;}
+  // iPhone は同じ画面でリンクを開くと、入っていれば ChatGPT アプリが受け取る
+  if(/iPhone|iPad|iPod/i.test(ua)||(/Macintosh/.test(ua)&&navigator.maxTouchPoints>1)){location.href=url;return;}
+  window.open(url,'_blank','noopener');
+});
+// 設定
+document.getElementById('setLink').addEventListener('click',()=>{document.getElementById('setGpt').value=gptUrl();document.getElementById('setErr').textContent='';document.getElementById('setPanel').hidden=false;});
+document.getElementById('setGpt').addEventListener('input',()=>{document.getElementById('setErr').textContent='';});
+document.getElementById('setClose').addEventListener('click',()=>{document.getElementById('setPanel').hidden=true;});
+document.getElementById('setSave').addEventListener('click',()=>{
+  const v=document.getElementById('setGpt').value.trim(),err=document.getElementById('setErr');
+  if(v&&!GPT_RE.test(v)){err.textContent='https://chatgpt.com/ で始まるリンクを貼り付けてください';return;}
+  try{v?localStorage.setItem(LS_GPTURL,v):localStorage.removeItem(LS_GPTURL);}catch(_){}
+  document.getElementById('setPanel').hidden=true;
+});
 if(DEMO)document.getElementById('gptLinks').hidden=true;
 document.getElementById('gptLink').addEventListener('click',async()=>{
   const box=document.getElementById('gptPanel'),ta=document.getElementById('gptText'),err=document.getElementById('gptErr');
@@ -430,7 +464,7 @@ document.getElementById('gptCopy').addEventListener('click',async()=>{
   try{await navigator.clipboard.writeText(ta.value);}catch(_){ta.select();document.execCommand('copy');}
   b.textContent='コピーしました';setTimeout(()=>{b.textContent='コピー';},2000);
 });
-['touchstart','touchmove','touchend'].forEach(t=>document.getElementById('gptPanel').addEventListener(t,e=>e.stopPropagation(),{passive:true}));
+['touchstart','touchmove','touchend'].forEach(t=>['gptPanel','setPanel'].forEach(id=>document.getElementById(id).addEventListener(t,e=>e.stopPropagation(),{passive:true})));
 
 const TYPES=['選択日の食事','日別まとめ','食事','朝夜体重','月曜体組成','レシピ','トレーニング'];
 const WD='日月火水木金土';
@@ -655,7 +689,7 @@ function paintDay(){
   $('wAm').textContent=row.am!=null?fmt1(row.am)+' kg':'未記録';
   $('wPm').textContent=row.pm!=null?fmt1(row.pm)+' kg':'未記録';
   const tr=d.training.filter(t=>t.date===k);
-  $('train').innerHTML=tr.length?tr.map(t=>`<div class="item"><span class="tag p">${esc(t.kind)}</span><div class="body">${esc(t.part||(t.kind==='オフ'?'オフ':'部位未記入'))}<small>${t.minutes!=null?fmtH(t.minutes):'時間未記入'}${t.sets!=null?' ・ '+t.sets+'セット':''}${t.detail?' ・ '+esc(t.detail):''}</small></div></div>`).join(''):'<div class="empty">記録なし</div>';
+  $('train').innerHTML=tr.length?tr.map(t=>`<div class="item"><span class="tag p">${esc(t.kind)}</span><div class="body">${esc(t.part||(t.kind==='オフ'?'オフ':'部位未記入'))}<small>${t.minutes!=null?fmtH(t.minutes):'時間未記入'}${t.sets!=null?' ・ '+esc(t.sets)+'セット':''}${t.detail?' ・ '+esc(t.detail):''}</small></div></div>`).join(''):'<div class="empty">記録なし</div>';
   $('mealTitle').textContent='食事（'+meals.length+'件）';
   $('meals').innerHTML=meals.length?meals.map(mealItem).join(''):'<div class="empty">この日の食事はまだ記録されていません</div>';
 }
@@ -738,10 +772,10 @@ function paintList(){
   }else if(S.type==='月曜体組成'){
     html=card('月曜体組成',d.body.length?d.body.slice().sort((a,b)=>byDate(a.monday,b.monday)).map(b=>`<div class="item"><span class="tag b">${esc(b.status||'—')}</span><div class="body">対象 ${dayLabel(b.monday)}<small class="num">体重 ${fmt1(b.weight)} kg ・体脂肪率 ${fmt1(b.fat)} % ・筋肉量 ${fmt1(b.muscle)} kg${b.measured?' ・測定 '+dayLabel(b.measured):''}</small></div></div>`).join(''):none);
   }else if(S.type==='レシピ'){
-    html=card('レシピ（最新版）',d.recipes.length?d.recipes.map(r=>`<div class="item"><span class="tag y">v${r.ver}</span><div class="body">${esc(r.name)}<small class="num">${r.kcal!=null?'1食 '+fmt(r.kcal)+' kcal ・P '+fmt(r.p)+' / F '+fmt(r.f)+' / C '+fmt(r.c):'栄養未確定'} ・${r.servings||'—'}食分<br>${esc(r.status)}</small></div></div>`).join(''):'<div class="empty">レシピはまだありません</div>');
+    html=card('レシピ（最新版）',d.recipes.length?d.recipes.map(r=>`<div class="item"><span class="tag y">v${esc(r.ver)}</span><div class="body">${esc(r.name)}<small class="num">${r.kcal!=null?'1食 '+fmt(r.kcal)+' kcal ・P '+fmt(r.p)+' / F '+fmt(r.f)+' / C '+fmt(r.c):'栄養未確定'} ・${esc(r.servings||'—')}食分<br>${esc(r.status)}</small></div></div>`).join(''):'<div class="empty">レシピはまだありません</div>');
   }else if(S.type==='トレーニング'){
     const ts=d.training.slice().sort((a,b)=>byDate(a.date,b.date));
-    html=card('トレーニング',ts.length?ts.map(t=>`<div class="item"><div class="body"><b>${dayLabel(t.date)}</b>　${esc(t.kind==='オフ'?'オフ':(t.part||'部位未記入'))}<small>${t.minutes!=null?fmtH(t.minutes):'時間未記入'}${t.sets!=null?' ・'+t.sets+'セット':''}${t.detail?' ・'+esc(t.detail):''}${t.memo?' ・'+esc(t.memo):''}</small></div></div>`).join(''):none);
+    html=card('トレーニング',ts.length?ts.map(t=>`<div class="item"><div class="body"><b>${dayLabel(t.date)}</b>　${esc(t.kind==='オフ'?'オフ':(t.part||'部位未記入'))}<small>${t.minutes!=null?fmtH(t.minutes):'時間未記入'}${t.sets!=null?' ・'+esc(t.sets)+'セット':''}${t.detail?' ・'+esc(t.detail):''}${t.memo?' ・'+esc(t.memo):''}</small></div></div>`).join(''):none);
   }
   body.innerHTML=html;
 }
@@ -853,7 +887,7 @@ window.addEventListener('resize',()=>{placeWeek(false);if(sheetShown){sheetH=she
     bar.style.height=(d>.5?d+top0:0)+'px'; // 見本の帯がある時はその分も埋める
     if(!busy){icon.style.opacity=d>=GO?1:Math.min(.45,d/GO*.45);icon.style.transform='rotate('+(Math.min(d,GO)/GO*270)+'deg) scale('+(d>=GO?1.15:1)+')';}
   });
-  const free=()=>window.scrollY<=0&&!sheetShown&&$('keyPanel').hidden&&$('gptPanel').hidden;
+  const free=()=>window.scrollY<=0&&!sheetShown&&$('keyPanel').hidden&&$('gptPanel').hidden&&$('setPanel').hidden;
   document.addEventListener('touchstart',e=>{
     y0=null;lock=false;
     if(busy||e.touches.length!==1||!free())return;
