@@ -144,7 +144,7 @@ button:disabled{opacity:.35;transform:none;cursor:default}
 /* 読み込み表示とエラー */
 body::before{content:"";position:fixed;top:0;left:0;right:0;height:env(safe-area-inset-top);background:var(--p800);z-index:45}
 /* 下に引っ張って更新：引っ張った分のすき間も紫で埋める */
-body{overscroll-behavior-y:none}
+body{overscroll-behavior-y:none;min-height:100vh}
 .ptr{position:fixed;top:env(safe-area-inset-top);left:0;right:0;height:0;z-index:44;background:var(--p800);color:#fff;display:flex;align-items:center;justify-content:center;overflow:hidden;pointer-events:none}
 .ptr svg{opacity:0}
 .ptr.spin svg{opacity:1;animation:ptrspin .8s linear infinite}
@@ -197,6 +197,19 @@ svg text{font-family:inherit}
 </style>
 </head>
 <body>
+<script>
+// iPhoneのホーム画面アプリでは、中身が画面より短いと下のタブバーが上に浮いてすき間ができる。
+// 中身の高さを常に画面いっぱい以上にして、どの画面でもタブバーやシートが一番下にくるようにする
+(function(){
+  if(!(navigator.standalone||matchMedia('(display-mode: standalone)').matches))return;
+  const fit=()=>{
+    const land=matchMedia('(orientation: landscape)').matches;
+    const h=land?Math.min(screen.width,screen.height):Math.max(screen.width,screen.height);
+    document.body.style.minHeight=Math.max(innerHeight,h)+'px';
+  };
+  fit();addEventListener('resize',fit);addEventListener('orientationchange',()=>setTimeout(fit,300));
+})();
+</script>
 <div class="load" id="load"></div>
 <div class="ptr" id="ptr" aria-hidden="true"><svg width="22" height="22" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.4" stroke-linecap="round" stroke-linejoin="round"><path d="M20 11a8 8 0 1 0-2.3 5.7"/><path d="M20 4v7h-7"/></svg></div>
 <div class="demo-bar" id="demoBar" hidden>見本データで表示しています（実際の記録ではありません）</div>
