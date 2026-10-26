@@ -2,12 +2,12 @@
 <html lang="ja">
 <head>
 <meta charset="utf-8">
-<title>フィジカルノート</title>
+<title>Physical Note</title>
 <meta name="viewport" content="width=device-width, initial-scale=1, viewport-fit=cover">
 <meta name="apple-mobile-web-app-capable" content="yes">
 <meta name="mobile-web-app-capable" content="yes">
 <meta name="apple-mobile-web-app-status-bar-style" content="black-translucent">
-<meta name="apple-mobile-web-app-title" content="フィジカルノート">
+<meta name="apple-mobile-web-app-title" content="Physical Note">
 <meta name="theme-color" content="#4b2e83">
 <meta name="referrer" content="no-referrer">
 <link rel="preconnect" href="https://script.google.com" crossorigin>
@@ -138,6 +138,7 @@ button:disabled{opacity:.35;transform:none;cursor:default}
 .cal td i{display:block;width:5px;height:5px;border-radius:50%;margin-top:1px}
 .cal td i.on{background:var(--o500)}
 .legend{font-size:11.5px;color:var(--sub);margin-top:4px}
+.legend em{font-style:normal}
 .legend span{display:inline-block;width:6px;height:6px;border-radius:50%;background:var(--o500);vertical-align:middle;margin-right:4px}
 
 /* 読み込み表示とエラー */
@@ -202,7 +203,7 @@ svg text{font-family:inherit}
 .keyc .open{display:block;text-align:center;margin-top:14px;padding:13px 0;border-radius:14px;background:var(--p800);color:#fff;font-weight:700;font-size:15px;text-decoration:none}
 .keyc .yrs{display:flex;flex-wrap:wrap;gap:8px;margin-top:14px}
 .keyc .yrs button{width:auto;margin:0;padding:8px 14px;border-radius:18px;font-size:13px;background:var(--bg);color:var(--p800);border:1px solid #d9cfe9}
-.keyc .yrs button.on{background:var(--p800);color:#fff;border-color:var(--p800)}
+.keyc .yrs button.on,.keyc .yrs button[aria-pressed="true"]{background:var(--p800);color:#fff;border-color:var(--p800)}
 .keyc .sub{background:transparent;color:var(--p800);border:1px solid #d9cfe9}
 .ybar{margin:12px 16px 0;padding:12px 14px;border-radius:14px;background:var(--p100);color:var(--p800);font-size:13px;display:flex;align-items:center;gap:10px}
 .ybar[hidden]{display:none}
@@ -245,52 +246,54 @@ svg text{font-family:inherit}
 </script>
 <div class="load" id="load"></div>
 <div class="ptr" id="ptr" aria-hidden="true"><svg width="22" height="22" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.4" stroke-linecap="round" stroke-linejoin="round"><path d="M20 11a8 8 0 1 0-2.3 5.7"/><path d="M20 4v7h-7"/></svg></div>
-<div class="demo-bar" id="demoBar" hidden>見本データで表示しています（実際の記録ではありません）</div>
+<div class="demo-bar" id="demoBar" hidden data-en="Showing sample data (not real records)">見本データで表示しています（実際の記録ではありません）</div>
 <div class="keyp" id="keyPanel" hidden>
   <form class="keyc" id="keyForm" autocomplete="off">
-    <h2>フィジカルノート</h2>
-    <p>最初の1回だけ、お知らせした合言葉を貼り付けてください。</p>
-    <input id="keyIn" type="text" inputmode="text" autocapitalize="off" autocorrect="off" spellcheck="false" aria-label="合言葉">
-    <button type="submit">はじめる</button>
+    <h2>Physical Note</h2>
+    <p data-en="Paste your passcode. You only need to do this once.">最初の1回だけ、お知らせした合言葉を貼り付けてください。</p>
+    <input id="keyIn" type="text" inputmode="text" autocapitalize="off" autocorrect="off" spellcheck="false" aria-label="合言葉" data-en-aria="Passcode">
+    <button type="submit" data-en="Start">はじめる</button>
     <p class="kerr" id="keyErr"></p>
-    <p><a href="demo.html" style="color:var(--p600);font-weight:700">見本データで試す ›</a></p>
+    <p><a href="demo.html" style="color:var(--p600);font-weight:700" data-en="Try with sample data ›">見本データで試す ›</a></p>
   </form>
 </div>
 <div class="keyp" id="gptPanel" hidden>
   <div class="keyc gemc">
-    <h2>ChatGPT用の指示文</h2>
-    <p>ChatGPTの「フィジカルノート」プロジェクトに入れている指示文です。書き直したいときや入れ直すときに使います。</p>
+    <h2 data-en="Instructions for ChatGPT">ChatGPT用の指示文</h2>
+    <p data-en="These are the instructions in your ChatGPT project 「フィジカルノート」. Use them when you rewrite or re-enter the instructions.">ChatGPTの「フィジカルノート」プロジェクトに入れている指示文です。書き直したいときや入れ直すときに使います。</p>
     <ol>
-      <li>下の「コピー」を押す</li>
-      <li>ChatGPTアプリで「フィジカルノート」プロジェクトを開き、右上の「…」から「指示」を開く</li>
-      <li>中身を入れ替えて保存</li>
+      <li data-en="Tap “Copy” below">下の「コピー」を押す</li>
+      <li data-en="In the ChatGPT app, open the 「フィジカルノート」 project, then open Instructions from “…” at the top right">ChatGPTアプリで「フィジカルノート」プロジェクトを開き、右上の「…」から「指示」を開く</li>
+      <li data-en="Replace the text and save">中身を入れ替えて保存</li>
     </ol>
-    <textarea id="gptText" readonly aria-label="ChatGPT用の指示文"></textarea>
-    <button type="button" id="gptCopy">コピー</button>
-    <button type="button" class="sub" id="gptClose">閉じる</button>
+    <textarea id="gptText" readonly aria-label="ChatGPT用の指示文" data-en-aria="Instructions for ChatGPT"></textarea>
+    <button type="button" id="gptCopy" data-en="Copy">コピー</button>
+    <button type="button" class="sub" id="gptClose" data-en="Close">閉じる</button>
     <p class="kerr" id="gptErr"></p>
   </div>
 </div>
 <div class="keyp" id="yearPanel" hidden>
   <div class="keyc gemc">
-    <h2>記録シート</h2>
+    <h2 data-en="Record sheet">記録シート</h2>
     <a class="open" id="sheetOpen" target="_blank" rel="noopener">記録シートを開く</a>
-    <h3>見る年</h3>
-    <p>記録は1年に1つのファイルです。アプリがふだん読むのは今年のファイルだけで、前の年は選んだときだけ読み込みます。</p>
+    <h3 data-en="Year to view">見る年</h3>
+    <p data-en="Records are kept in one file per year. The app normally reads only this year’s file, and loads an earlier year only when you pick it.">記録は1年に1つのファイルです。アプリがふだん読むのは今年のファイルだけで、前の年は選んだときだけ読み込みます。</p>
     <div class="yrs" id="yearList"></div>
-    <p>新しい年のファイル（「フィジカルノート｜2027」または「栄養・増量管理 2027年」）ができると、ここに自動で加わります。</p>
-    <button type="button" class="sub" id="yearClose">閉じる</button>
+    <p data-en="When a file for a new year (「フィジカルノート｜2027」 or 「栄養・増量管理 2027年」) is made, it is added here automatically.">新しい年のファイル（「フィジカルノート｜2027」または「栄養・増量管理 2027年」）ができると、ここに自動で加わります。</p>
+    <button type="button" class="sub" id="yearClose" data-en="Close">閉じる</button>
   </div>
 </div>
 <div class="keyp" id="setPanel" hidden>
   <div class="keyc gemc">
-    <h2>設定</h2>
-    <h3 style="font-size:14px;margin-top:16px">「ChatGPT」ボタンで開くチャット</h3>
-    <p>いつも使う ChatGPT のチャットのリンクを貼り付けると、「ChatGPT」ボタンでそのチャットが開きます。空欄なら「フィジカルノート」プロジェクトが開きます。</p>
-    <p>リンクは、ブラウザで ChatGPT のチャットを開いたときのアドレス（https://chatgpt.com/ で始まるもの）です。</p>
-    <input id="setGpt" type="url" inputmode="url" autocapitalize="off" autocorrect="off" spellcheck="false" placeholder="https://chatgpt.com/…" aria-label="ChatGPTのチャットのリンク">
-    <button type="button" id="setSave">保存</button>
-    <button type="button" class="sub" id="setClose">閉じる</button>
+    <h2 data-en="Settings">設定</h2>
+    <h3 style="font-size:14px;margin-top:16px" data-en="Language">表示の言語</h3>
+    <div class="yrs" id="langSel"><button type="button" data-lang="ja">日本語</button><button type="button" data-lang="en">English</button></div>
+    <h3 style="font-size:14px;margin-top:16px" data-en="Chat opened by the “ChatGPT” button">「ChatGPT」ボタンで開くチャット</h3>
+    <p data-en="Paste the link to the ChatGPT chat you use, and the “ChatGPT” button opens that chat. If it is empty, the 「フィジカルノート」 project opens.">いつも使う ChatGPT のチャットのリンクを貼り付けると、「ChatGPT」ボタンでそのチャットが開きます。空欄なら「フィジカルノート」プロジェクトが開きます。</p>
+    <p data-en="The link is the address shown when you open the chat in a browser (it starts with https://chatgpt.com/).">リンクは、ブラウザで ChatGPT のチャットを開いたときのアドレス（https://chatgpt.com/ で始まるもの）です。</p>
+    <input id="setGpt" type="url" inputmode="url" autocapitalize="off" autocorrect="off" spellcheck="false" placeholder="https://chatgpt.com/…" aria-label="ChatGPTのチャットのリンク" data-en-aria="Link to a ChatGPT chat">
+    <button type="button" id="setSave" data-en="Save">保存</button>
+    <button type="button" class="sub" id="setClose" data-en="Close">閉じる</button>
     <p class="kerr" id="setErr"></p>
   </div>
 </div>
@@ -299,23 +302,23 @@ svg text{font-family:inherit}
 <!-- 日ごと -->
 <section id="v-day">
   <div class="top">
-    <div class="trow"><span class="t">フィジカルノート</span><span class="tbtns"><span class="links" id="gptLinks"><a class="sheetlink" id="gptOpen" rel="noopener">ChatGPT</a><button class="sheetlink" id="gptLink">指示文</button><button class="sheetlink" id="yearPick">記録シート</button><button class="sheetlink gear" id="setLink" aria-label="設定"><svg width="15" height="15" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.2" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><circle cx="12" cy="12" r="3"/><path d="M19.4 15a1.7 1.7 0 0 0 .3 1.8l.1.1a2 2 0 1 1-2.8 2.8l-.1-.1a1.7 1.7 0 0 0-1.8-.3 1.7 1.7 0 0 0-1 1.5V21a2 2 0 1 1-4 0v-.1a1.7 1.7 0 0 0-1.1-1.5 1.7 1.7 0 0 0-1.8.3l-.1.1a2 2 0 1 1-2.8-2.8l.1-.1a1.7 1.7 0 0 0 .3-1.8 1.7 1.7 0 0 0-1.5-1H3a2 2 0 1 1 0-4h.1a1.7 1.7 0 0 0 1.5-1.1 1.7 1.7 0 0 0-.3-1.8l-.1-.1a2 2 0 1 1 2.8-2.8l.1.1a1.7 1.7 0 0 0 1.8.3H9a1.7 1.7 0 0 0 1-1.5V3a2 2 0 1 1 4 0v.1a1.7 1.7 0 0 0 1 1.5 1.7 1.7 0 0 0 1.8-.3l.1-.1a2 2 0 1 1 2.8 2.8l-.1.1a1.7 1.7 0 0 0-.3 1.8V9a1.7 1.7 0 0 0 1.5 1H21a2 2 0 1 1 0 4h-.1a1.7 1.7 0 0 0-1.5 1z"/></svg></button></span></span></div>
+    <div class="trow"><span class="t">Physical Note</span><span class="tbtns"><span class="links" id="gptLinks"><a class="sheetlink" id="gptOpen" rel="noopener">ChatGPT</a><button class="sheetlink" id="gptLink" data-en="Prompt">指示文</button><button class="sheetlink" id="yearPick" data-en="Sheet">記録シート</button><button class="sheetlink gear" id="setLink" aria-label="設定" data-en-aria="Settings"><svg width="15" height="15" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.2" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><circle cx="12" cy="12" r="3"/><path d="M19.4 15a1.7 1.7 0 0 0 .3 1.8l.1.1a2 2 0 1 1-2.8 2.8l-.1-.1a1.7 1.7 0 0 0-1.8-.3 1.7 1.7 0 0 0-1 1.5V21a2 2 0 1 1-4 0v-.1a1.7 1.7 0 0 0-1.1-1.5 1.7 1.7 0 0 0-1.8.3l-.1.1a2 2 0 1 1-2.8-2.8l.1-.1a1.7 1.7 0 0 0 .3-1.8 1.7 1.7 0 0 0-1.5-1H3a2 2 0 1 1 0-4h.1a1.7 1.7 0 0 0 1.5-1.1 1.7 1.7 0 0 0-.3-1.8l-.1-.1a2 2 0 1 1 2.8-2.8l.1.1a1.7 1.7 0 0 0 1.8.3H9a1.7 1.7 0 0 0 1-1.5V3a2 2 0 1 1 4 0v.1a1.7 1.7 0 0 0 1 1.5 1.7 1.7 0 0 0 1.8-.3l.1-.1a2 2 0 1 1 2.8 2.8l-.1.1a1.7 1.7 0 0 0-.3 1.8V9a1.7 1.7 0 0 0 1.5 1H21a2 2 0 1 1 0 4h-.1a1.7 1.7 0 0 0-1.5 1z"/></svg></button></span></span></div>
     <div class="datebar">
-      <button class="round" id="prevDay" aria-label="前の日">‹</button>
+      <button class="round" id="prevDay" aria-label="前の日" data-en-aria="Previous day">‹</button>
       <div class="d num" id="dayTitle">—</div>
-      <button class="round" id="nextDay" aria-label="次の日">›</button>
+      <button class="round" id="nextDay" aria-label="次の日" data-en-aria="Next day">›</button>
     </div>
     <div class="chips">
-      <button class="chip w" id="openCal"><svg width="15" height="15" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.2" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><rect x="3" y="4.5" width="18" height="16.5" rx="3"/><path d="M3 9.5h18M8 2.5v4M16 2.5v4"/></svg>カレンダー</button>
-      <button class="chip g" id="goToday">今日へ</button>
+      <button class="chip w" id="openCal"><svg width="15" height="15" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.2" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><rect x="3" y="4.5" width="18" height="16.5" rx="3"/><path d="M3 9.5h18M8 2.5v4M16 2.5v4"/></svg><span data-en="Calendar">カレンダー</span></button>
+      <button class="chip g" id="goToday" data-en="Today">今日へ</button>
     </div>
     <div class="week"><span class="wsel" id="wsel"></span><div class="wbtns" id="week"></div></div>
   </div>
-  <div class="err" id="err"><span id="errText"></span><button data-act="refresh">再読み込み</button></div>
-  <div class="ybar" id="yearBar" hidden><span id="yearText"></span><button id="yearBack">今年に戻る</button></div>
+  <div class="err" id="err"><span id="errText"></span><button data-act="refresh" data-en="Reload">再読み込み</button></div>
+  <div class="ybar" id="yearBar" hidden><span id="yearText"></span><button id="yearBack" data-en="Back to this year">今年に戻る</button></div>
   <div class="pager" id="dayBox"><div class="pane" id="dayPane">
     <div class="card">
-      <h3><span>栄養</span><span class="num" id="kcalGoal"></span></h3>
+      <h3><span data-en="Nutrition">栄養</span><span class="num" id="kcalGoal"></span></h3>
       <div class="kc">
         <svg width="108" height="108" viewBox="0 0 108 108" aria-hidden="true">
           <circle cx="54" cy="54" r="46" fill="none" stroke="#eee8f7" stroke-width="11"/>
@@ -328,15 +331,15 @@ svg text{font-family:inherit}
       <div class="note" id="nutNote"></div>
     </div>
     <div class="card">
-      <h3><span>体重</span><span class="num" id="wGoal"></span></h3>
-      <div class="wt"><div class="am">朝<b class="num" id="wAm">—</b></div><div class="pm">夜<b class="num" id="wPm">—</b></div></div>
+      <h3><span data-en="Weight">体重</span><span class="num" id="wGoal"></span></h3>
+      <div class="wt"><div class="am"><span data-en="AM">朝</span><b class="num" id="wAm">—</b></div><div class="pm"><span data-en="PM">夜</span><b class="num" id="wPm">—</b></div></div>
     </div>
     <div class="card">
-      <h3><span>トレーニング</span></h3>
+      <h3><span data-en="Training">トレーニング</span></h3>
       <div id="train"></div>
     </div>
     <div class="card">
-      <h3><span id="mealTitle">食事</span><button class="a" id="toList">一覧で見る ›</button></h3>
+      <h3><span id="mealTitle">食事</span><button class="a" id="toList" data-en="See list ›">一覧で見る ›</button></h3>
       <div id="meals"></div>
     </div>
   </div></div>
@@ -345,48 +348,57 @@ svg text{font-family:inherit}
 <!-- 記録一覧 -->
 <section id="v-list" class="hide">
   <div class="top">
-    <div class="trow"><span class="t">記録一覧</span></div>
+    <div class="trow"><span class="t" data-en="Records">記録一覧</span></div>
     <div class="mhead"><div class="m num" id="listMonth">—</div>
-      <div class="ctl"><button class="round" id="lPrev" aria-label="前の月">‹</button><button class="round" id="lNext" aria-label="次の月">›</button></div></div>
+      <div class="ctl"><button class="round" id="lPrev" aria-label="前の月" data-en-aria="Previous month">‹</button><button class="round" id="lNext" aria-label="次の月" data-en-aria="Next month">›</button></div></div>
   </div>
   <div class="tabs" id="tabs"></div>
-  <div class="sortbar"><button id="sortBtn" data-sort="1" aria-label="並び順を切り替える"></button></div>
+  <div class="sortbar"><button id="sortBtn" data-sort="1" aria-label="並び順を切り替える" data-en-aria="Change sort order"></button></div>
   <div class="pager" id="listBox"><div class="pane" id="listBody"></div></div>
 </section>
 
 <!-- グラフ -->
 <section id="v-graph" class="hide">
   <div class="top">
-    <div class="trow"><span class="t">グラフ</span></div>
+    <div class="trow"><span class="t" data-en="Graphs">グラフ</span></div>
     <div class="mhead"><div class="m num" id="gMonth">—</div>
-      <div class="ctl"><button class="round" id="gPrev" aria-label="前の月">‹</button><button class="round" id="gNext" aria-label="次の月">›</button></div></div>
+      <div class="ctl"><button class="round" id="gPrev" aria-label="前の月" data-en-aria="Previous month">‹</button><button class="round" id="gNext" aria-label="次の月" data-en-aria="Next month">›</button></div></div>
   </div>
   <div class="pager" id="graphBox"><div class="pane" id="graphPane">
-    <div class="card"><h3><span>体重の推移</span><span class="num" id="gW"></span></h3><div id="chartW"></div>
-      <div class="legend2"><span style="--c:#6a4c9c">朝</span><span style="--c:#d55e00">夜</span><span style="--c:#9a82c4">目標</span></div></div>
-    <div class="card"><h3><span>カロリー</span><span class="num" id="gK"></span></h3><div id="chartK"></div>
-      <div class="legend2"><span style="--c:#9a82c4">摂取</span><span style="--c:#d55e00">目標</span></div></div>
-    <div class="card"><h3><span>この月の平均（記録がある日）</span><span class="num" id="gN"></span></h3><div id="gAvg"></div></div>
+    <div class="card"><h3><span data-en="Weight trend">体重の推移</span><span class="num" id="gW"></span></h3><div id="chartW"></div>
+      <div class="legend2"><span style="--c:#6a4c9c" data-en="AM">朝</span><span style="--c:#d55e00" data-en="PM">夜</span><span style="--c:#9a82c4" data-en="Goal">目標</span></div></div>
+    <div class="card"><h3><span data-en="Calories">カロリー</span><span class="num" id="gK"></span></h3><div id="chartK"></div>
+      <div class="legend2"><span style="--c:#9a82c4" data-en="Intake">摂取</span><span style="--c:#d55e00" data-en="Goal">目標</span></div></div>
+    <div class="card"><h3><span data-en="Monthly average (days with records)">この月の平均（記録がある日）</span><span class="num" id="gN"></span></h3><div id="gAvg"></div></div>
   </div></div>
 </section>
 </div>
 
 <nav class="nav">
-  <button data-v="day" class="on"><svg width="22" height="22" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><rect x="3" y="4" width="18" height="17" rx="3"/><path d="M3 9h18M8 2v4M16 2v4"/></svg>今日</button>
-  <button data-v="list"><svg width="22" height="22" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M8 6h13M8 12h13M8 18h13"/><circle cx="3.5" cy="6" r="1.2"/><circle cx="3.5" cy="12" r="1.2"/><circle cx="3.5" cy="18" r="1.2"/></svg>記録一覧</button>
-  <button data-v="graph"><svg width="22" height="22" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M3 20h18"/><path d="M5 16l5-6 4 3 6-8"/></svg>グラフ</button>
+  <button data-v="day" class="on"><svg width="22" height="22" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><rect x="3" y="4" width="18" height="17" rx="3"/><path d="M3 9h18M8 2v4M16 2v4"/></svg><span data-en="Today">今日</span></button>
+  <button data-v="list"><svg width="22" height="22" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M8 6h13M8 12h13M8 18h13"/><circle cx="3.5" cy="6" r="1.2"/><circle cx="3.5" cy="12" r="1.2"/><circle cx="3.5" cy="18" r="1.2"/></svg><span data-en="Records">記録一覧</span></button>
+  <button data-v="graph"><svg width="22" height="22" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M3 20h18"/><path d="M5 16l5-6 4 3 6-8"/></svg><span data-en="Graphs">グラフ</span></button>
 </nav>
 
 <div class="dim" id="dim"></div>
-<div class="sheet" id="calSheet" role="dialog" aria-label="日付を選ぶ">
+<div class="sheet" id="calSheet" role="dialog" aria-label="日付を選ぶ" data-en-aria="Pick a date">
   <div class="grab"><i></i></div>
-  <div class="srow"><b>日付を選ぶ</b><button class="chip" id="calToday">今日</button></div>
+  <div class="srow"><b data-en="Pick a date">日付を選ぶ</b><button class="chip" id="calToday" data-en="Today">今日</button></div>
   <div class="months" id="calMonths"></div>
   <div class="pager" id="calBox"><div class="pane" id="calPane"><table class="cal" id="cal"></table></div></div>
-  <div class="legend"><span></span>記録がある日　<b style="color:var(--o700)">◯</b> 今日</div>
+  <div class="legend"><span></span><em data-en="Has records">記録がある日</em>　<b style="color:var(--o700)">◯</b> <em data-en="Today">今日</em></div>
 </div>
 
 <script>
+// 表示の言語（設定で切り替える）。英語のときは、画面の文字を data-en の文に置き換える
+const LS_LANG='physicalnote.lang';
+const EN=(()=>{try{return localStorage.getItem(LS_LANG)==='en';}catch(_){return false;}})();
+const TX=(ja,en)=>EN?en:ja;
+if(EN){
+  document.documentElement.lang='en';
+  document.querySelectorAll('[data-en]').forEach(e=>{e.textContent=e.dataset.en;});
+  document.querySelectorAll('[data-en-aria]').forEach(e=>e.setAttribute('aria-label',e.dataset.enAria));
+}
 // 記録はスプレッドシートの読み取り口（Apps Script）から、合言葉付きで読み込む
 const API='https://script.google.com/macros/s/AKfycbwfmPdv0J-nYvJW5dZbTi5FD_eMk__3YrYoypYoy03asBcugknrquWIVZD4bNkuiis/exec';
 const LS_KEY='physicalnote.key';
@@ -442,13 +454,13 @@ function demoMonth(ym){
 async function apiLoad(ym){
   if(DEMO){const d=demoMonth(ym);return {d,text:JSON.stringify(d)};}
   const k=appKey();
-  if(!k){askKey();throw new Error('合言葉が未設定です');}
+  if(!k){askKey();throw new Error(TX('合言葉が未設定です','No passcode set'));}
   const res=await fetch(API+'?k='+encodeURIComponent(k)+'&ym='+encodeURIComponent(ym),{cache:'no-store'});
-  if(!res.ok)throw new Error('通信エラー（'+res.status+'）');
+  if(!res.ok)throw new Error(TX('通信エラー（','Network error (')+res.status+TX('）',')'));
   const text=await res.text(),d=JSON.parse(text);
   if(d&&d.error){
-    if(d.error==='unauthorized'){askKey('合言葉が違うようです。もう一度貼り付けてください。');throw new Error('合言葉が違います');}
-    if(d.error==='no_file')throw new Error(ym.slice(0,4)+'年の記録ファイルが見つかりません');
+    if(d.error==='unauthorized'){askKey(TX('合言葉が違うようです。もう一度貼り付けてください。','The passcode seems wrong. Please paste it again.'));throw new Error(TX('合言葉が違います','Wrong passcode'));}
+    if(d.error==='no_file')throw new Error(TX(ym.slice(0,4)+'年の記録ファイルが見つかりません','No record file found for '+ym.slice(0,4)));
     throw new Error(d.error);
   }
   return {d,text};
@@ -474,9 +486,18 @@ document.getElementById('gptOpen').addEventListener('click',e=>{
 document.getElementById('setLink').addEventListener('click',()=>{document.getElementById('setGpt').value=gptUrl();document.getElementById('setErr').textContent='';document.getElementById('setPanel').hidden=false;});
 document.getElementById('setGpt').addEventListener('input',()=>{document.getElementById('setErr').textContent='';});
 document.getElementById('setClose').addEventListener('click',()=>{document.getElementById('setPanel').hidden=true;});
+// 表示の言語：押したらすぐ保存して、画面を読み直す
+document.querySelectorAll('#langSel button').forEach(b=>{
+  b.setAttribute('aria-pressed',String((b.dataset.lang==='en')===EN));
+  b.addEventListener('click',()=>{
+    if((b.dataset.lang==='en')===EN)return;
+    try{b.dataset.lang==='en'?localStorage.setItem(LS_LANG,'en'):localStorage.removeItem(LS_LANG);}catch(_){}
+    location.reload();
+  });
+});
 document.getElementById('setSave').addEventListener('click',()=>{
   const v=document.getElementById('setGpt').value.trim(),err=document.getElementById('setErr');
-  if(v&&!GPT_RE.test(v)){err.textContent='https://chatgpt.com/ で始まるリンクを貼り付けてください';return;}
+  if(v&&!GPT_RE.test(v)){err.textContent=TX('https://chatgpt.com/ で始まるリンクを貼り付けてください','Paste a link that starts with https://chatgpt.com/');return;}
   try{v?localStorage.setItem(LS_GPTURL,v):localStorage.removeItem(LS_GPTURL);}catch(_){}
   document.getElementById('setPanel').hidden=true;
 });
@@ -486,18 +507,22 @@ document.getElementById('gptLink').addEventListener('click',async()=>{
   err.textContent='';box.hidden=false;
   try{
     if(!ta.value){const r=await fetch('chatgpt.txt',{cache:'no-cache'});if(!r.ok)throw 0;ta.value=await r.text();}
-  }catch(_){err.textContent='指示文を読み込めませんでした。通信を確認してもう一度開いてください';}
+  }catch(_){err.textContent=TX('指示文を読み込めませんでした。通信を確認してもう一度開いてください','Could not load the instructions. Check your connection and open again.');}
 });
 document.getElementById('gptClose').addEventListener('click',()=>{document.getElementById('gptPanel').hidden=true;});
 document.getElementById('gptCopy').addEventListener('click',async()=>{
   const ta=document.getElementById('gptText'),b=document.getElementById('gptCopy');if(!ta.value)return;
   try{await navigator.clipboard.writeText(ta.value);}catch(_){ta.select();document.execCommand('copy');}
-  b.textContent='コピーしました';setTimeout(()=>{b.textContent='コピー';},2000);
+  b.textContent=TX('コピーしました','Copied');setTimeout(()=>{b.textContent=TX('コピー','Copy');},2000);
 });
 ['touchstart','touchmove','touchend'].forEach(t=>['gptPanel','setPanel'].forEach(id=>document.getElementById(id).addEventListener(t,e=>e.stopPropagation(),{passive:true})));
 
 const TYPES=['選択日の食事','日別まとめ','食事','朝夜体重','月曜体組成','レシピ','トレーニング'];
-const WD='日月火水木金土';
+const WD=EN?['Sun','Mon','Tue','Wed','Thu','Fri','Sat']:'日月火水木金土';
+const MON=['Jan','Feb','Mar','Apr','May','Jun','Jul','Aug','Sep','Oct','Nov','Dec'];
+// 記録一覧のタブ（中身の判定は日本語の名前のまま）
+const TYPE_EN={'選択日の食事':'Meals this day','日別まとめ':'Daily summary','食事':'Meals','朝夜体重':'Weight','月曜体組成':'Body (Mon)','レシピ':'Recipes','トレーニング':'Training'};
+const typeLabel=t=>EN?TYPE_EN[t]:t;
 const LS_OLD='physicalnote.month'; // 以前の保存形式（今月だけ）
 const LSM=DEMO?null:'physicalnote.months'; // 読み込んだ月をすべて保存しておき、次に開いたときすぐ出す
 const LSORT='physicalnote.sort';
@@ -514,12 +539,12 @@ const parse=k=>{const [y,m,d]=k.split('-').map(Number);return new Date(Date.UTC(
 const addDays=(k,n)=>{const d=parse(k);d.setUTCDate(d.getUTCDate()+n);return keyOf(d);};
 const ymOf=k=>k.slice(0,7);
 const addMonth=(ym,n)=>{const d=new Date(Date.UTC(+ym.slice(0,4),+ym.slice(5,7)-1+n,1));return d.getUTCFullYear()+'-'+pad(d.getUTCMonth()+1);};
-const ymLabel=ym=>{const [y,m]=ym.split('-').map(Number);return y+'年'+m+'月';};
-const dayLabel=k=>{const d=parse(k);return (d.getUTCMonth()+1)+'月'+d.getUTCDate()+'日（'+WD[d.getUTCDay()]+'）';};
+const ymLabel=ym=>{const [y,m]=ym.split('-').map(Number);return EN?MON[m-1]+' '+y:y+'年'+m+'月';};
+const dayLabel=k=>{const d=parse(k);return EN?WD[d.getUTCDay()]+', '+MON[d.getUTCMonth()]+' '+d.getUTCDate():(d.getUTCMonth()+1)+'月'+d.getUTCDate()+'日（'+WD[d.getUTCDay()]+'）';};
 const inYear=ym=>Number(ym.slice(0,4))===S.year;
 const clampDate=k=>{const a=S.year+'-01-01',b=S.year+'-12-31';return k<a?a:k>b?b:k;};
 const kindTag=k=>/朝|昼|夕|夜|間食|食/.test(k)?'':'p';
-const fmtH=m=>{const h=m/60;return (Number.isInteger(h)?h:h.toFixed(1))+'時間';};
+const fmtH=m=>{const h=m/60;return (Number.isInteger(h)?h:h.toFixed(1))+TX('時間',' h');};
 
 // ---------- 動き：ばね（途中でつかめる・指の速さを引き継ぐ） ----------
 function Spring(apply){
@@ -658,7 +683,7 @@ function fetchMonth(ym,low){
       },
       ng:e=>{
         delete S.pending[ym];setLoading(-1);S.failed[ym]=true;
-        $('errText').textContent=(S.cache[ym]?'最新の記録を読み込めませんでした。前回の内容を表示しています':'読み込みに失敗しました')+'（'+(e&&e.message||e)+'）';$('err').classList.add('on');
+        $('errText').textContent=(S.cache[ym]?TX('最新の記録を読み込めませんでした。前回の内容を表示しています','Could not load the latest records. Showing the last saved ones'):TX('読み込みに失敗しました','Could not load'))+' ('+(e&&e.message||e)+')';$('err').classList.add('on');
         schedulePaint();res(null);
       }};
     if(low)queue.push(j);else queue.unshift(j);
@@ -701,19 +726,19 @@ const SHEETS={2026:'https://docs.google.com/spreadsheets/d/1snJJARGhmVVdWXeCDIog
 const sheetUrl=y=>SHEETS[y]||'https://drive.google.com/drive/search?q='+encodeURIComponent('フィジカルノート｜'+y);
 function paintYear(){
   const past=S.year!==thisYear();
-  $('yearBar').hidden=!past;if(past)$('yearText').textContent=S.year+'年の記録を見ています';
+  $('yearBar').hidden=!past;if(past)$('yearText').textContent=TX(S.year+'年の記録を見ています','Viewing records for '+S.year);
 }
 function openYears(){
   const ys=[];for(let y=thisYear();y>=Math.min(FIRST_YEAR,thisYear());y--)ys.push(y);
-  $('yearList').innerHTML=ys.map(y=>`<button type="button" data-year="${y}" class="${y===S.year?'on':''}">${y}年${y===thisYear()?'（今年）':''}</button>`).join('');
-  $('sheetOpen').href=sheetUrl(S.year);$('sheetOpen').textContent=S.year+'年の記録シートを開く';
+  $('yearList').innerHTML=ys.map(y=>`<button type="button" data-year="${y}" class="${y===S.year?'on':''}">${EN?y+(y===thisYear()?' (this year)':''):y+'年'+(y===thisYear()?'（今年）':'')}</button>`).join('');
+  $('sheetOpen').href=sheetUrl(S.year);$('sheetOpen').textContent=TX(S.year+'年の記録シートを開く','Open the '+S.year+' record sheet');
   $('yearPanel').hidden=false;
 }
 
 // ---------- 日ごと ----------
 const ringSp=Spring(p=>{const c=2*Math.PI*46,a=$('ringArc');a.setAttribute('stroke-dasharray',(c*p/100)+' '+c);a.style.opacity=p>.5?1:0;});
 const weekSp=Spring(x=>{$('wsel').style.transform='translate3d('+x+'px,0,0)';});
-function buildPfc(){$('pfc').innerHTML=[['p','P たんぱく質'],['f','F 脂質'],['c','C 炭水化物']].map(([f,l])=>
+function buildPfc(){$('pfc').innerHTML=[['p',TX('P たんぱく質','P Protein')],['f',TX('F 脂質','F Fat')],['c',TX('C 炭水化物','C Carbs')]].map(([f,l])=>
   `<div class="l"><span>${l}</span><b class="num" id="pv-${f}">—</b></div><div class="bar"><span id="pb-${f}"></span></div><div class="rest num" id="pr-${f}"></div>`).join('');}
 function paintDay(){
   const k=S.date;$('dayTitle').textContent=dayLabel(k);
@@ -721,32 +746,32 @@ function paintDay(){
   const d=need(ymOf(k));
   need(ymOf(addDays(k,-7)),true);need(ymOf(addDays(k,7)),true);
   $('dayPane').classList.toggle('loading',!d);
-  if(!d){$('nutNote').textContent=S.failed[ymOf(k)]?'読み込めませんでした。上の「再読み込み」を押してください。':'読み込み中…';return;}
+  if(!d){$('nutNote').textContent=S.failed[ymOf(k)]?TX('読み込めませんでした。上の「再読み込み」を押してください。','Could not load. Tap “Reload” above.'):TX('読み込み中…','Loading…');return;}
   const st=d.settings,row=d.days.find(x=>x.date===k)||{};
   const meals=d.meals.filter(m=>m.date===k);
   const sum=f=>meals.reduce((a,m)=>a+(m[f]||0),0);
   const val=f=>row[f]!=null?row[f]:(meals.length?sum(f):null);
   const kcal=val('kcal'),g=st.kcal,over=kcal!=null&&g&&kcal>g;
-  $('kcalGoal').textContent='目標 '+fmt(g)+' kcal';
+  $('kcalGoal').textContent=TX('目標 ','Goal ')+fmt(g)+' kcal';
   $('ringArc').setAttribute('stroke',over?'#d55e00':'#6a4c9c');
   ringSp.to(kcal!=null&&g?Math.min(kcal/g,1)*100:0,{damping:1,response:.5});
   $('ringNum').textContent=fmt(kcal);
-  $('ringSub').textContent=kcal==null?'kcal':(over?'超過 '+fmt(kcal-g):'残り '+fmt(g-kcal));
+  $('ringSub').textContent=kcal==null?'kcal':(over?TX('超過 ','Over ')+fmt(kcal-g):TX('残り ','Left ')+fmt(g-kcal));
   ['p','f','c'].forEach(f=>{const v=val(f),gg=st[f];
     $('pv-'+f).textContent=fmt(v)+' / '+fmt(gg)+' g';
     const b=$('pb-'+f);b.style.width=(v!=null&&gg?Math.min(v/gg,1)*100:0)+'%';b.classList.toggle('over',!!(v!=null&&gg&&v>gg));
     // あと何g食べればいいか（四捨五入した値どうしで比べる）
     const r=$('pr-'+f),left=gg?Math.round(gg)-Math.round(v||0):null;
     r.className='rest num'+(left!=null&&left<0?' over':left===0?' done':'');
-    r.innerHTML=left==null?'':left>0?'あと <b>'+fmt(left)+'</b> g':left<0?'<b>'+fmt(-left)+'</b> g オーバー':'目標ぴったり';});
-  $('nutNote').textContent=!meals.length?'この日の食事はまだ記録されていません。':(meals.some(m=>['kcal','p','f','c'].some(f=>m[f]==null))?'栄養が未入力の食事があるため、記録済みの分だけの合計です。':'');
-  $('wGoal').textContent='目標 '+fmt1(st.weight)+' kg';
-  $('wAm').textContent=row.am!=null?fmt1(row.am)+' kg':'未記録';
-  $('wPm').textContent=row.pm!=null?fmt1(row.pm)+' kg':'未記録';
+    r.innerHTML=left==null?'':left>0?TX('あと ','')+'<b>'+fmt(left)+'</b> g'+TX('',' left'):left<0?'<b>'+fmt(-left)+'</b> g '+TX('オーバー','over'):TX('目標ぴったり','On target');});
+  $('nutNote').textContent=!meals.length?TX('この日の食事はまだ記録されていません。','No meals recorded for this day yet.'):(meals.some(m=>['kcal','p','f','c'].some(f=>m[f]==null))?TX('栄養が未入力の食事があるため、記録済みの分だけの合計です。','Some meals have no nutrition yet, so this is the total of what is recorded.'):'');
+  $('wGoal').textContent=TX('目標 ','Goal ')+fmt1(st.weight)+' kg';
+  $('wAm').textContent=row.am!=null?fmt1(row.am)+' kg':TX('未記録','None');
+  $('wPm').textContent=row.pm!=null?fmt1(row.pm)+' kg':TX('未記録','None');
   const tr=d.training.filter(t=>t.date===k);
-  $('train').innerHTML=tr.length?tr.map(t=>`<div class="item"><span class="tag p">${esc(t.kind)}</span><div class="body">${esc(t.part||(t.kind==='オフ'?'オフ':'部位未記入'))}<small>${t.minutes!=null?fmtH(t.minutes):'時間未記入'}${t.sets!=null?' ・ '+esc(t.sets)+'セット':''}${t.detail?' ・ '+esc(t.detail):''}</small></div></div>`).join(''):'<div class="empty">記録なし</div>';
-  $('mealTitle').textContent='食事（'+meals.length+'件）';
-  $('meals').innerHTML=meals.length?meals.map(mealItem).join(''):'<div class="empty">この日の食事はまだ記録されていません</div>';
+  $('train').innerHTML=tr.length?tr.map(t=>`<div class="item"><span class="tag p">${esc(t.kind)}</span><div class="body">${esc(t.part||(t.kind==='オフ'?TX('オフ','Rest day'):TX('部位未記入','No body part')))}<small>${t.minutes!=null?fmtH(t.minutes):TX('時間未記入','No time')}${t.sets!=null?' ・ '+esc(t.sets)+TX('セット',' sets'):''}${t.detail?' ・ '+esc(t.detail):''}</small></div></div>`).join(''):'<div class="empty">'+TX('記録なし','No records')+'</div>';
+  $('mealTitle').textContent=TX('食事（'+meals.length+'件）','Meals ('+meals.length+')');
+  $('meals').innerHTML=meals.length?meals.map(mealItem).join(''):'<div class="empty">'+TX('この日の食事はまだ記録されていません','No meals recorded for this day yet')+'</div>';
 }
 function mealItem(m){return `<div class="item"><span class="tag ${kindTag(m.kind)}">${esc(m.kind)}</span><div class="body">${esc(m.content)}<small class="num">P ${fmt(m.p)} / F ${fmt(m.f)} / C ${fmt(m.c)}${m.status?' ・'+esc(m.status):''}${m.time?' ・'+esc(m.time):''}</small></div><span class="k num">${fmt(m.kcal)}</span></div>`;}
 function drawWeek(){
@@ -788,7 +813,7 @@ function settleSheet(open,v){
 }
 const closeCal=v=>settleSheet(false,v);
 function drawCal(){
-  $('calMonths').innerHTML=[...Array(12)].map((_,i)=>{const ym=S.year+'-'+pad(i+1);return `<button data-ym="${ym}" class="${ym===S.calYm?'on':''}">${i+1}月</button>`;}).join('');
+  $('calMonths').innerHTML=[...Array(12)].map((_,i)=>{const ym=S.year+'-'+pad(i+1);return `<button data-ym="${ym}" class="${ym===S.calYm?'on':''}">${EN?MON[i]:(i+1)+'月'}</button>`;}).join('');
   const start=addDays(S.calYm+'-01',-parse(S.calYm+'-01').getUTCDay());
   let h='<tr>'+[...WD].map(w=>`<th>${w}</th>`).join('')+'</tr>';
   for(let w=0;w<6;w++){h+='<tr>';for(let i=0;i<7;i++){const k=addDays(start,w*7+i);
@@ -800,37 +825,37 @@ function drawCal(){
 // ---------- 記録一覧 ----------
 function paintList(){
   const ym=S.listYm;$('listMonth').textContent=ymLabel(ym);
-  $('tabs').innerHTML=TYPES.map(t=>`<button data-t="${t}" class="${t===S.type?'on':''}">${t}</button>`).join('');
-  const sb=$('sortBtn');sb.textContent=S.desc?'↓ 新しい順':'↑ 古い順';sb.classList.toggle('off',S.type==='選択日の食事'||S.type==='レシピ');
+  $('tabs').innerHTML=TYPES.map(t=>`<button data-t="${t}" class="${t===S.type?'on':''}">${typeLabel(t)}</button>`).join('');
+  const sb=$('sortBtn');sb.textContent=S.desc?TX('↓ 新しい順','↓ Newest first'):TX('↑ 古い順','↑ Oldest first');sb.classList.toggle('off',S.type==='選択日の食事'||S.type==='レシピ');
   const byDate=(a,b)=>a<b?(S.desc?1:-1):a>b?(S.desc?-1:1):0;
   const body=$('listBody');
   const dk=S.type==='選択日の食事'?S.date:null;
   const d=need(dk?ymOf(dk):ym);
-  if(!d){body.innerHTML=`<div class="card"><div class="empty">${S.failed[dk?ymOf(dk):ym]?'読み込めませんでした':'読み込み中…'}</div></div>`;return;}
+  if(!d){body.innerHTML=`<div class="card"><div class="empty">${S.failed[dk?ymOf(dk):ym]?TX('読み込めませんでした','Could not load'):TX('読み込み中…','Loading…')}</div></div>`;return;}
   const card=(t,inner,right)=>`<div class="card"><h3><span>${t}</span><span class="num">${right||''}</span></h3>${inner}</div>`;
-  const none='<div class="empty">この月の記録はありません</div>';
+  const none='<div class="empty">'+TX('この月の記録はありません','No records this month')+'</div>';
   let html='';
   if(S.type==='選択日の食事'){
     const ms=d.meals.filter(m=>m.date===dk);const tot=ms.reduce((a,m)=>a+(m.kcal||0),0);
-    html=card(dayLabel(dk)+'の食事',ms.length?ms.map(mealItem).join(''):'<div class="empty">この日の食事はまだ記録されていません</div>',ms.length?'合計 '+fmt(tot)+' kcal':'');
+    html=card(TX(dayLabel(dk)+'の食事','Meals on '+dayLabel(dk)),ms.length?ms.map(mealItem).join(''):'<div class="empty">'+TX('この日の食事はまだ記録されていません','No meals recorded for this day yet')+'</div>',ms.length?TX('合計 ','Total ')+fmt(tot)+' kcal':'');
   }else if(S.type==='日別まとめ'){
     const rows=d.days.filter(r=>r.meals>0||r.am!=null||r.pm!=null||r.training).sort((a,b)=>byDate(a.date,b.date));
-    html=card('日別まとめ',rows.length?rows.map(r=>`<div class="item"><div class="body"><b>${dayLabel(r.date)}</b>${r.done?' <span class="tag p">完了</span>':''}<small class="num">${r.kcal!=null?fmt(r.kcal)+' kcal ・P '+fmt(r.p)+' / F '+fmt(r.f)+' / C '+fmt(r.c):(r.meals?'食事'+r.meals+'件（栄養未確定あり）':'食事記録なし')}<br>体重 朝 ${r.am!=null?fmt1(r.am):'—'} ／ 夜 ${r.pm!=null?fmt1(r.pm):'—'}${r.training?' ・ '+esc(r.training):''}</small></div></div>`).join(''):none)
-      +card('この月の平均（記録がある日）',avgRows(d),avgDays(d)+'日');
+    html=card(typeLabel('日別まとめ'),rows.length?rows.map(r=>`<div class="item"><div class="body"><b>${dayLabel(r.date)}</b>${r.done?' <span class="tag p">'+TX('完了','Done')+'</span>':''}<small class="num">${r.kcal!=null?fmt(r.kcal)+' kcal ・P '+fmt(r.p)+' / F '+fmt(r.f)+' / C '+fmt(r.c):(r.meals?TX('食事'+r.meals+'件（栄養未確定あり）',r.meals+' meals (some nutrition missing)'):TX('食事記録なし','No meals'))}<br>${TX('体重 朝','Weight AM')} ${r.am!=null?fmt1(r.am):'—'} ／ ${TX('夜','PM')} ${r.pm!=null?fmt1(r.pm):'—'}${r.training?' ・ '+esc(r.training):''}</small></div></div>`).join(''):none)
+      +card(TX('この月の平均（記録がある日）','Monthly average (days with records)'),avgRows(d),avgDays(d)+TX('日',' days'));
   }else if(S.type==='食事'){
     const by={};d.meals.forEach(m=>(by[m.date]=by[m.date]||[]).push(m));
     const ks=Object.keys(by).sort(byDate);
-    html=ks.length?ks.map(k=>card(dayLabel(k),by[k].map(mealItem).join(''),'合計 '+fmt(by[k].reduce((a,m)=>a+(m.kcal||0),0))+' kcal')).join(''):card('食事',none);
+    html=ks.length?ks.map(k=>card(dayLabel(k),by[k].map(mealItem).join(''),TX('合計 ','Total ')+fmt(by[k].reduce((a,m)=>a+(m.kcal||0),0))+' kcal')).join(''):card(typeLabel('食事'),none);
   }else if(S.type==='朝夜体重'){
     const ws=d.weights.slice().sort((a,b)=>byDate(a.date,b.date)||(a.when==='朝'?-1:1));
-    html=card('朝夜体重',ws.length?ws.map(w=>`<div class="item"><span class="tag ${w.when==='朝'?'p':''}">${esc(w.when)}</span><div class="body">${dayLabel(w.date)}${w.note?'<small>'+esc(w.note)+'</small>':''}</div><span class="k num">${fmt1(w.kg)} kg</span></div>`).join(''):none,'目標 '+fmt1(d.settings.weight)+' kg');
+    html=card(typeLabel('朝夜体重'),ws.length?ws.map(w=>`<div class="item"><span class="tag ${w.when==='朝'?'p':''}">${esc(w.when)}</span><div class="body">${dayLabel(w.date)}${w.note?'<small>'+esc(w.note)+'</small>':''}</div><span class="k num">${fmt1(w.kg)} kg</span></div>`).join(''):none,TX('目標 ','Goal ')+fmt1(d.settings.weight)+' kg');
   }else if(S.type==='月曜体組成'){
-    html=card('月曜体組成',d.body.length?d.body.slice().sort((a,b)=>byDate(a.monday,b.monday)).map(b=>`<div class="item"><span class="tag b">${esc(b.status||'—')}</span><div class="body">対象 ${dayLabel(b.monday)}<small class="num">体重 ${fmt1(b.weight)} kg ・体脂肪率 ${fmt1(b.fat)} % ・筋肉量 ${fmt1(b.muscle)} kg${b.measured?' ・測定 '+dayLabel(b.measured):''}</small></div></div>`).join(''):none);
+    html=card(typeLabel('月曜体組成'),d.body.length?d.body.slice().sort((a,b)=>byDate(a.monday,b.monday)).map(b=>`<div class="item"><span class="tag b">${esc(b.status||'—')}</span><div class="body">${TX('対象','For')} ${dayLabel(b.monday)}<small class="num">${TX('体重','Weight')} ${fmt1(b.weight)} kg ・${TX('体脂肪率','Body fat')} ${fmt1(b.fat)} % ・${TX('筋肉量','Muscle')} ${fmt1(b.muscle)} kg${b.measured?' ・'+TX('測定 ','Measured ')+dayLabel(b.measured):''}</small></div></div>`).join(''):none);
   }else if(S.type==='レシピ'){
-    html=card('レシピ（最新版）',d.recipes.length?d.recipes.map(r=>`<div class="item"><span class="tag y">v${esc(r.ver)}</span><div class="body">${esc(r.name)}<small class="num">${r.kcal!=null?'1食 '+fmt(r.kcal)+' kcal ・P '+fmt(r.p)+' / F '+fmt(r.f)+' / C '+fmt(r.c):'栄養未確定'} ・${esc(r.servings||'—')}食分<br>${esc(r.status)}</small></div></div>`).join(''):'<div class="empty">レシピはまだありません</div>');
+    html=card(TX('レシピ（最新版）','Recipes (latest)'),d.recipes.length?d.recipes.map(r=>`<div class="item"><span class="tag y">v${esc(r.ver)}</span><div class="body">${esc(r.name)}<small class="num">${r.kcal!=null?TX('1食 ','Per serving ')+fmt(r.kcal)+' kcal ・P '+fmt(r.p)+' / F '+fmt(r.f)+' / C '+fmt(r.c):TX('栄養未確定','Nutrition not set')} ・${esc(r.servings||'—')}${TX('食分',' servings')}<br>${esc(r.status)}</small></div></div>`).join(''):'<div class="empty">'+TX('レシピはまだありません','No recipes yet')+'</div>');
   }else if(S.type==='トレーニング'){
     const ts=d.training.slice().sort((a,b)=>byDate(a.date,b.date));
-    html=card('トレーニング',ts.length?ts.map(t=>`<div class="item"><div class="body"><b>${dayLabel(t.date)}</b>　${esc(t.kind==='オフ'?'オフ':(t.part||'部位未記入'))}<small>${t.minutes!=null?fmtH(t.minutes):'時間未記入'}${t.sets!=null?' ・'+esc(t.sets)+'セット':''}${t.detail?' ・'+esc(t.detail):''}${t.memo?' ・'+esc(t.memo):''}</small></div></div>`).join(''):none);
+    html=card(typeLabel('トレーニング'),ts.length?ts.map(t=>`<div class="item"><div class="body"><b>${dayLabel(t.date)}</b>　${t.kind==='オフ'?TX('オフ','Rest day'):(t.part?esc(t.part):TX('部位未記入','No body part'))}<small>${t.minutes!=null?fmtH(t.minutes):TX('時間未記入','No time')}${t.sets!=null?' ・'+esc(t.sets)+TX('セット',' sets'):''}${t.detail?' ・'+esc(t.detail):''}${t.memo?' ・'+esc(t.memo):''}</small></div></div>`).join(''):none);
   }
   body.innerHTML=html;
 }
@@ -838,7 +863,7 @@ const avgDays=d=>d.days.filter(r=>r.kcal!=null).length;
 function avgRows(d){
   const rows=d.days.filter(r=>r.kcal!=null);const avg=f=>rows.length?rows.reduce((a,r)=>a+(r[f]||0),0)/rows.length:null;
   const ws=f=>{const v=d.days.filter(r=>r[f]!=null);return v.length?v.reduce((a,r)=>a+r[f],0)/v.length:null;};
-  return [['カロリー',fmt(avg('kcal'))+' kcal'],['たんぱく質',fmt(avg('p'))+' g'],['脂質',fmt(avg('f'))+' g'],['炭水化物',fmt(avg('c'))+' g'],['朝の体重',fmt1(ws('am'))+' kg'],['夜の体重',fmt1(ws('pm'))+' kg']]
+  return [[TX('カロリー','Calories'),fmt(avg('kcal'))+' kcal'],[TX('たんぱく質','Protein'),fmt(avg('p'))+' g'],[TX('脂質','Fat'),fmt(avg('f'))+' g'],[TX('炭水化物','Carbs'),fmt(avg('c'))+' g'],[TX('朝の体重','AM weight'),fmt1(ws('am'))+' kg'],[TX('夜の体重','PM weight'),fmt1(ws('pm'))+' kg']]
    .map(([a,b])=>`<div class="kv"><span>${a}</span><b class="num">${b}</b></div>`).join('');
 }
 
@@ -847,7 +872,7 @@ function paintGraph(){
   const ym=S.graphYm;$('gMonth').textContent=ymLabel(ym);
   const d=need(ym);
   $('graphPane').classList.toggle('loading',!d);
-  if(!d){['chartW','chartK','gAvg'].forEach(i=>$(i).innerHTML='<div class="empty">'+(S.failed[ym]?'読み込めませんでした':'読み込み中…')+'</div>');return;}
+  if(!d){['chartW','chartK','gAvg'].forEach(i=>$(i).innerHTML='<div class="empty">'+(S.failed[ym]?TX('読み込めませんでした','Could not load'):TX('読み込み中…','Loading…'))+'</div>');return;}
   const n=new Date(Date.UTC(+ym.slice(0,4),+ym.slice(5,7),0)).getUTCDate();
   const W=330,H=170,L=34,R=8,T=10,B=22;
   const x=i=>L+(W-L-R)*(i/(n-1));
@@ -863,8 +888,8 @@ function paintGraph(){
   let s=axes(n,x,H,B,L,W,lo,hi,y,v=>hi-lo<=8?v.toFixed(1):Math.round(v));
   if(tgt!=null)s+=`<line x1="${L}" x2="${W-R}" y1="${y(tgt)}" y2="${y(tgt)}" stroke="#9a82c4" stroke-dasharray="5 4"/>`;
   s+=line('am','#6a4c9c')+line('pm','#d55e00');
-  $('chartW').innerHTML=`<svg viewBox="0 0 ${W} ${H}" width="100%" role="img" aria-label="体重の推移">${s}</svg>`+(vals.length?'':'<div class="empty">この月の体重記録はまだありません</div>');
-  $('gW').textContent='目標 '+fmt1(tgt)+' kg';
+  $('chartW').innerHTML=`<svg viewBox="0 0 ${W} ${H}" width="100%" role="img" aria-label="${TX('体重の推移','Weight trend')}">${s}</svg>`+(vals.length?'':'<div class="empty">'+TX('この月の体重記録はまだありません','No weight records this month yet')+'</div>');
+  $('gW').textContent=TX('目標 ','Goal ')+fmt1(tgt)+' kg';
   // カロリー
   const goal=d.settings.kcal||0,kv=[];for(let i=0;i<n;i++)kv.push(day(i).kcal);
   const kmax=Math.max(goal,...kv.filter(v=>v!=null))*1.1||1;
@@ -873,14 +898,14 @@ function paintGraph(){
   const bw=Math.max((W-L-R)/n-2,2);
   kv.forEach((v,i)=>{if(v!=null)k+=`<rect x="${x(i)-bw/2}" y="${yk(v)}" width="${bw}" height="${H-B-yk(v)}" rx="2" fill="${v>goal?'#d55e00':'#9a82c4'}"/>`;});
   if(goal)k+=`<line x1="${L}" x2="${W-R}" y1="${yk(goal)}" y2="${yk(goal)}" stroke="#d55e00" stroke-dasharray="5 4"/>`;
-  $('chartK').innerHTML=`<svg viewBox="0 0 ${W} ${H}" width="100%" role="img" aria-label="カロリー">${k}</svg>`+(kv.some(v=>v!=null)?'':'<div class="empty">この月の食事記録はまだありません</div>');
-  $('gK').textContent='目標 '+fmt(goal)+' kcal';
-  $('gN').textContent=avgDays(d)+'日';
+  $('chartK').innerHTML=`<svg viewBox="0 0 ${W} ${H}" width="100%" role="img" aria-label="${TX('カロリー','Calories')}">${k}</svg>`+(kv.some(v=>v!=null)?'':'<div class="empty">'+TX('この月の食事記録はまだありません','No meal records this month yet')+'</div>');
+  $('gK').textContent=TX('目標 ','Goal ')+fmt(goal)+' kcal';
+  $('gN').textContent=avgDays(d)+TX('日',' days');
   $('gAvg').innerHTML=avgRows(d);
 }
 function axes(n,x,H,B,L,W,lo,hi,y,lab){
   let s='';for(let i=0;i<=4;i++){const v=lo+(hi-lo)*i/4;s+=`<line x1="${L}" x2="${W-8}" y1="${y(v)}" y2="${y(v)}" stroke="#f0ecf6"/><text x="${L-5}" y="${y(v)+3.5}" font-size="9.5" text-anchor="end" fill="#6e6878">${lab(v)}</text>`;}
-  [1,8,15,22,29].filter(dd=>dd<=n).forEach(dd=>{s+=`<text x="${x(dd-1)}" y="${H-6}" font-size="9.5" text-anchor="middle" fill="#6e6878">${dd}日</text>`;});
+  [1,8,15,22,29].filter(dd=>dd<=n).forEach(dd=>{s+=`<text x="${x(dd-1)}" y="${H-6}" font-size="9.5" text-anchor="middle" fill="#6e6878">${dd}${TX('日','')}</text>`;});
   return s;
 }
 
