@@ -192,6 +192,22 @@ svg text{font-family:inherit}
 .gemc li{margin-top:4px}
 .gemc textarea{width:100%;height:30vh;margin-top:14px;font:12px/1.5 ui-monospace,SFMono-Regular,Menlo,monospace;padding:10px 12px;border-radius:14px;border:1px solid #d9cfe9;background:var(--bg);color:var(--ink);resize:vertical}
 .gemc .sub{background:transparent;color:var(--p800);border:1px solid #d9cfe9}
+/* 記録シートの管理（年の切り替え・リセット） */
+.mngc h3{font-size:14px;color:var(--ink);margin-top:20px;padding-top:14px;border-top:1px solid var(--line)}
+.mngc .open{display:block;text-align:center;margin-top:14px;padding:13px 0;border-radius:14px;background:var(--p800);color:#fff;font-weight:700;font-size:15px;text-decoration:none}
+.mngc .yrs{display:flex;flex-wrap:wrap;gap:8px;margin-top:10px}
+.mngc .yrs button{width:auto;margin:0;padding:8px 14px;border-radius:18px;font-size:13px;background:var(--bg);color:var(--p800);border:1px solid #d9cfe9}
+.mngc .yrs button.on{background:var(--p800);color:#fff;border-color:var(--p800)}
+.mngc .ck{display:flex;align-items:center;gap:8px;margin-top:12px;font-size:13px;color:var(--ink)}
+.mngc .ck input{width:18px;height:18px;margin:0;accent-color:var(--p800)}
+.mngc .danger{background:var(--o700)}
+.mngc .ok{color:var(--p800);font-weight:700;min-height:0}
+.mngc .bk{font-size:12.5px;margin-top:8px}
+.mngc .bk a{color:var(--p600)}
+.ybar{margin:12px 16px 0;padding:12px 14px;border-radius:14px;background:var(--p100);color:var(--p800);font-size:13px;display:flex;align-items:center;gap:10px}
+.ybar[hidden]{display:none}
+.ybar span{flex:1}
+.ybar button{flex:none;background:#fff;color:var(--p800);font-weight:700;padding:7px 12px;border-radius:14px}
 .demo-bar{position:sticky;top:0;z-index:44;background:var(--o100);color:var(--o700);font-size:12px;font-weight:700;text-align:center;padding:calc(6px + env(safe-area-inset-top)) 12px 6px}
 .demo-bar[hidden]{display:none}
 /* iPhoneのホーム画面アプリで下に固定した部品が浮くずれを打ち消す（--gapは画面の下端とのずれをJSで測った値） */
@@ -261,12 +277,38 @@ svg text{font-family:inherit}
     <p class="kerr" id="gemErr"></p>
   </div>
 </div>
+<div class="keyp" id="mngPanel" hidden>
+  <div class="keyc gemc mngc">
+    <h2>記録シート</h2>
+    <p>記録は1年に1つのファイルに分けて残します。今年のファイルはURLが変わらないので、Geminiの指示文は毎年貼り直さなくて大丈夫です。</p>
+    <a class="open" id="mngOpen" target="_blank" rel="noopener">今年の記録シートを開く</a>
+    <h3>見る年</h3>
+    <p>アプリがふだん読むのは今年のファイルだけです。前の年は、選んだときだけ読み込みます。</p>
+    <div class="yrs" id="mngYears"></div>
+    <h3>年の切り替え</h3>
+    <p id="rollText"></p>
+    <button type="button" id="rollBtn" hidden></button>
+    <h3>記録のリセット</h3>
+    <p>今年の記録シートの記録を消して、まっさらにします。消す前に、シートを丸ごとコピーした「バックアップ」をドライブに残します。目標（設定）と前の年のファイルはそのまま残り、シートのURLも変わりません。</p>
+    <label class="ck"><input type="checkbox" id="rsRecipe">レシピも消す</label>
+    <button type="button" class="sub" id="rsBtn">リセットする…</button>
+    <div id="rsBox" hidden>
+      <p>確認のため「リセット」と入力してください。</p>
+      <input id="rsIn" type="text" autocomplete="off" aria-label="確認の文字">
+      <button type="button" class="danger" id="rsGo" disabled>バックアップを残して記録を消す</button>
+    </div>
+    <div class="bk" id="mngBk"></div>
+    <p class="kerr ok" id="mngOk"></p>
+    <p class="kerr" id="mngErr"></p>
+    <button type="button" class="sub" id="mngClose">閉じる</button>
+  </div>
+</div>
 <div class="wrap">
 
 <!-- 日ごと -->
 <section id="v-day">
   <div class="top">
-    <div class="trow"><span class="t">Physical Note</span><span class="links"><a class="sheetlink" id="gemOpen" hidden href="https://gemini.google.com/app" target="_blank" rel="noopener">Gemini</a><button class="sheetlink" id="gemLink" hidden>指示文</button><a class="sheetlink" id="sheetLink" hidden target="_blank" rel="noopener">記録シート</a></span></div>
+    <div class="trow"><span class="t">Physical Note</span><span class="links"><a class="sheetlink" id="gemOpen" hidden href="https://gemini.google.com/app" target="_blank" rel="noopener">Gemini</a><button class="sheetlink" id="gemLink" hidden>指示文</button><button class="sheetlink" id="sheetLink" hidden>記録シート</button></span></div>
     <div class="datebar">
       <button class="round" id="prevDay" aria-label="前の日">‹</button>
       <div class="d num" id="dayTitle">—</div>
@@ -279,6 +321,7 @@ svg text{font-family:inherit}
     <div class="week"><span class="wsel" id="wsel"></span><div class="wbtns" id="week"></div></div>
   </div>
   <div class="err" id="err"><span id="errText"></span><button data-act="refresh">再読み込み</button></div>
+  <div class="ybar" id="yearBar" hidden><span id="yearText"></span><button id="yearBtn"></button></div>
   <div class="pager" id="dayBox"><div class="pane" id="dayPane">
     <div class="card">
       <h3><span>栄養</span><span class="num" id="kcalGoal"></span></h3>
@@ -487,7 +530,7 @@ async function gFetch(url,opt){
   const t=await gToken();
   const res=await fetch(url,Object.assign({},opt,{headers:Object.assign({Authorization:'Bearer '+t},opt&&opt.body?{'Content-Type':'application/json'}:{})}));
   if(res.status===401){try{localStorage.removeItem(LS_GTOK);}catch(_){}throw Object.assign(new Error('Googleへの接続が切れました。「再読み込み」を押してください'),{relogin:true});}
-  if(res.status===404&&/spreadsheets\//.test(url)){gForget();throw new Error('記録シートが見つかりません。もう一度読み込むと作り直します');}
+  if(res.status===404&&gSheet&&url.includes('spreadsheets/'+gSheet)){gForget();throw new Error('記録シートが見つかりません。もう一度読み込むと作り直します');}
   if(!res.ok)throw new Error('Googleとの通信エラー（'+res.status+'）');
   return res.json();
 }
@@ -504,7 +547,8 @@ const G_TABS=[
     ['設定','1日の目標（kcal・P・F・C）と目標体重を書きます。'],
     ['記録ID・有効','空欄で大丈夫です。取り消すときは「有効」に FALSE と書きます。'],
     ['日付の書き方','2026-10-26 や 2026/10/26 のように書きます。'],
-    ['見出しの行','1行目の見出しや列の順番は変えないでください。']]],
+    ['見出しの行','1行目の見出しや列の順番は変えないでください。'],
+    ['年の切り替え','このシートには今年の記録を書きます。年が明けたら、アプリの「記録シート」から前の年の記録を「Physical Note 記録シート（2026年）」のような年ごとのファイルに移せます。このシートのURLは変わりません。']]],
   ['食事',[['記録ID','日付','時刻','食事区分','内容・量','kcal','P g','F g','C g','根拠・メモ','確定状態','有効','登録日時','更新日時']]],
   ['体重',[['記録ID','日付','朝夜','体重 kg','測定条件','有効','登録日時','更新日時']]],
   ['トレーニング',[['記録ID','日付','区分','部位','時間 分','時間','開始時刻','メモ','有効','登録日時','更新日時','入力根拠','セット数','セット内訳']]],
@@ -531,21 +575,113 @@ async function gEnsureSheet(){
   showSheetLink();
   return id;
 }
-// シート全体は1回読んで少しの間使い回す（となりの月をまとめて読むため）
-let gRowsP=null,gRowsAt=0;
-function gRows(){
-  if(gRowsP&&Date.now()-gRowsAt<15000)return gRowsP;
-  gRowsAt=Date.now();
-  return gRowsP=(async()=>{
+// 記録は1年に1ファイル。今年のファイル（gSheet）はURLを変えずに使い続け、年が明けたら前の年の行を
+// 「Physical Note 記録シート（2026年）」のような年別ファイルへ移す。アプリがふだん読むのは今年のファイルだけ
+const G_REC=[['食事',[1]],['体重',[1]],['トレーニング',[1]],['月曜体組成',[1,2]],['日次確認',[0]]]; // 記録のタブと日付の列
+const G_ALL=[['設定','A2:C6'],['食事','A2:N'],['体重','A2:H'],['トレーニング','A2:N'],['月曜体組成','A2:P'],['日次確認','A2:C'],['レシピ','A2:T']];
+const LS_YEARS='pn.app.years';
+let gYears={};try{gYears=JSON.parse(localStorage.getItem(LS_YEARS)||'{}')||{};}catch(_){}
+let gOld={}; // 今年のファイルに残っている前の年の行数 {2026: 120}
+const gThisYear=()=>+(S.today||'').slice(0,4)||new Date().getFullYear();
+const gKey=v=>{const m=String(v==null?'':v).match(/(\d{4})[-\/年.](\d{1,2})[-\/月.](\d{1,2})/);return m?m[1]+'-'+('0'+m[2]).slice(-2)+'-'+('0'+m[3]).slice(-2):'';};
+const gRowYear=(cols,r)=>{for(const c of cols){const k=gKey(r[c]);if(k)return +k.slice(0,4);}return 0;};
+const gFilled=r=>r&&r.some(x=>x!==''&&x!=null);
+const gSig=r=>JSON.stringify(r);
+async function gGet(id,ranges){
+  const r=await gFetch('https://sheets.googleapis.com/v4/spreadsheets/'+id+'/values:batchGet?'+ranges.map(([s,a])=>'ranges='+encodeURIComponent("'"+s+"'!"+a)).join('&')+'&valueRenderOption=UNFORMATTED_VALUE&dateTimeRenderOption=FORMATTED_STRING');
+  const out={};(r.valueRanges||[]).forEach((v,i)=>{out[ranges[i][0]]=v.values||[];});
+  return out;
+}
+// 記録のタブを、行の位置がわかるまま読む（i番目 = シートの i+2 行目）
+const gRaw=id=>gGet(id,G_REC.map(([t])=>[t,'A2:Z']));
+const gTidy=out=>{Object.keys(out).forEach(k=>{out[k]=out[k].filter(gFilled);});return out;};
+// 1年分は1回読んで少しの間使い回す（となりの月をまとめて読むため）
+let gRowsC={};
+function gRows(y){
+  y=+y||gThisYear();
+  const c=gRowsC[y];if(c&&Date.now()-c.at<15000)return c.p;
+  const p=(async()=>{
     const id=await gEnsureSheet();
-    const ranges=[['設定','A2:C6'],['食事','A2:N'],['体重','A2:H'],['トレーニング','A2:N'],['月曜体組成','A2:P'],['日次確認','A2:C'],['レシピ','A2:T']];
-    const r=await gFetch('https://sheets.googleapis.com/v4/spreadsheets/'+id+'/values:batchGet?'+ranges.map(([s,a])=>'ranges='+encodeURIComponent("'"+s+"'!"+a)).join('&')+'&valueRenderOption=UNFORMATTED_VALUE&dateTimeRenderOption=FORMATTED_STRING');
-    const out={};(r.valueRanges||[]).forEach((v,i)=>{out[ranges[i][0]]=(v.values||[]).filter(row=>row.some(x=>x!==''&&x!=null));});
-    return out;
-  })().catch(e=>{gRowsP=null;throw e;});
+    const main=gTidy(await gGet(id,G_ALL));
+    if(y===gThisYear()){
+      const old={};G_REC.forEach(([t,cols])=>(main[t]||[]).forEach(r=>{const ry=gRowYear(cols,r);if(ry&&ry<y)old[ry]=(old[ry]||0)+1;}));
+      gOld=old;paintYearBar();
+      return main;
+    }
+    // 前の年：年別ファイルを読み、今年のファイルにまだ残っているその年の行も足す（同じ行は二重にしない）
+    if(!gYears[y])return main;
+    const R=gTidy(await gGet(gYears[y],G_ALL));
+    G_REC.forEach(([t])=>{const have=new Set((R[t]||[]).map(gSig));R[t]=(R[t]||[]).concat((main[t]||[]).filter(r=>!have.has(gSig(r))));});
+    return R;
+  })().catch(e=>{delete gRowsC[y];throw e;});
+  gRowsC[y]={p,at:Date.now()};
+  return p;
+}
+// ドライブから、このアプリが作った年別ファイルとバックアップを探す
+let gBackups=[];
+async function gListFiles(){
+  const q=k=>encodeURIComponent("appProperties has { key='pnKind' and value='"+k+"' } and trashed=false");
+  const [ys,bs]=await Promise.all([
+    gFetch('https://www.googleapis.com/drive/v3/files?q='+q('year')+'&orderBy=createdTime&fields=files(id,appProperties)&pageSize=100'),
+    gFetch('https://www.googleapis.com/drive/v3/files?q='+q('backup')+'&orderBy='+encodeURIComponent('createdTime desc')+'&fields=files(id,name)&pageSize=5')]);
+  const m={};(ys.files||[]).forEach(f=>{const y=f.appProperties&&f.appProperties.pnYear;if(y&&!m[y])m[y]=f.id;});
+  gYears=m;gBackups=bs.files||[];
+  try{localStorage.setItem(LS_YEARS,JSON.stringify(m));}catch(_){}
+}
+const gCopy=(id,name,props)=>gFetch('https://www.googleapis.com/drive/v3/files/'+id+'/copy?fields=id',{method:'POST',body:JSON.stringify({name,appProperties:props})});
+// 指定した行を消す。下の行から消すので、途中で行番号がずれない
+async function gDeleteRows(id,rows){
+  const tabs=Object.keys(rows).filter(t=>rows[t].length);if(!tabs.length)return;
+  const meta=await gFetch('https://sheets.googleapis.com/v4/spreadsheets/'+id+'?fields=sheets.properties(sheetId,title,gridProperties.rowCount)');
+  const P={};(meta.sheets||[]).forEach(s=>{P[s.properties.title]=s.properties;});
+  const req=[];
+  tabs.forEach(t=>{const p=P[t];if(!p)return;
+    const idx=[...new Set(rows[t])].sort((a,b)=>b-a);
+    // 見出し以外の行をすべて消すことはできないので、そのときは先に空の行を1つ足す
+    if(idx.length>=p.gridProperties.rowCount-1)req.push({appendDimension:{sheetId:p.sheetId,dimension:'ROWS',length:1}});
+    for(let i=0;i<idx.length;){let j=i;while(j+1<idx.length&&idx[j+1]===idx[j]-1)j++;
+      req.push({deleteDimension:{range:{sheetId:p.sheetId,dimension:'ROWS',startIndex:idx[j]+1,endIndex:idx[i]+2}}});i=j+1;}
+  });
+  if(req.length)await gFetch('https://sheets.googleapis.com/v4/spreadsheets/'+id+':batchUpdate',{method:'POST',body:JSON.stringify({requests:req})});
+}
+// y年の記録を、今年のファイルから年別ファイルへ移す。年別ファイルに入ったのを読み直して確かめた行だけを今年のファイルから消す
+async function gRollYear(y){
+  const main=await gEnsureSheet();
+  await gListFiles();
+  let arch=gYears[y];
+  if(!arch){
+    // 初めての年：今年のファイルを丸ごとコピーして、その年以外の行を消す（設定・レシピはその時点のものが残る）
+    arch=(await gCopy(main,G_TITLE+'（'+y+'年）',{pnKind:'year',pnYear:String(y)})).id;
+    const A=await gRaw(arch),del={};
+    G_REC.forEach(([t,cols])=>{del[t]=[];(A[t]||[]).forEach((r,i)=>{if(gFilled(r)&&gRowYear(cols,r)!==y)del[t].push(i);});});
+    await gDeleteRows(arch,del);
+    gYears[y]=arch;try{localStorage.setItem(LS_YEARS,JSON.stringify(gYears));}catch(_){}
+  }else{
+    // あとから書かれたその年の行：年別ファイルの下に書き足す（読んだ値をそのまま書く）
+    const [A,M]=await Promise.all([gRaw(arch),gRaw(main)]);
+    for(const [t,cols] of G_REC){
+      const have=new Set((A[t]||[]).filter(gFilled).map(gSig));
+      const add=(M[t]||[]).filter(r=>gFilled(r)&&gRowYear(cols,r)===y&&!have.has(gSig(r)));
+      if(add.length)await gFetch('https://sheets.googleapis.com/v4/spreadsheets/'+arch+'/values/'+encodeURIComponent("'"+t+"'!A1")+':append?valueInputOption=RAW&insertDataOption=INSERT_ROWS',{method:'POST',body:JSON.stringify({values:add})});
+    }
+  }
+  const [A,M]=await Promise.all([gRaw(arch),gRaw(main)]),del={};let n=0;
+  G_REC.forEach(([t,cols])=>{const have=new Set((A[t]||[]).filter(gFilled).map(gSig));del[t]=[];
+    (M[t]||[]).forEach((r,i)=>{if(gFilled(r)&&gRowYear(cols,r)===y&&have.has(gSig(r))){del[t].push(i);n++;}});});
+  await gDeleteRows(main,del);
+  return n;
+}
+// 今年のファイルの記録を消す。先にファイルを丸ごとコピーしてバックアップを残す
+async function gReset(withRecipes){
+  const main=await gEnsureSheet();
+  const now=new Date(),st=now.getFullYear()+'-'+pad(now.getMonth()+1)+'-'+pad(now.getDate())+' '+pad(now.getHours())+':'+pad(now.getMinutes());
+  const bk=await gCopy(main,G_TITLE+' バックアップ（'+st+'）',{pnKind:'backup'});
+  if(!bk||!bk.id)throw new Error('バックアップを作れなかったので、記録は消していません');
+  const tabs=G_REC.map(([t])=>t).concat(withRecipes?['レシピ']:[]);
+  await gFetch('https://sheets.googleapis.com/v4/spreadsheets/'+main+'/values:batchClear',{method:'POST',body:JSON.stringify({ranges:tabs.map(t=>"'"+t+"'!A2:Z")})});
 }
 function gMonth(R,ym){
-  const key=v=>{const m=String(v==null?'':v).match(/(\d{4})[-\/年.](\d{1,2})[-\/月.](\d{1,2})/);return m?m[1]+'-'+('0'+m[2]).slice(-2)+'-'+('0'+m[3]).slice(-2):'';};
+  const key=gKey;
   const num=v=>(v===''||v==null||isNaN(Number(v)))?null:Number(v);
   const valid=v=>!(v===false||String(v==null?'':v).trim().toUpperCase()==='FALSE');
   const str=v=>v==null?'':String(v);
@@ -577,13 +713,13 @@ function gMonth(R,ym){
   return {ym,today,settings,meals:allM.filter(m=>inYm(m.date)),weights:allW.filter(w=>inYm(w.date)),training:allT.filter(t=>inYm(t.date)),body,days,recipes:Object.keys(latest).map(k=>latest[k])};
 }
 async function gLoad(ym){
-  const d=gMonth(await gRows(),ym);
+  const d=gMonth(await gRows(ym.slice(0,4)),ym);
   return {d,text:JSON.stringify(d)};
 }
 function gSheetUrl(){return gSheet?'https://docs.google.com/spreadsheets/d/'+gSheet+'/edit':'';}
 // ログインボタン（最初の1回）
 function gStart(){document.getElementById('keyErr').textContent='Googleに移動しています…';gRedirect('select_account');}
-function showSheetLink(){const a=document.getElementById('sheetLink');if(a&&gSheet){a.href=gSheetUrl();a.hidden=false;document.getElementById('gemLink').hidden=false;document.getElementById('gemOpen').hidden=false;}}
+function showSheetLink(){const a=document.getElementById('sheetLink');if(a&&gSheet){a.hidden=false;document.getElementById('gemLink').hidden=false;document.getElementById('gemOpen').hidden=false;}}
 // Gemini に貼る指示文（gemini.txt）に、この人の記録シートとアプリのURLを入れて出す
 let gemTpl=null;
 async function openGem(){
@@ -602,7 +738,64 @@ document.getElementById('gemCopy').addEventListener('click',async()=>{
   try{await navigator.clipboard.writeText(ta.value);}catch(_){ta.select();document.execCommand('copy');}
   b.textContent='コピーしました';setTimeout(()=>{b.textContent='コピー';},2000);
 });
-['touchstart','touchmove','touchend'].forEach(t=>document.getElementById('gemPanel').addEventListener(t,e=>e.stopPropagation(),{passive:true}));
+['touchstart','touchmove','touchend'].forEach(t=>['gemPanel','mngPanel'].forEach(id=>document.getElementById(id).addEventListener(t,e=>e.stopPropagation(),{passive:true})));
+// ---------- 記録シートの管理：見る年・年の切り替え・リセット ----------
+let mngBusy=false;
+function mngMsg(ok,err){document.getElementById('mngOk').textContent=ok||'';document.getElementById('mngErr').textContent=err||'';}
+function paintMng(){
+  const ty=gThisYear(),yrs=[...new Set([ty].concat(Object.keys(gYears).map(Number),Object.keys(gOld).map(Number)))].filter(y=>y&&y<=ty).sort((a,b)=>b-a);
+  document.getElementById('mngOpen').href=gSheetUrl();
+  document.getElementById('mngYears').innerHTML=yrs.map(y=>`<button type="button" data-year="${y}" class="${y===S.year?'on':''}">${y}年${y===ty?'（今年）':''}</button>`).join('');
+  const old=Object.keys(gOld).map(Number).sort((a,b)=>a-b),rb=document.getElementById('rollBtn');
+  if(old.length){
+    const y=old[0];
+    document.getElementById('rollText').textContent=y+'年の記録が'+gOld[y]+'件、今年のファイルに残っています。「'+G_TITLE+'（'+y+'年）」に移すと、今年のファイルが軽くなります。移した記録は、上の「見る年」からいつでも見られます。';
+    rb.textContent=y+'年の記録を移す';rb.dataset.y=y;rb.hidden=false;rb.disabled=mngBusy;
+  }else{
+    document.getElementById('rollText').textContent='年が明けたら、ここで前の年の記録を年ごとのファイルに移せます。今年のファイルに前の年の記録はありません。';
+    rb.hidden=true;
+  }
+  document.getElementById('mngBk').innerHTML=gBackups.length?'リセット前のバックアップ：'+gBackups.map(f=>`<br><a href="https://docs.google.com/spreadsheets/d/${esc(f.id)}/edit" target="_blank" rel="noopener">${esc(f.name)}</a>`).join(''):'';
+  document.getElementById('rsGo').disabled=mngBusy||document.getElementById('rsIn').value.trim()!=='リセット';
+}
+async function openMng(){
+  mngMsg();document.getElementById('rsBox').hidden=true;document.getElementById('rsBtn').hidden=false;document.getElementById('rsIn').value='';
+  document.getElementById('mngPanel').hidden=false;paintMng();
+  try{await Promise.all([gListFiles(),gRows(gThisYear())]);paintMng();}catch(e){mngMsg('',e&&e.message||String(e));}
+}
+// 管理の操作のあとは、読み込んだ内容を捨てて読み直す
+function mngReload(){gRowsC={};S.cache={};S.raw={};S.at={};try{localStorage.removeItem(LSM);}catch(_){}refresh();}
+document.getElementById('sheetLink').addEventListener('click',openMng);
+document.getElementById('mngClose').addEventListener('click',()=>{document.getElementById('mngPanel').hidden=true;});
+document.getElementById('mngYears').addEventListener('click',e=>{const b=e.target.closest('button[data-year]');if(!b)return;setYear(+b.dataset.year);document.getElementById('mngPanel').hidden=true;});
+document.getElementById('rollBtn').addEventListener('click',async e=>{
+  const y=+e.currentTarget.dataset.y;if(!y||mngBusy)return;
+  mngBusy=true;mngMsg(y+'年の記録を移しています…（閉じずにお待ちください）');paintMng();
+  try{const n=await gRollYear(y);delete gOld[y];await gListFiles();mngReload();await gRows(gThisYear()).catch(()=>{});
+    mngMsg(y+'年の記録を'+n+'件、「'+G_TITLE+'（'+y+'年）」に移しました。');}
+  catch(err){mngMsg('','途中で止まりました（'+(err&&err.message||err)+'）。記録は消えていません。もう一度押すと続きから移します。');}
+  mngBusy=false;paintMng();
+});
+document.getElementById('rsBtn').addEventListener('click',()=>{document.getElementById('rsBox').hidden=false;document.getElementById('rsBtn').hidden=true;document.getElementById('rsIn').focus();});
+document.getElementById('rsIn').addEventListener('input',paintMng);
+document.getElementById('rsGo').addEventListener('click',async()=>{
+  if(mngBusy||document.getElementById('rsIn').value.trim()!=='リセット')return;
+  mngBusy=true;mngMsg('バックアップを作っています…');paintMng();
+  try{await gReset(document.getElementById('rsRecipe').checked);await gListFiles().catch(()=>{});mngReload();
+    document.getElementById('rsBox').hidden=true;document.getElementById('rsBtn').hidden=false;document.getElementById('rsIn').value='';
+    mngMsg('記録を消しました。消す前の内容は、下のバックアップに残っています。');}
+  catch(err){mngMsg('','リセットできませんでした（'+(err&&err.message||err)+'）');}
+  mngBusy=false;paintMng();
+});
+// 日ごとの画面の上に出すお知らせ：前の年を見ているとき／前の年の記録が今年のファイルに残っているとき
+function paintYearBar(){
+  const bar=document.getElementById('yearBar'),t=document.getElementById('yearText'),b=document.getElementById('yearBtn');if(!bar)return;
+  const ty=gThisYear(),old=Object.keys(gOld).map(Number).sort((a,b)=>a-b);
+  if(S.year&&S.year!==ty){t.textContent=S.year+'年の記録を見ています';b.textContent='今年に戻る';b.dataset.go='today';bar.hidden=false;}
+  else if(GMODE()&&old.length){t.textContent=old[0]+'年の記録を、年ごとのファイルに移せます';b.textContent='移す';b.dataset.go='mng';bar.hidden=false;}
+  else bar.hidden=true;
+}
+document.getElementById('yearBtn').addEventListener('click',e=>{if(e.currentTarget.dataset.go==='mng')openMng();else setYear(gThisYear());});
 if(GCLIENT&&!DEMO){
   document.getElementById('gBox').hidden=false;
   document.getElementById('gBtn').addEventListener('click',gStart);
@@ -751,7 +944,7 @@ function schedulePaint(){if(!paintRaf)paintRaf=requestAnimationFrame(()=>{paintR
 let saveT=0;
 function saveCache(){
   if(!LSM)return;clearTimeout(saveT);
-  saveT=setTimeout(()=>{try{const o={};Object.keys(S.raw).filter(inYear).forEach(ym=>o[ym]=S.raw[ym]);localStorage.setItem(LSM,JSON.stringify(o));localStorage.removeItem(LS_OLD);}catch(_){}},400);
+  saveT=setTimeout(()=>{try{const o={};Object.keys(S.raw).filter(ym=>ym.slice(0,4)===S.today.slice(0,4)).forEach(ym=>o[ym]=S.raw[ym]);localStorage.setItem(LSM,JSON.stringify(o));localStorage.removeItem(LS_OLD);}catch(_){}},400);
 }
 // 読み込みは同時に2件まで。今見ている月を先に、となりの月は後回し
 const queue=[];let active=0;
@@ -788,19 +981,27 @@ function need(ym,low){
   if(!S.at[ym]&&!S.failed[ym])fetchMonth(ym,low);
   return d||null;
 }
-function refresh(){S.failed={};$('err').classList.remove('on');gRowsP=null;
+function refresh(){S.failed={};$('err').classList.remove('on');gRowsC={};
   Object.keys(S.at).forEach(ym=>S.at[ym]=0); // ほかの月は次に見たときに読み直す
   const yms=new Set([ymOf(S.date),S.view==='list'?S.listYm:null,S.view==='graph'?S.graphYm:null,sheetShown?S.calYm:null].filter(ym=>ym&&inYear(ym)));
   return Promise.all([...yms].map(ym=>fetchMonth(ym)));}
 function syncToday(d){
   if(!d.today||d.today===S.today)return false;
-  const follow=S.date===S.today||!S.touched;
-  S.today=d.today;S.year=+d.today.slice(0,4);
-  if(follow)applyDate(d.today);
+  const follow=S.date===S.today||!S.touched,wasThis=S.year===+String(S.today).slice(0,4);
+  S.today=d.today;
+  if(wasThis||follow){S.year=+d.today.slice(0,4);applyDate(follow?d.today:S.date);} // 前の年を見ているときはそのまま
   return true;
 }
 function hasRecord(k){const d=S.cache[ymOf(k)];if(!d)return false;const r=d.days.find(x=>x.date===k);return !!(r&&(r.meals>0||r.am!=null||r.pm!=null||r.training));}
 function applyDate(k){S.date=clampDate(k);S.listYm=S.graphYm=ymOf(S.date);}
+// 見る年を切り替える。前の年は、今日と同じ月日から見はじめる
+function setYear(y){
+  if(!y||y===S.year)return;
+  const ty=+S.today.slice(0,4);S.year=y;S.touched=y!==ty;
+  applyDate(y===ty?S.today:keyOf(parse(y+S.today.slice(4))));
+  if(sheetShown)closeCal();
+  paintAll();paintYearBar();
+}
 
 // ---------- 日ごと ----------
 const ringSp=Spring(p=>{const c=2*Math.PI*46,a=$('ringArc');a.setAttribute('stroke-dasharray',(c*p/100)+' '+c);a.style.opacity=p>.5?1:0;});
@@ -1010,9 +1211,9 @@ document.addEventListener('click',e=>{
   if(b.closest('.nav')){if(b.dataset.v!==S.view)show(b.dataset.v);return;}
   if(b.dataset.act==='refresh')return refresh();
   if(b.id==='prevDay'||b.id==='nextDay'){S.touched=true;return dayPager.go(b.id==='nextDay'?1:-1);}
-  if(b.id==='goToday')return jumpDay(S.today);
+  if(b.id==='goToday'){if(S.year!==+S.today.slice(0,4))return setYear(+S.today.slice(0,4));return jumpDay(S.today);}
   if(b.id==='openCal')return openCal();
-  if(b.id==='calToday'){closeCal();return jumpDay(S.today);}
+  if(b.id==='calToday'){closeCal();if(S.year!==+S.today.slice(0,4))return setYear(+S.today.slice(0,4));return jumpDay(S.today);}
   if(b.id==='toList'){S.type='選択日の食事';return show('list');}
   if(b.dataset.k&&b.closest('#week'))return jumpDay(b.dataset.k);
   if(b.dataset.k&&b.closest('#cal')){closeCal();return jumpDay(b.dataset.k);}
@@ -1034,7 +1235,7 @@ window.addEventListener('resize',()=>{placeWeek(false);if(sheetShown){sheetH=she
     bar.style.height=(d>.5?d+top0:0)+'px'; // 見本の帯がある時はその分も埋める
     if(!busy){icon.style.opacity=d>=GO?1:Math.min(.45,d/GO*.45);icon.style.transform='rotate('+(Math.min(d,GO)/GO*270)+'deg) scale('+(d>=GO?1.15:1)+')';}
   });
-  const free=()=>window.scrollY<=0&&!sheetShown&&$('keyPanel').hidden&&$('gemPanel').hidden;
+  const free=()=>window.scrollY<=0&&!sheetShown&&$('keyPanel').hidden&&$('gemPanel').hidden&&$('mngPanel').hidden;
   document.addEventListener('touchstart',e=>{
     y0=null;lock=false;
     if(busy||e.touches.length!==1||!free())return;
