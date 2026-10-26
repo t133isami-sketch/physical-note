@@ -193,7 +193,13 @@ svg text{font-family:inherit}
 .gemc .sub{background:transparent;color:var(--p800);border:1px solid #d9cfe9}
 /* 見る年の切り替え */
 .tbtns{display:flex;gap:6px;align-items:center}
-.yrchip{font-size:12px;font-weight:700;color:#fff;opacity:.9;padding:4px 10px;border-radius:999px;background:rgba(255,255,255,.16)}
+/* ボタンが4つ並ぶので、文字を折り返さず詰める。狭い画面では左の名前を省略する */
+.trow .t{flex:1;min-width:0;overflow:hidden;text-overflow:ellipsis;white-space:nowrap}
+.trow .links{gap:5px}
+.trow .sheetlink{white-space:nowrap;padding:4px 9px}
+.trow .sheetlink.gear{padding:4px 7px}
+.keyc h3{font-size:14px;color:var(--ink);margin-top:20px;padding-top:14px;border-top:1px solid var(--line)}
+.keyc .open{display:block;text-align:center;margin-top:14px;padding:13px 0;border-radius:14px;background:var(--p800);color:#fff;font-weight:700;font-size:15px;text-decoration:none}
 .keyc .yrs{display:flex;flex-wrap:wrap;gap:8px;margin-top:14px}
 .keyc .yrs button{width:auto;margin:0;padding:8px 14px;border-radius:18px;font-size:13px;background:var(--bg);color:var(--p800);border:1px solid #d9cfe9}
 .keyc .yrs button.on{background:var(--p800);color:#fff;border-color:var(--p800)}
@@ -266,8 +272,10 @@ svg text{font-family:inherit}
   </div>
 </div>
 <div class="keyp" id="yearPanel" hidden>
-  <div class="keyc">
-    <h2>見る年</h2>
+  <div class="keyc gemc">
+    <h2>記録シート</h2>
+    <a class="open" id="sheetOpen" target="_blank" rel="noopener">記録シートを開く</a>
+    <h3>見る年</h3>
     <p>記録は1年に1つのファイルです。アプリがふだん読むのは今年のファイルだけで、前の年は選んだときだけ読み込みます。</p>
     <div class="yrs" id="yearList"></div>
     <p>新しい年のファイル（「フィジカルノート｜2027」または「栄養・増量管理 2027年」）ができると、ここに自動で加わります。</p>
@@ -291,7 +299,7 @@ svg text{font-family:inherit}
 <!-- 日ごと -->
 <section id="v-day">
   <div class="top">
-    <div class="trow"><span class="t">フィジカルノート</span><span class="tbtns"><span class="links" id="gptLinks"><a class="sheetlink" id="gptOpen" rel="noopener">ChatGPT</a><button class="sheetlink" id="gptLink">指示文</button><button class="sheetlink gear" id="setLink" aria-label="設定"><svg width="15" height="15" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.2" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><circle cx="12" cy="12" r="3"/><path d="M19.4 15a1.7 1.7 0 0 0 .3 1.8l.1.1a2 2 0 1 1-2.8 2.8l-.1-.1a1.7 1.7 0 0 0-1.8-.3 1.7 1.7 0 0 0-1 1.5V21a2 2 0 1 1-4 0v-.1a1.7 1.7 0 0 0-1.1-1.5 1.7 1.7 0 0 0-1.8.3l-.1.1a2 2 0 1 1-2.8-2.8l.1-.1a1.7 1.7 0 0 0 .3-1.8 1.7 1.7 0 0 0-1.5-1H3a2 2 0 1 1 0-4h.1a1.7 1.7 0 0 0 1.5-1.1 1.7 1.7 0 0 0-.3-1.8l-.1-.1a2 2 0 1 1 2.8-2.8l.1.1a1.7 1.7 0 0 0 1.8.3H9a1.7 1.7 0 0 0 1-1.5V3a2 2 0 1 1 4 0v.1a1.7 1.7 0 0 0 1 1.5 1.7 1.7 0 0 0 1.8-.3l.1-.1a2 2 0 1 1 2.8 2.8l-.1.1a1.7 1.7 0 0 0-.3 1.8V9a1.7 1.7 0 0 0 1.5 1H21a2 2 0 1 1 0 4h-.1a1.7 1.7 0 0 0-1.5 1z"/></svg></button></span><button class="yrchip num" id="yearPick" aria-label="見る年を選ぶ">—</button></span></div>
+    <div class="trow"><span class="t">フィジカルノート</span><span class="tbtns"><span class="links" id="gptLinks"><a class="sheetlink" id="gptOpen" rel="noopener">ChatGPT</a><button class="sheetlink" id="gptLink">指示文</button><button class="sheetlink" id="yearPick">記録シート</button><button class="sheetlink gear" id="setLink" aria-label="設定"><svg width="15" height="15" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.2" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><circle cx="12" cy="12" r="3"/><path d="M19.4 15a1.7 1.7 0 0 0 .3 1.8l.1.1a2 2 0 1 1-2.8 2.8l-.1-.1a1.7 1.7 0 0 0-1.8-.3 1.7 1.7 0 0 0-1 1.5V21a2 2 0 1 1-4 0v-.1a1.7 1.7 0 0 0-1.1-1.5 1.7 1.7 0 0 0-1.8.3l-.1.1a2 2 0 1 1-2.8-2.8l.1-.1a1.7 1.7 0 0 0 .3-1.8 1.7 1.7 0 0 0-1.5-1H3a2 2 0 1 1 0-4h.1a1.7 1.7 0 0 0 1.5-1.1 1.7 1.7 0 0 0-.3-1.8l-.1-.1a2 2 0 1 1 2.8-2.8l.1.1a1.7 1.7 0 0 0 1.8.3H9a1.7 1.7 0 0 0 1-1.5V3a2 2 0 1 1 4 0v.1a1.7 1.7 0 0 0 1 1.5 1.7 1.7 0 0 0 1.8-.3l.1-.1a2 2 0 1 1 2.8 2.8l-.1.1a1.7 1.7 0 0 0-.3 1.8V9a1.7 1.7 0 0 0 1.5 1H21a2 2 0 1 1 0 4h-.1a1.7 1.7 0 0 0-1.5 1z"/></svg></button></span></span></div>
     <div class="datebar">
       <button class="round" id="prevDay" aria-label="前の日">‹</button>
       <div class="d num" id="dayTitle">—</div>
@@ -688,14 +696,17 @@ function setYear(y){
   if(sheetShown)closeCal();
   paintAll();paintYear();
 }
+// 年ごとの記録シート。分かっていない年は、ドライブでその年のファイルを探す
+const SHEETS={2026:'https://docs.google.com/spreadsheets/d/1snJJARGhmVVdWXeCDIoghGYahkcrfpisr29HYVYaGJU/edit'};
+const sheetUrl=y=>SHEETS[y]||'https://drive.google.com/drive/search?q='+encodeURIComponent('フィジカルノート｜'+y);
 function paintYear(){
-  $('yearPick').textContent=S.year+'年';
   const past=S.year!==thisYear();
   $('yearBar').hidden=!past;if(past)$('yearText').textContent=S.year+'年の記録を見ています';
 }
 function openYears(){
   const ys=[];for(let y=thisYear();y>=Math.min(FIRST_YEAR,thisYear());y--)ys.push(y);
   $('yearList').innerHTML=ys.map(y=>`<button type="button" data-year="${y}" class="${y===S.year?'on':''}">${y}年${y===thisYear()?'（今年）':''}</button>`).join('');
+  $('sheetOpen').href=sheetUrl(S.year);$('sheetOpen').textContent=S.year+'年の記録シートを開く';
   $('yearPanel').hidden=false;
 }
 
