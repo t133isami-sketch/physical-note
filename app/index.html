@@ -11,6 +11,7 @@
 <meta name="theme-color" content="#4b2e83">
 <meta name="referrer" content="no-referrer">
 <link rel="preconnect" href="https://script.google.com" crossorigin>
+<link rel="preconnect" href="https://sheets.googleapis.com" crossorigin>
 <link rel="preconnect" href="https://script.googleusercontent.com" crossorigin>
 <link rel="apple-touch-icon" href="../icon-180.png">
 <link rel="icon" type="image/png" href="../icon-180.png">
@@ -181,6 +182,10 @@ svg text{font-family:inherit}
 .keyc input:focus{outline:2px solid var(--p600);outline-offset:1px}
 .keyc button{width:100%;margin-top:12px;padding:13px 0;border-radius:14px;background:var(--p800);color:#fff;font-weight:700;font-size:15px}
 .keyc .kerr{color:var(--o700);min-height:1.5em}
+.keyc .gbtn{display:flex;align-items:center;justify-content:center;gap:10px;background:#fff;color:#1f1f1f;border:1px solid #dadce0;font-weight:600;margin-top:16px}
+.keyc .or{margin-top:18px;padding-top:14px;border-top:1px solid var(--line)}
+.sheetlink{font-size:12px;font-weight:700;color:#fff;opacity:.9;text-decoration:none;padding:4px 10px;border-radius:999px;background:rgba(255,255,255,.16)}
+.sheetlink[hidden]{display:none}
 .demo-bar{position:sticky;top:0;z-index:44;background:var(--o100);color:var(--o700);font-size:12px;font-weight:700;text-align:center;padding:calc(6px + env(safe-area-inset-top)) 12px 6px}
 .demo-bar[hidden]{display:none}
 </style>
@@ -192,7 +197,12 @@ svg text{font-family:inherit}
 <div class="keyp" id="keyPanel" hidden>
   <form class="keyc" id="keyForm" autocomplete="off">
     <h2>Physical Note</h2>
-    <p>最初の1回だけ、発行ページで作った接続リンクを貼り付けてください。</p>
+    <div id="gBox" hidden>
+      <p>Googleでログインすると、あなたのGoogleドライブに記録シートができて、すぐに使えます。アプリが触れるのは、このアプリが作ったシートだけです。<a href="../start/privacy.html" style="color:var(--p600)">プライバシーポリシー</a></p>
+      <button type="button" id="gBtn" class="gbtn"><svg width="18" height="18" viewBox="0 0 48 48" aria-hidden="true"><path fill="#FFC107" d="M43.6 20.5H42V20H24v8h11.3C33.7 32.7 29.2 36 24 36c-6.6 0-12-5.4-12-12s5.4-12 12-12c3.1 0 5.8 1.2 7.9 3.1l5.7-5.7C34 6.1 29.3 4 24 4 12.9 4 4 12.9 4 24s8.9 20 20 20 20-8.9 20-20c0-1.3-.1-2.4-.4-3.5z"/><path fill="#FF3D00" d="M6.3 14.7l6.6 4.8C14.7 15.1 19 12 24 12c3.1 0 5.8 1.2 7.9 3.1l5.7-5.7C34 6.1 29.3 4 24 4 16.3 4 9.7 8.3 6.3 14.7z"/><path fill="#4CAF50" d="M24 44c5.2 0 9.9-2 13.4-5.2l-6.2-5.2C29.2 35.1 26.7 36 24 36c-5.2 0-9.6-3.3-11.3-7.9l-6.5 5C9.5 39.6 16.2 44 24 44z"/><path fill="#1976D2" d="M43.6 20.5H42V20H24v8h11.3c-.8 2.2-2.2 4.2-4.1 5.6l6.2 5.2C37 39.2 44 34 44 24c0-1.3-.1-2.4-.4-3.5z"/></svg>Googleでログインしてはじめる</button>
+      <p class="or">接続リンクをお持ちの方は、下に貼り付けてください。</p>
+    </div>
+    <p id="linkHint">最初の1回だけ、発行ページで作った接続リンクを貼り付けてください。</p>
     <input id="keyIn" type="text" inputmode="text" autocapitalize="off" autocorrect="off" spellcheck="false" aria-label="接続リンクまたは合言葉">
     <button type="submit">はじめる</button>
     <p class="kerr" id="keyErr"></p>
@@ -204,7 +214,7 @@ svg text{font-family:inherit}
 <!-- 日ごと -->
 <section id="v-day">
   <div class="top">
-    <div class="trow"><span class="t">Physical Note</span></div>
+    <div class="trow"><span class="t">Physical Note</span><a class="sheetlink" id="sheetLink" hidden target="_blank" rel="noopener">記録シートを開く</a></div>
     <div class="datebar">
       <button class="round" id="prevDay" aria-label="前の日">‹</button>
       <div class="d num" id="dayTitle">—</div>
@@ -359,6 +369,10 @@ function demoMonth(ym){
 }
 async function apiLoad(ym){
   if(DEMO){const d=demoMonth(ym);return {d,text:JSON.stringify(d)};}
+  if(GMODE()){
+    if(!gSheet&&!gCached()){askKey();throw new Error('Googleでログインしてください');}
+    return gLoad(ym);
+  }
   const k=appKey();
   if(!k||!API){askKey();throw new Error('接続リンクが未設定です');}
   const res=await fetch(API+'?k='+encodeURIComponent(k)+'&ym='+encodeURIComponent(ym),{cache:'no-store'});
@@ -371,6 +385,155 @@ async function apiLoad(ym){
   return {d,text};
 }
 if(DEMO)document.getElementById('demoBar').hidden=false;
+// ---------- Googleログイン方式 ----------
+// Googleでログインすると、その人のドライブに記録シートを作り（2回目からは見つけて）、Sheets API で直接読む。
+// 権限は drive.file だけ：このアプリが作ったシートにしか触れない。読み取り口（Apps Script）や合言葉は要らない
+const GCLIENT=''; // Google Cloud の OAuth クライアントID（…apps.googleusercontent.com）
+const G_SCOPE='https://www.googleapis.com/auth/drive.file';
+const G_TITLE='Physical Note 記録シート';
+const LS_GTOK='pn.app.gtok',LS_SHEET='pn.app.sheet';
+let gSheet='';try{gSheet=localStorage.getItem(LS_SHEET)||'';}catch(_){}
+const GMODE=()=>!DEMO&&!!GCLIENT&&(!!gSheet||!API);
+let gClient=null,gWait=null,gGis=null;
+function gLoadGis(){
+  if(gGis)return gGis;
+  return gGis=new Promise((ok,ng)=>{const s=document.createElement('script');s.src='https://accounts.google.com/gsi/client';s.async=true;
+    s.onload=()=>{gClient=google.accounts.oauth2.initTokenClient({client_id:GCLIENT,scope:G_SCOPE,callback:r=>{
+      const w=gWait;gWait=null;if(!w)return;
+      if(r&&r.access_token){try{localStorage.setItem(LS_GTOK,JSON.stringify({t:r.access_token,exp:Date.now()+(+r.expires_in||3600)*1000-60000}));}catch(_){}w.ok(r.access_token);}
+      else w.ng(new Error('Googleにログインできませんでした'));
+    },error_callback:e=>{const w=gWait;gWait=null;if(w)w.ng(new Error(e&&e.type==='popup_closed'?'ログインが閉じられました':'Googleにログインできませんでした'));}});ok();};
+    s.onerror=()=>{gGis=null;ng(new Error('Googleのログイン画面を読み込めませんでした'));};document.head.appendChild(s);});
+}
+function gCached(){try{const o=JSON.parse(localStorage.getItem(LS_GTOK)||'null');return o&&o.exp>Date.now()?o.t:'';}catch(_){return '';}}
+// トークンが切れていたら、ボタンを押したとき（ユーザーの操作中）だけGoogleの確認を出す
+function gToken(){
+  const t=gCached();if(t)return Promise.resolve(t);
+  const tap=navigator.userActivation?navigator.userActivation.isActive:false;
+  if(!gClient||!tap){gLoadGis().catch(()=>{});return Promise.reject(Object.assign(new Error('Googleへの接続が切れました。「再読み込み」を押してください'),{relogin:true}));}
+  return new Promise((ok,ng)=>{gWait={ok,ng};gClient.requestAccessToken({prompt:''});});
+}
+async function gFetch(url,opt){
+  const t=await gToken();
+  const res=await fetch(url,Object.assign({},opt,{headers:Object.assign({Authorization:'Bearer '+t},opt&&opt.body?{'Content-Type':'application/json'}:{})}));
+  if(res.status===401){try{localStorage.removeItem(LS_GTOK);}catch(_){}throw Object.assign(new Error('Googleへの接続が切れました。「再読み込み」を押してください'),{relogin:true});}
+  if(res.status===404&&/spreadsheets\//.test(url)){gForget();throw new Error('記録シートが見つかりません。もう一度読み込むと作り直します');}
+  if(!res.ok)throw new Error('Googleとの通信エラー（'+res.status+'）');
+  return res.json();
+}
+function gForget(){gSheet='';try{localStorage.removeItem(LS_SHEET);}catch(_){}}
+const G_TABS=[
+  ['使い方',[['項目','書き方'],
+    ['このシート','Physical Note の記録帳です。ここに書いた記録を、アプリが読み込んで表示します。1行に1件ずつ書いてください。'],
+    ['食事','日付・食事区分・内容・kcal と P / F / C（g）を書きます。わからない値は空欄で大丈夫です。'],
+    ['体重','日付・朝か夜・体重（kg）を書きます。'],
+    ['トレーニング','日付・区分（トレーニング／オフ）・部位・時間（分）・セット数を書きます。'],
+    ['月曜体組成','体組成計の値を週に1回まとめて書けます（任意）。'],
+    ['日次確認','その日の食事を書き終えたら、日付と「完了」に TRUE を書きます（任意）。'],
+    ['レシピ','よく作る料理の名前・食数と、全量の kcal / P / F / C を書くと、1食分の値が出ます（任意）。'],
+    ['設定','1日の目標（kcal・P・F・C）と目標体重を書きます。'],
+    ['記録ID・有効','空欄で大丈夫です。取り消すときは「有効」に FALSE と書きます。'],
+    ['日付の書き方','2026-10-26 や 2026/10/26 のように書きます。'],
+    ['見出しの行','1行目の見出しや列の順番は変えないでください。']]],
+  ['食事',[['記録ID','日付','時刻','食事区分','内容・量','kcal','P g','F g','C g','根拠・メモ','確定状態','有効','登録日時','更新日時']]],
+  ['体重',[['記録ID','日付','朝夜','体重 kg','測定条件','有効','登録日時','更新日時']]],
+  ['トレーニング',[['記録ID','日付','区分','部位','時間 分','時間','開始時刻','メモ','有効','登録日時','更新日時','入力根拠','セット数','セット内訳']]],
+  ['月曜体組成',[['記録ID','対象月曜','測定日','体重 kg','体脂肪率 %','筋肉量 kg','骨格筋量 kg','内臓脂肪レベル','基礎代謝 kcal','体水分率 %','腹囲 cm','機器・備考','提出状態','有効','登録日時','更新日時']]],
+  ['日次確認',[['日付','完了','備考']]],
+  ['レシピ',[['レシピID','名前','版','食数','完成全量 g','1食 g','全量 kcal','全量 P','全量 F','全量 C','1食 kcal','1食 P','1食 F','1食 C','状態','作り方','備考','有効','作成日時','更新日時']]],
+  ['設定',[['項目','値','説明'],['kcal目標',2200,'1日の目標カロリー'],['P目標 g',110,'たんぱく質の目標（g）'],['F目標 g',60,'脂質の目標（g）'],['C目標 g',300,'炭水化物の目標（g）'],['体重目標 kg',65,'目標体重']]],
+];
+// 記録シートを見つける（このアプリが前に作ったもの）。なければ作る
+async function gEnsureSheet(){
+  if(gSheet)return gSheet;
+  const q=encodeURIComponent("name='"+G_TITLE+"' and mimeType='application/vnd.google-apps.spreadsheet' and trashed=false");
+  const found=await gFetch('https://www.googleapis.com/drive/v3/files?q='+q+'&orderBy=createdTime&fields=files(id)&pageSize=1');
+  let id=found.files&&found.files[0]&&found.files[0].id;
+  if(!id){
+    const cell=v=>({userEnteredValue:typeof v==='number'?{numberValue:v}:{stringValue:String(v)}});
+    const made=await gFetch('https://sheets.googleapis.com/v4/spreadsheets',{method:'POST',body:JSON.stringify({
+      properties:{title:G_TITLE,locale:'ja_JP',timeZone:'Asia/Tokyo'},
+      sheets:G_TABS.map(([title,rows])=>({properties:{title,gridProperties:{frozenRowCount:1}},
+        data:[{startRow:0,startColumn:0,rowData:rows.map((r,i)=>({values:r.map(v=>Object.assign(cell(v),i===0?{userEnteredFormat:{textFormat:{bold:true},backgroundColor:{red:.96,green:.96,blue:.97}}}:{}))}))}]}))})});
+    id=made.spreadsheetId;
+  }
+  gSheet=id;try{localStorage.setItem(LS_SHEET,id);}catch(_){}
+  return id;
+}
+// シート全体は1回読んで少しの間使い回す（となりの月をまとめて読むため）
+let gRowsP=null,gRowsAt=0;
+function gRows(){
+  if(gRowsP&&Date.now()-gRowsAt<15000)return gRowsP;
+  gRowsAt=Date.now();
+  return gRowsP=(async()=>{
+    const id=await gEnsureSheet();
+    const ranges=[['設定','A2:C6'],['食事','A2:N'],['体重','A2:H'],['トレーニング','A2:N'],['月曜体組成','A2:P'],['日次確認','A2:C'],['レシピ','A2:T']];
+    const r=await gFetch('https://sheets.googleapis.com/v4/spreadsheets/'+id+'/values:batchGet?'+ranges.map(([s,a])=>'ranges='+encodeURIComponent("'"+s+"'!"+a)).join('&')+'&valueRenderOption=UNFORMATTED_VALUE&dateTimeRenderOption=FORMATTED_STRING');
+    const out={};(r.valueRanges||[]).forEach((v,i)=>{out[ranges[i][0]]=(v.values||[]).filter(row=>row.some(x=>x!==''&&x!=null));});
+    return out;
+  })().catch(e=>{gRowsP=null;throw e;});
+}
+function gMonth(R,ym){
+  const key=v=>{const m=String(v==null?'':v).match(/(\d{4})[-\/年.](\d{1,2})[-\/月.](\d{1,2})/);return m?m[1]+'-'+('0'+m[2]).slice(-2)+'-'+('0'+m[3]).slice(-2):'';};
+  const num=v=>(v===''||v==null||isNaN(Number(v)))?null:Number(v);
+  const valid=v=>!(v===false||String(v==null?'':v).trim().toUpperCase()==='FALSE');
+  const str=v=>v==null?'':String(v);
+  const year=ym.slice(0,4),inYm=d=>d&&d.slice(0,7)===ym,inY=d=>d&&d.slice(0,4)===year;
+  const st=(R['設定']||[]).map(r=>r[1]);
+  const settings={kcal:num(st[0]),p:num(st[1]),f:num(st[2]),c:num(st[3]),weight:num(st[4])};
+  const allM=[],allW=[],allT=[],done={},body=[];
+  (R['食事']||[]).forEach((r,i)=>{const d=key(r[1]);if(!inY(d)||!valid(r[11]))return;
+    allM.push({id:str(r[0])||'食事'+(i+2),date:d,time:str(r[2]).slice(0,5),kind:str(r[3]),content:str(r[4]),kcal:num(r[5]),p:num(r[6]),f:num(r[7]),c:num(r[8]),status:str(r[10])});});
+  (R['体重']||[]).forEach(r=>{const d=key(r[1]);if(!inY(d)||!valid(r[5])||num(r[3])==null)return;allW.push({date:d,when:str(r[2])||'朝',kg:num(r[3]),note:str(r[4])});});
+  (R['トレーニング']||[]).forEach(r=>{const d=key(r[1]);if(!inY(d)||!valid(r[8]))return;
+    allT.push({date:d,kind:str(r[2])||'トレーニング',part:str(r[3]),minutes:num(r[4]),memo:str(r[7]),sets:num(r[12]),detail:str(r[13])});});
+  (R['月曜体組成']||[]).forEach(r=>{const d=key(r[1])||key(r[2]);if(!inYm(d)||!valid(r[13]))return;
+    body.push({monday:d,measured:key(r[2]),weight:num(r[3]),fat:num(r[4]),muscle:num(r[5]),skeletal:num(r[6]),visceral:num(r[7]),bmr:num(r[8]),water:num(r[9]),waist:num(r[10]),status:str(r[12])});});
+  (R['日次確認']||[]).forEach(r=>{const d=key(r[0]);const v=str(r[1]).trim().toUpperCase();if(d&&(r[1]===true||v==='TRUE'||v==='完了'))done[d]=true;});
+  const days=[],n=new Date(Date.UTC(+year,+ym.slice(5,7),0)).getUTCDate();
+  for(let i=1;i<=n;i++){const d=ym+'-'+('0'+i).slice(-2);
+    const ms=allM.filter(m=>m.date===d),ts=allT.filter(t=>t.date===d);
+    const tot=f=>ms.length&&ms.every(m=>m[f]!=null&&m[f]>=0)?ms.reduce((a,m)=>a+m[f],0):null;
+    const avg=w=>{const v=allW.filter(x=>x.date===d&&x.when===w).map(x=>x.kg);return v.length?v.reduce((a,x)=>a+x,0)/v.length:null;};
+    const tsum=f=>ts.length&&ts.every(t=>t[f]!=null)?ts.reduce((a,t)=>a+t[f],0):null;
+    days.push({date:d,am:avg('朝'),pm:avg('夜'),kcal:tot('kcal'),p:tot('p'),f:tot('f'),c:tot('c'),meals:ms.length,done:!!done[d],
+      training:ts.map(t=>t.kind==='オフ'?'オフ':(t.part||'部位未記入')).join(' / '),minutes:tsum('minutes'),sets:tsum('sets')});}
+  const latest={};
+  (R['レシピ']||[]).forEach(r=>{if(!r[1]||!valid(r[17]))return;const id=str(r[0])||str(r[1]),ver=num(r[2])||1,sv=num(r[3]);
+    const per=(one,all)=>num(one)!=null?num(one):(num(all)!=null&&sv>0?num(all)/sv:null);
+    if(!latest[id]||latest[id].ver<ver)latest[id]={id,name:str(r[1]),ver,servings:sv,kcal:per(r[10],r[6]),p:per(r[11],r[7]),f:per(r[12],r[8]),c:per(r[13],r[9]),status:str(r[14])};});
+  const now=new Date(),today=now.getFullYear()+'-'+('0'+(now.getMonth()+1)).slice(-2)+'-'+('0'+now.getDate()).slice(-2);
+  return {ym,today,settings,meals:allM.filter(m=>inYm(m.date)),weights:allW.filter(w=>inYm(w.date)),training:allT.filter(t=>inYm(t.date)),body,days,recipes:Object.keys(latest).map(k=>latest[k])};
+}
+async function gLoad(ym){
+  const d=gMonth(await gRows(),ym);
+  return {d,text:JSON.stringify(d)};
+}
+function gSheetUrl(){return gSheet?'https://docs.google.com/spreadsheets/d/'+gSheet+'/edit':'';}
+// ログインボタン（最初の1回）
+async function gStart(){
+  const err=document.getElementById('keyErr');err.textContent='';
+  try{
+    await new Promise((ok,ng)=>{gWait={ok,ng};gClient.requestAccessToken({prompt:'consent'});});
+    err.textContent='記録シートを準備しています…';
+    API='';try{localStorage.removeItem(LS_API);localStorage.removeItem(LS_KEY);localStorage.removeItem('pn.app.months');}catch(_){}
+    await gEnsureSheet();
+    S.cache={};S.raw={};S.failed={};S.at={};
+    document.getElementById('keyPanel').hidden=true;
+    showSheetLink();refresh();
+  }catch(e){err.textContent=e&&e.message||'うまくいきませんでした';}
+}
+function showSheetLink(){const a=document.getElementById('sheetLink');if(a&&gSheet){a.href=gSheetUrl();a.hidden=false;}}
+if(GCLIENT&&!DEMO){
+  document.getElementById('gBox').hidden=false;
+  gLoadGis().catch(e=>{document.getElementById('keyErr').textContent=e.message;});
+  document.getElementById('gBtn').addEventListener('click',()=>{
+    if(!gClient){document.getElementById('keyErr').textContent='少し待ってからもう一度押してください';gLoadGis();return;}
+    gStart();
+  });
+  if(gSheet)showSheetLink();
+}
+
 
 const TYPES=['選択日の食事','日別まとめ','食事','朝夜体重','月曜体組成','レシピ','トレーニング'];
 const WD='日月火水木金土';
@@ -547,7 +710,7 @@ function need(ym,low){
   if(!S.at[ym]&&!S.failed[ym])fetchMonth(ym,low);
   return d||null;
 }
-function refresh(){S.failed={};$('err').classList.remove('on');
+function refresh(){S.failed={};$('err').classList.remove('on');gRowsP=null;
   Object.keys(S.at).forEach(ym=>S.at[ym]=0); // ほかの月は次に見たときに読み直す
   const yms=new Set([ymOf(S.date),S.view==='list'?S.listYm:null,S.view==='graph'?S.graphYm:null,sheetShown?S.calYm:null].filter(ym=>ym&&inYear(ym)));
   return Promise.all([...yms].map(ym=>fetchMonth(ym)));}
