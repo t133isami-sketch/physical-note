@@ -173,7 +173,7 @@ svg text{font-family:inherit}
   .card{box-shadow:none;border:1px solid #b5a8cc}
   :root{--sub:#4f4a58}
 }
-.keyp{position:fixed;inset:0;z-index:60;background:var(--bg);display:flex;align-items:center;justify-content:center;padding:24px 16px calc(24px + env(safe-area-inset-bottom))}
+.keyp{position:fixed;inset:0;z-index:60;background:var(--bg);display:flex;align-items:center;justify-content:center;padding:calc(16px + env(safe-area-inset-top)) calc(16px + env(safe-area-inset-right)) calc(24px + env(safe-area-inset-bottom)) calc(16px + env(safe-area-inset-left))} /* 時刻やカメラの部分にかからないよう、上は画面のすき間の分だけ下げる */
 .keyp[hidden]{display:none}
 .keyc{width:100%;max-width:400px;background:var(--card);border-radius:22px;padding:24px 20px;box-shadow:0 2px 12px rgba(75,46,131,.12)}
 .keyc h2{font-size:20px;color:var(--p800);letter-spacing:-.01em}
