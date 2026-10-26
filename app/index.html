@@ -469,11 +469,16 @@ if(GCLIENT&&!DEMO&&/[#&](access_token|error)=/.test(location.hash)){
       localStorage.setItem(LS_GTOK,JSON.stringify({t:h.get('access_token'),exp:Date.now()+(+h.get('expires_in')||3600)*1000-60000}));
       if(!gSheet){API='';localStorage.removeItem(LS_API);localStorage.removeItem(LS_KEY);localStorage.removeItem('pn.app.months');}
     }catch(_){}
-  }else gBackErr=h.get('error')==='access_denied'?'ログインがキャンセルされました':'Googleにログインできませんでした';
+  }else if(!/^(interaction|login|consent|account_selection)_required$/.test(h.get('error')||'')) // 自動の再ログインが通らなかっただけなら黙って戻る
+    gBackErr=h.get('error')==='access_denied'?'ログインがキャンセルされました':'Googleにログインできませんでした';
 }
-// トークンが切れていたら、ボタンを押したとき（ユーザーの操作中）だけGoogleの確認へ移る
+// トークン（約1時間）が切れていたら、まず画面を出さずにGoogleへ取りに行く（ログイン済みなら一瞬で戻る）。
+// それが通らなかったときだけ、「再読み込み」を押してもらってGoogleの確認へ移る
+const SS_GAUTO='pn.app.gauto';
 function gToken(){
   const t=gCached();if(t)return Promise.resolve(t);
+  let last=0;try{last=+sessionStorage.getItem(SS_GAUTO)||0;}catch(_){}
+  if(gSheet&&Date.now()-last>120000){try{sessionStorage.setItem(SS_GAUTO,String(Date.now()));}catch(_){}return gRedirect('none');}
   const tap=navigator.userActivation?navigator.userActivation.isActive:false;
   if(!tap)return Promise.reject(Object.assign(new Error('Googleへの接続が切れました。「再読み込み」を押してください'),{relogin:true}));
   return gRedirect('');
