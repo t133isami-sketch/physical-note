@@ -186,6 +186,12 @@ svg text{font-family:inherit}
 .keyc .or{margin-top:18px;padding-top:14px;border-top:1px solid var(--line)}
 .sheetlink{font-size:12px;font-weight:700;color:#fff;opacity:.9;text-decoration:none;padding:4px 10px;border-radius:999px;background:rgba(255,255,255,.16)}
 .sheetlink[hidden]{display:none}
+.trow .links{display:flex;gap:6px}
+.gemc{max-height:100%;overflow-y:auto;-webkit-overflow-scrolling:touch}
+.gemc ol{font-size:13px;color:var(--sub);margin:8px 0 0 1.3em}
+.gemc li{margin-top:4px}
+.gemc textarea{width:100%;height:30vh;margin-top:14px;font:12px/1.5 ui-monospace,SFMono-Regular,Menlo,monospace;padding:10px 12px;border-radius:14px;border:1px solid #d9cfe9;background:var(--bg);color:var(--ink);resize:vertical}
+.gemc .sub{background:transparent;color:var(--p800);border:1px solid #d9cfe9}
 .demo-bar{position:sticky;top:0;z-index:44;background:var(--o100);color:var(--o700);font-size:12px;font-weight:700;text-align:center;padding:calc(6px + env(safe-area-inset-top)) 12px 6px}
 .demo-bar[hidden]{display:none}
 </style>
@@ -209,12 +215,27 @@ svg text{font-family:inherit}
     <p><a href="../demo.html" style="color:var(--p600);font-weight:700">見本データで試す ›</a>　<a href="../start/#setup" style="color:var(--p600);font-weight:700">はじめかた ›</a></p>
   </form>
 </div>
+<div class="keyp" id="gemPanel" hidden>
+  <div class="keyc gemc">
+    <h2>Gemini用の指示文</h2>
+    <p>あなたの記録シートとアプリのURLを入れた指示文です。Gemini に貼ると、話しかけるだけで記録シートに書き込んでくれます。</p>
+    <ol>
+      <li>下の「コピー」を押す</li>
+      <li>Gemini の「Gem マネージャー」で新しい Gem を作り、「指示」の欄に貼り付けて保存</li>
+      <li>Gemini の「アプリ」で Google Workspace をオンにする（初回だけ）</li>
+    </ol>
+    <textarea id="gemText" readonly aria-label="Gemini用の指示文"></textarea>
+    <button type="button" id="gemCopy">コピー</button>
+    <button type="button" class="sub" id="gemClose">閉じる</button>
+    <p class="kerr" id="gemErr"></p>
+  </div>
+</div>
 <div class="wrap">
 
 <!-- 日ごと -->
 <section id="v-day">
   <div class="top">
-    <div class="trow"><span class="t">Physical Note</span><a class="sheetlink" id="sheetLink" hidden target="_blank" rel="noopener">記録シートを開く</a></div>
+    <div class="trow"><span class="t">Physical Note</span><span class="links"><button class="sheetlink" id="gemLink" hidden>Gemini用の指示文</button><a class="sheetlink" id="sheetLink" hidden target="_blank" rel="noopener">記録シートを開く</a></span></div>
     <div class="datebar">
       <button class="round" id="prevDay" aria-label="前の日">‹</button>
       <div class="d num" id="dayTitle">—</div>
@@ -523,7 +544,26 @@ async function gStart(){
     showSheetLink();refresh();
   }catch(e){err.textContent=e&&e.message||'うまくいきませんでした';}
 }
-function showSheetLink(){const a=document.getElementById('sheetLink');if(a&&gSheet){a.href=gSheetUrl();a.hidden=false;}}
+function showSheetLink(){const a=document.getElementById('sheetLink');if(a&&gSheet){a.href=gSheetUrl();a.hidden=false;document.getElementById('gemLink').hidden=false;}}
+// Gemini に貼る指示文（gemini.txt）に、この人の記録シートとアプリのURLを入れて出す
+let gemTpl=null;
+async function openGem(){
+  const box=document.getElementById('gemPanel'),ta=document.getElementById('gemText'),err=document.getElementById('gemErr');
+  err.textContent='';box.hidden=false;
+  try{
+    if(!gemTpl){const r=await fetch('gemini.txt',{cache:'no-cache'});if(!r.ok)throw 0;gemTpl=await r.text();}
+    const app=location.origin+location.pathname.replace(/[^/]*$/,'');
+    ta.value=gemTpl.split('{{SHEET_URL}}').join(gSheetUrl()).split('{{APP_URL}}').join(app);
+  }catch(_){err.textContent='指示文を読み込めませんでした。通信を確認してもう一度開いてください';}
+}
+document.getElementById('gemLink').addEventListener('click',openGem);
+document.getElementById('gemClose').addEventListener('click',()=>{document.getElementById('gemPanel').hidden=true;});
+document.getElementById('gemCopy').addEventListener('click',async()=>{
+  const ta=document.getElementById('gemText'),b=document.getElementById('gemCopy');if(!ta.value)return;
+  try{await navigator.clipboard.writeText(ta.value);}catch(_){ta.select();document.execCommand('copy');}
+  b.textContent='コピーしました';setTimeout(()=>{b.textContent='コピー';},2000);
+});
+['touchstart','touchmove','touchend'].forEach(t=>document.getElementById('gemPanel').addEventListener(t,e=>e.stopPropagation(),{passive:true}));
 if(GCLIENT&&!DEMO){
   document.getElementById('gBox').hidden=false;
   gLoadGis().catch(e=>{document.getElementById('keyErr').textContent=e.message;});
@@ -956,7 +996,7 @@ window.addEventListener('resize',()=>{placeWeek(false);if(sheetShown){sheetH=she
     bar.style.height=(d>.5?d+top0:0)+'px'; // 見本の帯がある時はその分も埋める
     if(!busy){icon.style.opacity=d>=GO?1:Math.min(.45,d/GO*.45);icon.style.transform='rotate('+(Math.min(d,GO)/GO*270)+'deg) scale('+(d>=GO?1.15:1)+')';}
   });
-  const free=()=>window.scrollY<=0&&!sheetShown&&$('keyPanel').hidden;
+  const free=()=>window.scrollY<=0&&!sheetShown&&$('keyPanel').hidden&&$('gemPanel').hidden;
   document.addEventListener('touchstart',e=>{
     y0=null;lock=false;
     if(busy||e.touches.length!==1||!free())return;
