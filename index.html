@@ -191,6 +191,23 @@ svg text{font-family:inherit}
 .gemc li{margin-top:4px}
 .gemc textarea{width:100%;height:30vh;margin-top:14px;font:12px/1.5 ui-monospace,SFMono-Regular,Menlo,monospace;padding:10px 12px;border-radius:14px;border:1px solid #d9cfe9;background:var(--bg);color:var(--ink);resize:vertical}
 .gemc .sub{background:transparent;color:var(--p800);border:1px solid #d9cfe9}
+/* 見る年の切り替え */
+.tbtns{display:flex;gap:6px;align-items:center}
+/* ボタンが4つ並ぶので、文字を折り返さず詰める。狭い画面では左の名前を省略する */
+.trow .t{flex:1;min-width:0;overflow:hidden;text-overflow:ellipsis;white-space:nowrap}
+.trow .links{gap:5px}
+.trow .sheetlink{white-space:nowrap;padding:4px 9px}
+.trow .sheetlink.gear{padding:4px 7px}
+.keyc h3{font-size:14px;color:var(--ink);margin-top:20px;padding-top:14px;border-top:1px solid var(--line)}
+.keyc .open{display:block;text-align:center;margin-top:14px;padding:13px 0;border-radius:14px;background:var(--p800);color:#fff;font-weight:700;font-size:15px;text-decoration:none}
+.keyc .yrs{display:flex;flex-wrap:wrap;gap:8px;margin-top:14px}
+.keyc .yrs button{width:auto;margin:0;padding:8px 14px;border-radius:18px;font-size:13px;background:var(--bg);color:var(--p800);border:1px solid #d9cfe9}
+.keyc .yrs button.on{background:var(--p800);color:#fff;border-color:var(--p800)}
+.keyc .sub{background:transparent;color:var(--p800);border:1px solid #d9cfe9}
+.ybar{margin:12px 16px 0;padding:12px 14px;border-radius:14px;background:var(--p100);color:var(--p800);font-size:13px;display:flex;align-items:center;gap:10px}
+.ybar[hidden]{display:none}
+.ybar span{flex:1}
+.ybar button{flex:none;background:#fff;color:var(--p800);font-weight:700;padding:7px 12px;border-radius:14px}
 .demo-bar{position:sticky;top:0;z-index:44;background:var(--o100);color:var(--o700);font-size:12px;font-weight:700;text-align:center;padding:calc(6px + env(safe-area-inset-top)) 12px 6px}
 .demo-bar[hidden]{display:none}
 /* iPhoneのホーム画面アプリで下に固定した部品が浮くずれを打ち消す（--gapは画面の下端とのずれをJSで測った値） */
@@ -254,6 +271,17 @@ svg text{font-family:inherit}
     <p class="kerr" id="gptErr"></p>
   </div>
 </div>
+<div class="keyp" id="yearPanel" hidden>
+  <div class="keyc gemc">
+    <h2>記録シート</h2>
+    <a class="open" id="sheetOpen" target="_blank" rel="noopener">記録シートを開く</a>
+    <h3>見る年</h3>
+    <p>記録は1年に1つのファイルです。アプリがふだん読むのは今年のファイルだけで、前の年は選んだときだけ読み込みます。</p>
+    <div class="yrs" id="yearList"></div>
+    <p>新しい年のファイル（「フィジカルノート｜2027」または「栄養・増量管理 2027年」）ができると、ここに自動で加わります。</p>
+    <button type="button" class="sub" id="yearClose">閉じる</button>
+  </div>
+</div>
 <div class="keyp" id="setPanel" hidden>
   <div class="keyc gemc">
     <h2>設定</h2>
@@ -271,7 +299,7 @@ svg text{font-family:inherit}
 <!-- 日ごと -->
 <section id="v-day">
   <div class="top">
-    <div class="trow"><span class="t">フィジカルノート</span><span class="links" id="gptLinks"><a class="sheetlink" id="gptOpen" rel="noopener">ChatGPT</a><button class="sheetlink" id="gptLink">指示文</button><button class="sheetlink gear" id="setLink" aria-label="設定"><svg width="15" height="15" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.2" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><circle cx="12" cy="12" r="3"/><path d="M19.4 15a1.7 1.7 0 0 0 .3 1.8l.1.1a2 2 0 1 1-2.8 2.8l-.1-.1a1.7 1.7 0 0 0-1.8-.3 1.7 1.7 0 0 0-1 1.5V21a2 2 0 1 1-4 0v-.1a1.7 1.7 0 0 0-1.1-1.5 1.7 1.7 0 0 0-1.8.3l-.1.1a2 2 0 1 1-2.8-2.8l.1-.1a1.7 1.7 0 0 0 .3-1.8 1.7 1.7 0 0 0-1.5-1H3a2 2 0 1 1 0-4h.1a1.7 1.7 0 0 0 1.5-1.1 1.7 1.7 0 0 0-.3-1.8l-.1-.1a2 2 0 1 1 2.8-2.8l.1.1a1.7 1.7 0 0 0 1.8.3H9a1.7 1.7 0 0 0 1-1.5V3a2 2 0 1 1 4 0v.1a1.7 1.7 0 0 0 1 1.5 1.7 1.7 0 0 0 1.8-.3l.1-.1a2 2 0 1 1 2.8 2.8l-.1.1a1.7 1.7 0 0 0-.3 1.8V9a1.7 1.7 0 0 0 1.5 1H21a2 2 0 1 1 0 4h-.1a1.7 1.7 0 0 0-1.5 1z"/></svg></button></span></div>
+    <div class="trow"><span class="t">フィジカルノート</span><span class="tbtns"><span class="links" id="gptLinks"><a class="sheetlink" id="gptOpen" rel="noopener">ChatGPT</a><button class="sheetlink" id="gptLink">指示文</button><button class="sheetlink" id="yearPick">記録シート</button><button class="sheetlink gear" id="setLink" aria-label="設定"><svg width="15" height="15" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.2" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><circle cx="12" cy="12" r="3"/><path d="M19.4 15a1.7 1.7 0 0 0 .3 1.8l.1.1a2 2 0 1 1-2.8 2.8l-.1-.1a1.7 1.7 0 0 0-1.8-.3 1.7 1.7 0 0 0-1 1.5V21a2 2 0 1 1-4 0v-.1a1.7 1.7 0 0 0-1.1-1.5 1.7 1.7 0 0 0-1.8.3l-.1.1a2 2 0 1 1-2.8-2.8l.1-.1a1.7 1.7 0 0 0 .3-1.8 1.7 1.7 0 0 0-1.5-1H3a2 2 0 1 1 0-4h.1a1.7 1.7 0 0 0 1.5-1.1 1.7 1.7 0 0 0-.3-1.8l-.1-.1a2 2 0 1 1 2.8-2.8l.1.1a1.7 1.7 0 0 0 1.8.3H9a1.7 1.7 0 0 0 1-1.5V3a2 2 0 1 1 4 0v.1a1.7 1.7 0 0 0 1 1.5 1.7 1.7 0 0 0 1.8-.3l.1-.1a2 2 0 1 1 2.8 2.8l-.1.1a1.7 1.7 0 0 0-.3 1.8V9a1.7 1.7 0 0 0 1.5 1H21a2 2 0 1 1 0 4h-.1a1.7 1.7 0 0 0-1.5 1z"/></svg></button></span></span></div>
     <div class="datebar">
       <button class="round" id="prevDay" aria-label="前の日">‹</button>
       <div class="d num" id="dayTitle">—</div>
@@ -284,6 +312,7 @@ svg text{font-family:inherit}
     <div class="week"><span class="wsel" id="wsel"></span><div class="wbtns" id="week"></div></div>
   </div>
   <div class="err" id="err"><span id="errText"></span><button data-act="refresh">再読み込み</button></div>
+  <div class="ybar" id="yearBar" hidden><span id="yearText"></span><button id="yearBack">今年に戻る</button></div>
   <div class="pager" id="dayBox"><div class="pane" id="dayPane">
     <div class="card">
       <h3><span>栄養</span><span class="num" id="kcalGoal"></span></h3>
@@ -419,6 +448,7 @@ async function apiLoad(ym){
   const text=await res.text(),d=JSON.parse(text);
   if(d&&d.error){
     if(d.error==='unauthorized'){askKey('合言葉が違うようです。もう一度貼り付けてください。');throw new Error('合言葉が違います');}
+    if(d.error==='no_file')throw new Error(ym.slice(0,4)+'年の記録ファイルが見つかりません');
     throw new Error(d.error);
   }
   return {d,text};
@@ -604,7 +634,7 @@ function schedulePaint(){if(!paintRaf)paintRaf=requestAnimationFrame(()=>{paintR
 let saveT=0;
 function saveCache(){
   if(!LSM)return;clearTimeout(saveT);
-  saveT=setTimeout(()=>{try{const o={};Object.keys(S.raw).filter(inYear).forEach(ym=>o[ym]=S.raw[ym]);localStorage.setItem(LSM,JSON.stringify(o));localStorage.removeItem(LS_OLD);}catch(_){}},400);
+  saveT=setTimeout(()=>{try{const o={};Object.keys(S.raw).filter(ym=>ym.slice(0,4)===S.today.slice(0,4)).forEach(ym=>o[ym]=S.raw[ym]);localStorage.setItem(LSM,JSON.stringify(o));localStorage.removeItem(LS_OLD);}catch(_){}},400);
 }
 // 読み込みは同時に2件まで。今見ている月を先に、となりの月は後回し
 const queue=[];let active=0;
@@ -647,13 +677,38 @@ function refresh(){S.failed={};$('err').classList.remove('on');
   return Promise.all([...yms].map(ym=>fetchMonth(ym)));}
 function syncToday(d){
   if(!d.today||d.today===S.today)return false;
-  const follow=S.date===S.today||!S.touched;
-  S.today=d.today;S.year=+d.today.slice(0,4);
-  if(follow)applyDate(d.today);
+  const follow=S.date===S.today||!S.touched,wasThis=S.year===+String(S.today).slice(0,4);
+  S.today=d.today;
+  if(wasThis||follow){S.year=+d.today.slice(0,4);applyDate(follow?d.today:S.date);} // 前の年を見ているときはそのまま
+  paintYear();
   return true;
 }
 function hasRecord(k){const d=S.cache[ymOf(k)];if(!d)return false;const r=d.days.find(x=>x.date===k);return !!(r&&(r.meals>0||r.am!=null||r.pm!=null||r.training));}
 function applyDate(k){S.date=clampDate(k);S.listYm=S.graphYm=ymOf(S.date);}
+// ---------- 見る年 ----------
+// 記録は1年に1ファイル。読み取り口が、年ごとのファイルを選んで返す（今年のファイル以外は、選んだときだけ読む）
+const FIRST_YEAR=2026; // 記録がある最初の年
+const thisYear=()=>+S.today.slice(0,4);
+function setYear(y){
+  if(!y||y===S.year)return;
+  S.year=y;S.touched=y!==thisYear();
+  applyDate(y===thisYear()?S.today:keyOf(parse(y+S.today.slice(4)))); // 前の年は、今日と同じ月日から
+  if(sheetShown)closeCal();
+  paintAll();paintYear();
+}
+// 年ごとの記録シート。分かっていない年は、ドライブでその年のファイルを探す
+const SHEETS={2026:'https://docs.google.com/spreadsheets/d/1snJJARGhmVVdWXeCDIoghGYahkcrfpisr29HYVYaGJU/edit'};
+const sheetUrl=y=>SHEETS[y]||'https://drive.google.com/drive/search?q='+encodeURIComponent('フィジカルノート｜'+y);
+function paintYear(){
+  const past=S.year!==thisYear();
+  $('yearBar').hidden=!past;if(past)$('yearText').textContent=S.year+'年の記録を見ています';
+}
+function openYears(){
+  const ys=[];for(let y=thisYear();y>=Math.min(FIRST_YEAR,thisYear());y--)ys.push(y);
+  $('yearList').innerHTML=ys.map(y=>`<button type="button" data-year="${y}" class="${y===S.year?'on':''}">${y}年${y===thisYear()?'（今年）':''}</button>`).join('');
+  $('sheetOpen').href=sheetUrl(S.year);$('sheetOpen').textContent=S.year+'年の記録シートを開く';
+  $('yearPanel').hidden=false;
+}
 
 // ---------- 日ごと ----------
 const ringSp=Spring(p=>{const c=2*Math.PI*46,a=$('ringArc');a.setAttribute('stroke-dasharray',(c*p/100)+' '+c);a.style.opacity=p>.5?1:0;});
@@ -863,9 +918,13 @@ document.addEventListener('click',e=>{
   if(b.closest('.nav')){if(b.dataset.v!==S.view)show(b.dataset.v);return;}
   if(b.dataset.act==='refresh')return refresh();
   if(b.id==='prevDay'||b.id==='nextDay'){S.touched=true;return dayPager.go(b.id==='nextDay'?1:-1);}
-  if(b.id==='goToday')return jumpDay(S.today);
+  if(b.id==='goToday'){if(S.year!==thisYear())return setYear(thisYear());return jumpDay(S.today);}
+  if(b.id==='yearPick')return openYears();
+  if(b.id==='yearBack')return setYear(thisYear());
+  if(b.id==='yearClose'){$('yearPanel').hidden=true;return;}
+  if(b.dataset.year){$('yearPanel').hidden=true;return setYear(+b.dataset.year);}
   if(b.id==='openCal')return openCal();
-  if(b.id==='calToday'){closeCal();return jumpDay(S.today);}
+  if(b.id==='calToday'){closeCal();if(S.year!==thisYear())return setYear(thisYear());return jumpDay(S.today);}
   if(b.id==='toList'){S.type='選択日の食事';return show('list');}
   if(b.dataset.k&&b.closest('#week'))return jumpDay(b.dataset.k);
   if(b.dataset.k&&b.closest('#cal')){closeCal();return jumpDay(b.dataset.k);}
@@ -887,7 +946,7 @@ window.addEventListener('resize',()=>{placeWeek(false);if(sheetShown){sheetH=she
     bar.style.height=(d>.5?d+top0:0)+'px'; // 見本の帯がある時はその分も埋める
     if(!busy){icon.style.opacity=d>=GO?1:Math.min(.45,d/GO*.45);icon.style.transform='rotate('+(Math.min(d,GO)/GO*270)+'deg) scale('+(d>=GO?1.15:1)+')';}
   });
-  const free=()=>window.scrollY<=0&&!sheetShown&&$('keyPanel').hidden&&$('gptPanel').hidden&&$('setPanel').hidden;
+  const free=()=>window.scrollY<=0&&!sheetShown&&$('keyPanel').hidden&&$('gptPanel').hidden&&$('setPanel').hidden&&$('yearPanel').hidden;
   document.addEventListener('touchstart',e=>{
     y0=null;lock=false;
     if(busy||e.touches.length!==1||!free())return;
@@ -931,7 +990,7 @@ document.addEventListener('visibilitychange',()=>{if(document.visibilityState===
       Object.keys(o).filter(inYear).forEach(ym=>{try{S.cache[ym]=JSON.parse(o[ym]);S.raw[ym]=o[ym];}catch(_){}});}catch(_){}
     try{const t=localStorage.getItem(LS_OLD),c=t&&JSON.parse(t);if(c&&c.ym&&inYear(c.ym)&&!S.cache[c.ym]){S.cache[c.ym]=c;S.raw[c.ym]=t;}}catch(_){}
   }
-  paintAll(); // ここで今月の最新読み込みも始まる
+  paintAll();paintYear(); // ここで今月の最新読み込みも始まる
   // アプリ本体も端末に保存して、電波が弱くてもすぐ開けるようにする
   if('serviceWorker' in navigator&&location.protocol==='https:')addEventListener('load',()=>navigator.serviceWorker.register('sw.js').catch(()=>{}));
 })();
