@@ -222,7 +222,7 @@ svg text{font-family:inherit}
     <p>あなたの記録シートとアプリのURLを入れた指示文です。Gemini に貼ると、話しかけるだけで記録シートに書き込んでくれます。</p>
     <ol>
       <li>下の「コピー」を押す</li>
-      <li>Gemini の「Gem マネージャー」で新しい Gem を作り、「指示」の欄に貼り付けて保存</li>
+      <li><a href="https://gemini.google.com/gems/create" target="_blank" rel="noopener" style="color:var(--p600);font-weight:700">Gem を作るページ</a>を開き、「指示」の欄に貼り付けて保存</li>
       <li>Gemini の「アプリ」で Google Workspace をオンにする（初回だけ）</li>
     </ol>
     <textarea id="gemText" readonly aria-label="Gemini用の指示文"></textarea>
@@ -236,7 +236,7 @@ svg text{font-family:inherit}
 <!-- 日ごと -->
 <section id="v-day">
   <div class="top">
-    <div class="trow"><span class="t">Physical Note</span><span class="links"><button class="sheetlink" id="gemLink" hidden>Gemini用の指示文</button><a class="sheetlink" id="sheetLink" hidden target="_blank" rel="noopener">記録シートを開く</a></span></div>
+    <div class="trow"><span class="t">Physical Note</span><span class="links"><a class="sheetlink" id="gemOpen" hidden href="https://gemini.google.com/app" target="_blank" rel="noopener">Gemini</a><button class="sheetlink" id="gemLink" hidden>指示文</button><a class="sheetlink" id="sheetLink" hidden target="_blank" rel="noopener">記録シート</a></span></div>
     <div class="datebar">
       <button class="round" id="prevDay" aria-label="前の日">‹</button>
       <div class="d num" id="dayTitle">—</div>
@@ -548,7 +548,7 @@ async function gLoad(ym){
 function gSheetUrl(){return gSheet?'https://docs.google.com/spreadsheets/d/'+gSheet+'/edit':'';}
 // ログインボタン（最初の1回）
 function gStart(){document.getElementById('keyErr').textContent='Googleに移動しています…';gRedirect('select_account');}
-function showSheetLink(){const a=document.getElementById('sheetLink');if(a&&gSheet){a.href=gSheetUrl();a.hidden=false;document.getElementById('gemLink').hidden=false;}}
+function showSheetLink(){const a=document.getElementById('sheetLink');if(a&&gSheet){a.href=gSheetUrl();a.hidden=false;document.getElementById('gemLink').hidden=false;document.getElementById('gemOpen').hidden=false;}}
 // Gemini に貼る指示文（gemini.txt）に、この人の記録シートとアプリのURLを入れて出す
 let gemTpl=null;
 async function openGem(){
