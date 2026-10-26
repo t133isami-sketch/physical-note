@@ -181,6 +181,15 @@ svg text{font-family:inherit}
 .keyc input:focus{outline:2px solid var(--p600);outline-offset:1px}
 .keyc button{width:100%;margin-top:12px;padding:13px 0;border-radius:14px;background:var(--p800);color:#fff;font-weight:700;font-size:15px}
 .keyc .kerr{color:var(--o700);min-height:1.5em}
+.links{display:flex;gap:6px}
+.links[hidden]{display:none}
+.sheetlink{font-size:12px;font-weight:700;color:#fff;opacity:.9;text-decoration:none;padding:4px 10px;border-radius:999px;background:rgba(255,255,255,.16)}
+.sheetlink[hidden]{display:none}
+.gemc{max-height:100%;overflow-y:auto;-webkit-overflow-scrolling:touch}
+.gemc ol{font-size:13px;color:var(--sub);margin:8px 0 0 1.3em}
+.gemc li{margin-top:4px}
+.gemc textarea{width:100%;height:30vh;margin-top:14px;font:12px/1.5 ui-monospace,SFMono-Regular,Menlo,monospace;padding:10px 12px;border-radius:14px;border:1px solid #d9cfe9;background:var(--bg);color:var(--ink);resize:vertical}
+.gemc .sub{background:transparent;color:var(--p800);border:1px solid #d9cfe9}
 .demo-bar{position:sticky;top:0;z-index:44;background:var(--o100);color:var(--o700);font-size:12px;font-weight:700;text-align:center;padding:calc(6px + env(safe-area-inset-top)) 12px 6px}
 .demo-bar[hidden]{display:none}
 /* iPhoneのホーム画面アプリで下に固定した部品が浮くずれを打ち消す（--gapは画面の下端とのずれをJSで測った値） */
@@ -229,12 +238,27 @@ svg text{font-family:inherit}
     <p><a href="demo.html" style="color:var(--p600);font-weight:700">見本データで試す ›</a></p>
   </form>
 </div>
+<div class="keyp" id="gptPanel" hidden>
+  <div class="keyc gemc">
+    <h2>ChatGPT用の指示文</h2>
+    <p>ChatGPTの「フィジカルノート」プロジェクトに入れている指示文です。書き直したいときや入れ直すときに使います。</p>
+    <ol>
+      <li>下の「コピー」を押す</li>
+      <li>ChatGPTアプリで「フィジカルノート」プロジェクトを開き、右上の「…」から「指示」を開く</li>
+      <li>中身を入れ替えて保存</li>
+    </ol>
+    <textarea id="gptText" readonly aria-label="ChatGPT用の指示文"></textarea>
+    <button type="button" id="gptCopy">コピー</button>
+    <button type="button" class="sub" id="gptClose">閉じる</button>
+    <p class="kerr" id="gptErr"></p>
+  </div>
+</div>
 <div class="wrap">
 
 <!-- 日ごと -->
 <section id="v-day">
   <div class="top">
-    <div class="trow"><span class="t">フィジカルノート</span></div>
+    <div class="trow"><span class="t">フィジカルノート</span><span class="links" id="gptLinks"><a class="sheetlink" id="gptOpen" target="_blank" rel="noopener">ChatGPT</a><button class="sheetlink" id="gptLink">指示文</button></span></div>
     <div class="datebar">
       <button class="round" id="prevDay" aria-label="前の日">‹</button>
       <div class="d num" id="dayTitle">—</div>
@@ -387,6 +411,26 @@ async function apiLoad(ym){
   return {d,text};
 }
 if(DEMO)document.getElementById('demoBar').hidden=false;
+
+// ChatGPT の「フィジカルノート」プロジェクトへ飛ぶボタンと、そこに入れている指示文（chatgpt.txt）
+// chatgpt.com のリンクは、iPhone に ChatGPT アプリが入っていればアプリで開く
+const CHATGPT_URL='https://chatgpt.com/g/g-p-6adacd56cec48191952dcab46fca562a';
+document.getElementById('gptOpen').href=CHATGPT_URL;
+if(DEMO)document.getElementById('gptLinks').hidden=true;
+document.getElementById('gptLink').addEventListener('click',async()=>{
+  const box=document.getElementById('gptPanel'),ta=document.getElementById('gptText'),err=document.getElementById('gptErr');
+  err.textContent='';box.hidden=false;
+  try{
+    if(!ta.value){const r=await fetch('chatgpt.txt',{cache:'no-cache'});if(!r.ok)throw 0;ta.value=await r.text();}
+  }catch(_){err.textContent='指示文を読み込めませんでした。通信を確認してもう一度開いてください';}
+});
+document.getElementById('gptClose').addEventListener('click',()=>{document.getElementById('gptPanel').hidden=true;});
+document.getElementById('gptCopy').addEventListener('click',async()=>{
+  const ta=document.getElementById('gptText'),b=document.getElementById('gptCopy');if(!ta.value)return;
+  try{await navigator.clipboard.writeText(ta.value);}catch(_){ta.select();document.execCommand('copy');}
+  b.textContent='コピーしました';setTimeout(()=>{b.textContent='コピー';},2000);
+});
+['touchstart','touchmove','touchend'].forEach(t=>document.getElementById('gptPanel').addEventListener(t,e=>e.stopPropagation(),{passive:true}));
 
 const TYPES=['選択日の食事','日別まとめ','食事','朝夜体重','月曜体組成','レシピ','トレーニング'];
 const WD='日月火水木金土';
@@ -809,7 +853,7 @@ window.addEventListener('resize',()=>{placeWeek(false);if(sheetShown){sheetH=she
     bar.style.height=(d>.5?d+top0:0)+'px'; // 見本の帯がある時はその分も埋める
     if(!busy){icon.style.opacity=d>=GO?1:Math.min(.45,d/GO*.45);icon.style.transform='rotate('+(Math.min(d,GO)/GO*270)+'deg) scale('+(d>=GO?1.15:1)+')';}
   });
-  const free=()=>window.scrollY<=0&&!sheetShown&&$('keyPanel').hidden;
+  const free=()=>window.scrollY<=0&&!sheetShown&&$('keyPanel').hidden&&$('gptPanel').hidden;
   document.addEventListener('touchstart',e=>{
     y0=null;lock=false;
     if(busy||e.touches.length!==1||!free())return;
