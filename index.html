@@ -183,6 +183,10 @@ svg text{font-family:inherit}
 .keyc .kerr{color:var(--o700);min-height:1.5em}
 .links{display:flex;gap:6px}
 .links[hidden]{display:none}
+.seth{font-size:14px;margin-top:18px}
+.aipick{display:flex;gap:8px;margin-top:10px}
+.keyc .aipick button{flex:1;width:auto;margin:0;padding:10px 0;min-height:44px;border-radius:12px;background:var(--bg);color:var(--p800);border:1px solid #d9cfe9;font-size:14px}
+.keyc .aipick button[aria-checked="true"]{background:var(--p800);color:#fff;border-color:var(--p800)}
 .sheetlink.gear{display:flex;align-items:center;padding:4px 7px}
 .sheetlink{font-size:12px;font-weight:700;color:#fff;opacity:.9;text-decoration:none;padding:4px 10px;border-radius:999px;background:rgba(255,255,255,.16)}
 .sheetlink[hidden]{display:none}
@@ -312,10 +316,12 @@ body::before{top:var(--top,0px)}
 <div class="keyp" id="setPanel" hidden>
   <div class="keyc gemc">
     <h2>設定</h2>
-    <h3 style="font-size:14px;margin-top:16px">「ChatGPT」ボタンで開くチャット</h3>
-    <p>いつも使う ChatGPT のチャットのリンクを貼り付けると、「ChatGPT」ボタンでそのチャットが開きます。空欄なら「フィジカルノート」プロジェクトが開きます。</p>
-    <p>リンクは、ブラウザで ChatGPT のチャットを開いたときのアドレス（https://chatgpt.com/ で始まるもの）です。</p>
-    <input id="setGpt" type="url" inputmode="url" autocapitalize="off" autocorrect="off" spellcheck="false" placeholder="https://chatgpt.com/…" aria-label="ChatGPTのチャットのリンク">
+    <h3 class="seth">連携するAI</h3>
+    <p>上のボタンで開くAIを選びます。ボタンの名前も変わります。</p>
+    <div class="aipick" id="aiPick" role="radiogroup" aria-label="連携するAI"><button type="button" role="radio" data-ai="gemini">Gemini</button><button type="button" role="radio" data-ai="chatgpt">ChatGPT</button><button type="button" role="radio" data-ai="muse">Muse</button></div>
+    <h3 class="seth">開くチャット（なくても大丈夫）</h3>
+    <p>いつも使うチャットのリンクを貼り付けると、ボタンでそのチャットが開きます。リンクを貼ると、どのAIのものかを見て、上の選択も自動で変わります。空欄なら、ChatGPT は「フィジカルノート」プロジェクト、ほかは選んだAIのアプリが開きます。</p>
+    <input id="setGpt" type="url" inputmode="url" autocapitalize="off" autocorrect="off" spellcheck="false" placeholder="https://…" aria-label="チャットのリンク">
     <button type="button" id="setSave">保存</button>
     <button type="button" class="sub" id="setClose">閉じる</button>
     <p class="kerr" id="setErr"></p>
@@ -482,30 +488,58 @@ async function apiLoad(ym){
 }
 if(DEMO)document.getElementById('demoBar').hidden=false;
 
-// ChatGPT の「フィジカルノート」プロジェクトへ飛ぶボタンと、そこに入れている指示文（chatgpt.txt）
-// chatgpt.com のリンクは、iPhone に ChatGPT アプリが入っていればアプリで開く
+// 連携するAI（Gemini・ChatGPT・Muse）へ飛ぶボタン。ボタンの名前と、押したときに開く先が変わる
+// ChatGPT はふだん「フィジカルノート」プロジェクトを開く。指示文（chatgpt.txt）は下の「指示文」から
+// https のリンクは、iPhone にそのAIのアプリが入っていればアプリで開く
 const CHATGPT_URL='https://chatgpt.com/g/g-p-6adacd56cec48191952dcab46fca562a';
-const LS_GPTURL='physicalnote.gpturl',GPT_RE=/^https:\/\/(chatgpt\.com|chat\.openai\.com)\//;
-function gptUrl(){try{const u=localStorage.getItem(LS_GPTURL)||'';return GPT_RE.test(u)?u:'';}catch(_){return '';}}
-document.getElementById('gptOpen').href=CHATGPT_URL;
+const LS_GPTURL='physicalnote.gpturl',LS_AI='physicalnote.ai';
+const AIS={
+  gemini:{name:'Gemini',home:'https://gemini.google.com/app',re:/^https:\/\/(gemini\.google\.com|g\.co\/gemini)\//,pkg:'com.google.android.apps.bard',scheme:'googlegemini://'},
+  chatgpt:{name:'ChatGPT',home:CHATGPT_URL,re:/^https:\/\/(chatgpt\.com|chat\.openai\.com)\//,pkg:'com.openai.chatgpt'},
+  muse:{name:'Muse',home:'https://muse.ai/',re:/^https:\/\/([a-z0-9-]+\.)*muse\.ai\//},
+};
+function aiOf(u){for(const k in AIS)if(AIS[k].re.test(u))return k;return '';}
+function aiLink(){try{const u=localStorage.getItem(LS_GPTURL)||'';return aiOf(u)?u:'';}catch(_){return '';}}
+function aiKey(){const l=aiLink();if(l)return aiOf(l);let k='';try{k=localStorage.getItem(LS_AI)||'';}catch(_){}return AIS[k]?k:'chatgpt';}
+function paintAi(){const a=document.getElementById('gptOpen'),k=aiKey();a.textContent=AIS[k].name;a.href=aiLink()||AIS[k].home;}
+paintAi();
 document.getElementById('gptOpen').addEventListener('click',e=>{
   e.preventDefault();
-  const url=gptUrl()||CHATGPT_URL,ua=navigator.userAgent;
-  // Android は ChatGPT アプリ（com.openai.chatgpt）で開き、入っていなければブラウザで開く
-  if(/Android/i.test(ua)){location.href='intent://'+url.replace(/^https:\/\//,'')+'#Intent;scheme=https;package=com.openai.chatgpt;S.browser_fallback_url='+encodeURIComponent(url)+';end';return;}
-  // iPhone は同じ画面でリンクを開くと、入っていれば ChatGPT アプリが受け取る
-  if(/iPhone|iPad|iPod/i.test(ua)||(/Macintosh/.test(ua)&&navigator.maxTouchPoints>1)){location.href=url;return;}
+  const ai=AIS[aiKey()],chat=aiLink(),url=chat||ai.home,ua=navigator.userAgent;
+  // Android はAIのアプリで開き、入っていなければブラウザで開く
+  if(/Android/i.test(ua)){location.href=ai.pkg?'intent://'+url.replace(/^https:\/\//,'')+'#Intent;scheme=https;package='+ai.pkg+';S.browser_fallback_url='+encodeURIComponent(url)+';end':url;return;}
+  if(/iPhone|iPad|iPod/i.test(ua)||(/Macintosh/.test(ua)&&navigator.maxTouchPoints>1)){
+    if(chat||!ai.scheme){location.href=url;return;}
+    // Gemini はアプリを直接開く。入っていなくて画面が残ったままなら、ウェブ版へ
+    let gone=false;const off=()=>{if(document.hidden)gone=true;};
+    document.addEventListener('visibilitychange',off);
+    setTimeout(()=>{document.removeEventListener('visibilitychange',off);if(!gone&&!document.hidden)location.href=url;},1500);
+    location.href=ai.scheme;return;
+  }
   window.open(url,'_blank','noopener');
 });
 // 設定
-document.getElementById('setLink').addEventListener('click',()=>{document.getElementById('setGpt').value=gptUrl();document.getElementById('setErr').textContent='';document.getElementById('setPanel').hidden=false;});
-document.getElementById('setGpt').addEventListener('input',()=>{document.getElementById('setErr').textContent='';});
+let setAi='chatgpt';
+function pickAi(k){setAi=k;document.querySelectorAll('#aiPick button').forEach(b=>b.setAttribute('aria-checked',b.dataset.ai===k?'true':'false'));}
+document.getElementById('setLink').addEventListener('click',()=>{document.getElementById('setGpt').value=aiLink();pickAi(aiKey());document.getElementById('setErr').textContent='';document.getElementById('setPanel').hidden=false;});
+document.getElementById('aiPick').addEventListener('click',e=>{
+  const b=e.target.closest('button[data-ai]');if(!b)return;
+  // 別のAIを選んだら、ほかのAIのリンクは外す
+  const inp=document.getElementById('setGpt'),k=aiOf(inp.value.trim());
+  if(k&&k!==b.dataset.ai)inp.value='';
+  pickAi(b.dataset.ai);document.getElementById('setErr').textContent='';
+});
+document.getElementById('setGpt').addEventListener('input',e=>{
+  document.getElementById('setErr').textContent='';
+  const k=aiOf(e.target.value.trim());if(k)pickAi(k);
+});
 document.getElementById('setClose').addEventListener('click',()=>{document.getElementById('setPanel').hidden=true;});
 document.getElementById('setSave').addEventListener('click',()=>{
   const v=document.getElementById('setGpt').value.trim(),err=document.getElementById('setErr');
-  if(v&&!GPT_RE.test(v)){err.textContent='https://chatgpt.com/ で始まるリンクを貼り付けてください';return;}
-  try{v?localStorage.setItem(LS_GPTURL,v):localStorage.removeItem(LS_GPTURL);}catch(_){}
-  document.getElementById('setPanel').hidden=true;
+  if(v&&!aiOf(v)){err.textContent='Gemini・ChatGPT・Muse のチャットのリンク（https:// で始まるもの）を貼り付けてください';return;}
+  const k=v?aiOf(v):setAi;
+  try{localStorage.setItem(LS_AI,k);v?localStorage.setItem(LS_GPTURL,v):localStorage.removeItem(LS_GPTURL);}catch(_){}
+  paintAi();document.getElementById('setPanel').hidden=true;
 });
 if(DEMO)document.getElementById('gptLinks').hidden=true;
 document.getElementById('gptLink').addEventListener('click',async()=>{
