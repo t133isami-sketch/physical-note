@@ -491,12 +491,13 @@ if(DEMO)document.getElementById('demoBar').hidden=false;
 // 連携するAI（Gemini・ChatGPT・Muse）へ飛ぶボタン。ボタンの名前と、押したときに開く先が変わる
 // ChatGPT はふだん「フィジカルノート」プロジェクトを開く。指示文（chatgpt.txt）は下の「指示文」から
 // https のリンクは、iPhone にそのAIのアプリが入っていればアプリで開く
+// Muse は muse.ai のトップではアプリが開かないので、アプリが受け取る /chat を開く
 const CHATGPT_URL='https://chatgpt.com/g/g-p-6adacd56cec48191952dcab46fca562a';
 const LS_GPTURL='physicalnote.gpturl',LS_AI='physicalnote.ai';
 const AIS={
   gemini:{name:'Gemini',home:'https://gemini.google.com/app',re:/^https:\/\/(gemini\.google\.com|g\.co\/gemini)\//,pkg:'com.google.android.apps.bard',scheme:'googlegemini://'},
   chatgpt:{name:'ChatGPT',home:CHATGPT_URL,re:/^https:\/\/(chatgpt\.com|chat\.openai\.com)\//,pkg:'com.openai.chatgpt'},
-  muse:{name:'Muse',home:'https://muse.ai/',re:/^https:\/\/([a-z0-9-]+\.)*muse\.ai\//},
+  muse:{name:'Muse',home:'https://muse.ai/chat',re:/^https:\/\/([a-z0-9-]+\.)*muse\.ai\//},
 };
 function aiOf(u){for(const k in AIS)if(AIS[k].re.test(u))return k;return '';}
 function aiLink(){try{const u=localStorage.getItem(LS_GPTURL)||'';return aiOf(u)?u:'';}catch(_){return '';}}
