@@ -210,36 +210,63 @@ svg text{font-family:inherit}
 .ybar button{flex:none;background:#fff;color:var(--p800);font-weight:700;padding:7px 12px;border-radius:14px}
 .demo-bar{position:sticky;top:0;z-index:44;background:var(--o100);color:var(--o700);font-size:12px;font-weight:700;text-align:center;padding:calc(6px + env(safe-area-inset-top)) 12px 6px}
 .demo-bar[hidden]{display:none}
-/* iPhoneのホーム画面アプリで下に固定した部品が浮くずれを打ち消す（--gapは画面の下端とのずれをJSで測った値） */
+/* iPhoneのホーム画面アプリで固定した部品がずれるのを打ち消す（--gap・--topは画面とのずれをJSで測った値） */
 .nav{bottom:calc(0px - var(--gap,0px))}
 .sheet{bottom:calc(-40px - var(--gap,0px))}
-.dim,.keyp{bottom:calc(0px - var(--gap,0px))}
+.dim,.keyp{top:var(--top,0px);bottom:calc(0px - var(--gap,0px))}
+body::before{top:var(--top,0px)}
+.ptr,.load{top:calc(env(safe-area-inset-top) + var(--top,0px))}
 </style>
 </head>
 <body>
 <script>
-// iPhoneのホーム画面アプリでは、中身が短い画面などで、下に固定したタブバーやシートが上に浮いてすき間ができることがある。
-// 中身の高さを常に画面いっぱい以上にしたうえで、それでも残るずれを毎回測って打ち消す（--gap）
+// iPhoneのホーム画面アプリでは、中身が短い画面や、キーボードを閉じたあと（iOS 26の不具合）などに、
+// 下に固定したタブバーやシート・上の紫の帯が本来の位置からずれることがある。
+// 中身の高さを常に画面いっぱい以上にしたうえで、残るずれを毎回測って打ち消す（--gap：下側、--top：上側）
 (function(){
   if(!(navigator.standalone||matchMedia('(display-mode: standalone)').matches))return;
+  const vv=window.visualViewport,root=document.documentElement;
   const probe=document.createElement('div');
   probe.style.cssText='position:fixed;top:0;bottom:0;left:0;width:0;visibility:hidden;pointer-events:none';
   document.body.appendChild(probe);
-  let raf=0;
+  const typing=()=>{const a=document.activeElement;return !!a&&(a.tagName==='INPUT'||a.tagName==='TEXTAREA');};
+  let raf=0;const last={top:0,gap:0};
   const fit=()=>{
     raf=0;
     const land=matchMedia('(orientation: landscape)').matches;
     const h=land?Math.min(screen.width,screen.height):Math.max(screen.width,screen.height);
     document.body.style.minHeight=Math.max(innerHeight,h)+'px';
-    // 固定部品の基準になる枠の下端が画面の下端より上にあれば、その分だけ下げる（キーボードなど大きな差は対象外）
-    const gap=Math.round(h-probe.getBoundingClientRect().bottom);
-    document.documentElement.style.setProperty('--gap',(gap>0&&gap<=100?gap:0)+'px');
+    let top=0,gap=0;
+    // 入力中（キーボード表示中）は動かさない
+    if(!typing()){
+      const r=probe.getBoundingClientRect(),d=vv?vv.offsetTop:0;
+      // 固定部品の基準枠が画面に対して上にずれた分（d）と、下端が画面の下端に届かない分を足して下げる
+      top=Math.round(d-r.top);
+      gap=Math.round(h-(r.bottom-d));
+      if(top<0||top>h/2)top=0;
+      if(gap<0||gap>h/2)gap=0;
+    }
+    // 変わったときだけ書き換える（スクロール中に毎回全体を描き直さないように）
+    if(top!==last.top)root.style.setProperty('--top',top+'px');
+    if(gap!==last.gap)root.style.setProperty('--gap',gap+'px');
+    last.top=top;last.gap=gap;
   };
   const later=()=>{if(!raf)raf=requestAnimationFrame(fit);};
+  // キーボードを閉じたあと、少しスクロールを揺らして表示位置を計算し直させる
+  const nudge=()=>{
+    const y=scrollY;
+    if(y>0){scrollTo(scrollX,y-1);scrollTo(scrollX,y);}else{scrollTo(scrollX,1);scrollTo(scrollX,0);}
+    fit();
+  };
   fit();
   addEventListener('resize',later);addEventListener('scroll',later,{passive:true});addEventListener('pageshow',later);
   addEventListener('orientationchange',()=>setTimeout(fit,300));
   document.addEventListener('visibilitychange',later);
+  document.addEventListener('focusout',e=>{
+    if(e.target.tagName!=='INPUT'&&e.target.tagName!=='TEXTAREA')return;
+    setTimeout(nudge,120);setTimeout(nudge,450);
+  });
+  if(vv){vv.addEventListener('resize',later);vv.addEventListener('scroll',later);}
   if(window.ResizeObserver)new ResizeObserver(later).observe(document.body);
 })();
 </script>
