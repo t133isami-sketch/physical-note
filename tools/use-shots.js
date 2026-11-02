@@ -14,7 +14,7 @@ const W=390,H=844;
     const p=await b.newPage({viewport:{width:W,height:H},deviceScaleFactor:2,isMobile:true,hasTouch:true,colorScheme:'light'});
     await p.goto(BASE+url);await p.waitForTimeout(2000);
     await p.addStyleTag({content:'.demo-bar{display:none!important}*{transition:none!important;animation:none!important}'});
-    await p.evaluate(()=>{['gemOpen','gemLink','sheetLink','setLink'].forEach(id=>document.getElementById(id).hidden=false);});
+    await p.evaluate(()=>{['museOpen','museLink','sheetLink','setLink'].forEach(id=>document.getElementById(id).hidden=false);});
     await p.waitForTimeout(300);return p;
   }
   // 印の位置：要素の中心（または左上寄り）を画像に対する%で出す
@@ -55,13 +55,13 @@ const W=390,H=844;
 
   p=await page('?demo');
   await p.click('#setLink');await p.waitForTimeout(500);
-  await shoot(p,'use-set',[['#setGem','R'],['#setSave','R']]);
+  await shoot(p,'use-set',[['#setMuse','R'],['#setSave','R']]);
   await p.close();
 
   p=await page('?demo');
-  await p.click('#gemLink');await p.waitForTimeout(700);
-  await p.evaluate(()=>{const t=document.getElementById('gemText');t.value=t.value.split(location.origin+'/').join('https://t133isami-sketch.github.io/physical-note/').replace(/https:\/\/docs\.google\.com\/spreadsheets\/d\/[^\s/]*\/?(edit)?/g,'https://docs.google.com/spreadsheets/d/（あなたの記録シート）/edit');document.getElementById('gemErr').textContent='';});
-  await shoot(p,'use-gem',[['#gemCopy','R']]);
+  await p.click('#museLink');await p.waitForTimeout(700);
+  await p.evaluate(()=>{const t=document.getElementById('museText');t.value=t.value.split(location.origin+'/').join('https://t133isami-sketch.github.io/physical-note/').replace(/https:\/\/docs\.google\.com\/spreadsheets\/d\/[^\s/]*\/?(edit)?/g,'https://docs.google.com/spreadsheets/d/（あなたの記録シート）/edit');document.getElementById('museErr').textContent='';});
+  await shoot(p,'use-gem',[['#museCopy','R']]);
   await p.close();
 
   p=await page('?demo');
