@@ -295,7 +295,7 @@ body::before{top:var(--top,0px)}
 <div class="keyp" id="musePanel" hidden>
   <div class="keyc gemc">
     <h2>Muse用の指示文</h2>
-    <p>Museの詳しい指示は、記録シートの「Muse基本指示」タブに入っています。下の文をMuseに送ると、Museがそのタブを読んで、話しかけるだけで記録シートに書き込むようになります。</p>
+    <p>あなたの記録シートのURLとIDを入れた指示文です。Museに送ると、Museが記録シートの「Muse基本指示」「運用仕様」「設定」のタブを読んで、話しかけるだけで記録シートに書き込むようになります。</p>
     <ol>
       <li>下の「コピー」を押す</li>
       <li>Museで新しいチャットを開き、貼り付けて送る</li>
@@ -577,52 +577,41 @@ async function gFetch(url,opt){
   return res.json();
 }
 function gForget(){gSheet='';try{localStorage.removeItem(LS_SHEET);}catch(_){}}
-const G_TABS=[
-  ['使い方',[['項目','書き方'],
-    ['このシート','Physical Note の記録帳です。ここに書いた記録を、アプリが読み込んで表示します。1行に1件ずつ書いてください。'],
-    ['食事','日付・食事区分・内容・kcal と P / F / C（g）を書きます。わからない値は空欄で大丈夫です。'],
-    ['体重','日付・朝か夜・体重（kg）を書きます。'],
-    ['トレーニング','日付・区分（トレーニング／オフ）・部位・時間（分）・セット数を書きます。'],
-    ['月曜体組成','体組成計の値を週に1回まとめて書けます（任意）。'],
-    ['日次確認','その日の食事を書き終えたら、日付と「完了」に TRUE を書きます（任意）。'],
-    ['レシピ','よく作る料理の名前・食数と、全量の kcal / P / F / C を書くと、1食分の値が出ます（任意）。'],
-    ['設定','1日の目標（kcal・P・F・C）と目標体重を書きます。'],
-    ['記録ID・有効','空欄で大丈夫です。取り消すときは「有効」に FALSE と書きます。'],
-    ['日付の書き方','2026-10-26 や 2026/10/26 のように書きます。'],
-    ['見出しの行','1行目の見出しや列の順番は変えないでください。'],
-    ['年の切り替え','このシートには今年の記録を書きます。年が明けたら、アプリの「記録シート」から前の年の記録を「Physical Note 記録シート（2026年）」のような年ごとのファイルに移せます。このシートのURLは変わりません。'],
-    ['Muse','Museに記録してもらうときの指示は「Muse基本指示」タブにあります。Museはこのタブと「運用仕様」「設定」を読んでから書き込みます。'],
-    ['監査ログ','Museが書き込んだり訂正したりした内容が、1件ずつ残ります。手で書き直した分は残りません。'],
-    ['テスト専用','つながるかを試すときのテストの記録です。アプリには表示されません。']]],
-  ['食事',[['記録ID','日付','時刻','食事区分','内容・量','kcal','P g','F g','C g','根拠・メモ','確定状態','有効','登録日時','更新日時']]],
-  ['体重',[['記録ID','日付','朝夜','体重 kg','測定条件','有効','登録日時','更新日時']]],
-  ['トレーニング',[['記録ID','日付','区分','部位','時間 分','時間','開始時刻','メモ','有効','登録日時','更新日時','入力根拠','セット数','セット内訳']]],
-  ['月曜体組成',[['記録ID','対象月曜','測定日','体重 kg','体脂肪率 %','筋肉量 kg','骨格筋量 kg','内臓脂肪レベル','基礎代謝 kcal','体水分率 %','腹囲 cm','機器・備考','提出状態','有効','登録日時','更新日時']]],
-  ['日次確認',[['日付','完了','備考']]],
-  ['レシピ',[['レシピID','名前','版','食数','完成全量 g','1食 g','全量 kcal','全量 P','全量 F','全量 C','1食 kcal','1食 P','1食 F','1食 C','状態','作り方','備考','有効','作成日時','更新日時']]],
-  ['運用仕様',[['項目','仕様'],
-    ['原本','記録・目標・状態の本体はこのシート。チャットの記憶や会話の要約だけを原本にしない。表示はアプリ（Physical Note）で行う。'],
-    ['再開','新しいチャットでは「Muse基本指示」・運用仕様・設定・列見出し・必要な日付の既存IDを読み直す。記録のチャットは週ごと／長くなったときに新しくする。'],
-    ['書込','1食1行。数値・日付・有効TRUEを型どおりに保存。書込前にIDと対象行を確認し、監査ログを同じ処理で追加。成功後に読み戻す。失敗時はIDを検索してから再送。'],
-    ['重複','朝夜の体重は1日各1件の有効行。月曜体組成は対象週1件。複数のチャットから同時に送らない。訂正は同じID、取消は有効FALSE。'],
-    ['欠測','未入力は空欄、実測0は数値0。食事の推定は推定と根拠を残す。体脂肪率15%は15。写真や画像URLは保存しない。'],
-    ['提出','月曜体組成は対象月曜と測定日を別に記録。体重kg・体脂肪率%・筋肉量kgが揃ってから提出済にする。'],
-    ['目標','設定B2:B6（kcal・P・F・C・体重目標）で変更できる。現在の目標は過去日の比較にも反映する。'],
-    ['テスト','TESTの記録はテスト専用タブだけに書く。本番の記録や集計に混ぜない。'],
-    ['写真からレシピ','写真は下書きとして読み取る。商品名、表示の基準量、kcal/P/F/C、実際の使用量を区別。「レシピ登録して」と言われたらレシピ・レシピ材料・監査ログに保存。食べたと言われなければ食事へ書かない。'],
-    ['レシピ修正・食事記録','材料はレシピIDと版で結ぶ。修正は新しい版を作り旧版を無効化。食べた分は量に応じた栄養を食事へ値として書き、根拠にIDと版を残す。過去の食事は変更しない。'],
-    ['外食の記録','店名とメニューが食事として報告されたら、公式の最新栄養情報と照合し、kcal/P/F/C・出典URL・確認日を食事へ保存して読み戻す。公式情報がなければ内容だけ保存し、栄養は空欄にする。'],
-    ['トレーニング入力','「今日、胸と三頭を2時間やった」→ 今日、トレーニング、胸・上腕三頭筋、120分、2時間。「今日はオフ」→ オフ、部位なし、0分、0時間。報告がない日は未記録でオフではない。'],
-    ['セット数','「胸12セット、三頭6セット」→ セット数18、セット内訳「胸12／上腕三頭筋6」。合計だけなら部位ごとの配分は推測しない。'],
-    ['年の切り替え','新しい記録は必ずこのシートに書く。前の年の記録は、アプリで年ごとのファイルへ移す。このシートのURLとIDは変わらない。'],
-    ['シートの役割','このシートは記録の保管場所。色・枠・フィルター・グラフは付けない。行が足りなくなったら下に行を足す。']]],
-  ['監査ログ',[['イベントID','日時 JST','操作','対象タブ','記録ID','変更前 JSON','変更後 JSON','実行元','結果']]],
-  ['テスト専用',[['テストID','区分','日付','kcal','P g','F g','C g','朝体重 kg','夜体重 kg','目的','読戻し状態']]],
-  ['レシピ材料',[['レシピID','版','材料','数量','単位','使用 g','100g kcal','100g P','100g F','100g C','材料 kcal','材料 P','材料 F','材料 C','出典','確認状態']]],
-  ['食品マスター',[['食品ID','店・メーカー','商品','サイズ','kcal','P g','F g','C g','単位','公式出典','確認日 JST','備考']]],
-  ['設定',[['項目','値','説明'],['kcal目標',2200,'1日の目標カロリー'],['P目標 g',110,'たんぱく質の目標（g）'],['F目標 g',60,'脂質の目標（g）'],['C目標 g',300,'炭水化物の目標（g）'],['体重目標 kg',65,'目標体重']]],
-];
-// 記録シートを見つける（このアプリが前に作ったもの）。なければ作る
+// 記録シートの形は、配布元の「フィジカルノート｜テンプレート」と同じ（template.json に写してある）。
+// タブ・見出し・設定・数式・ルール（Muse基本指示・運用仕様）をそのまま作る。個人の記録とレシピは入れない
+let gTpl=null;
+async function gTemplate(){
+  if(!gTpl){const r=await fetch('template.json',{cache:'no-cache'});if(!r.ok)throw new Error('記録シートのひな形を読み込めませんでした。通信を確認してください');gTpl=await r.json();}
+  return gTpl;
+}
+const G_DATE_COLS={'体重':[1],'食事':[1],'トレーニング':[1],'月曜体組成':[1,2],'日次確認':[0],'日別集計':[0]};
+// テンプレートの中身に、この人のシートのID・URLと今年を入れる
+function gTplRows(t,id){
+  const url='https://docs.google.com/spreadsheets/d/'+id+'/edit',y=gThisYear();
+  return t.rows.map(r=>r.map(v=>{
+    if(typeof v!=='string')return v;
+    if(t.title==='設定'&&/^\d{4}-01-01$/.test(v))return y+'-01-01';
+    return v.split('ID（ここに自分のスプレッドシートIDを記入）').join('ID '+id).split('（ここに自分のシートのURLを貼る）').join(url);
+  }));
+}
+// 作ったタブに中身を書く。sheetId はタブの番号
+async function gFillTabs(id,list){
+  if(!list.length)return;
+  await gFetch('https://sheets.googleapis.com/v4/spreadsheets/'+id+'/values:batchUpdate',{method:'POST',body:JSON.stringify({valueInputOption:'USER_ENTERED',
+    data:list.map(({t,from})=>({range:"'"+t.title+"'!A"+(from+1),values:gTplRows(t,id).slice(from)}))})});
+  const req=[];
+  list.forEach(({t,sid,from})=>{
+    if(from===0)req.push({repeatCell:{range:{sheetId:sid,startRowIndex:0,endRowIndex:1},cell:{userEnteredFormat:{textFormat:{bold:true},backgroundColor:{red:.96,green:.96,blue:.97}}},fields:'userEnteredFormat(textFormat,backgroundColor)'}});
+    (G_DATE_COLS[t.title]||[]).forEach(c=>req.push({repeatCell:{range:{sheetId:sid,startRowIndex:1,startColumnIndex:c,endColumnIndex:c+1},cell:{userEnteredFormat:{numberFormat:{type:'DATE',pattern:'yyyy-mm-dd'}}},fields:'userEnteredFormat.numberFormat'}}));
+    if(t.title==='日別集計'){ // 2行目の式を、1年分（367行目まで）に広げる
+      req.push({copyPaste:{source:{sheetId:sid,startRowIndex:2,endRowIndex:3,startColumnIndex:0,endColumnIndex:1},destination:{sheetId:sid,startRowIndex:3,endRowIndex:367,startColumnIndex:0,endColumnIndex:1},pasteType:'PASTE_FORMULA'}});
+      req.push({copyPaste:{source:{sheetId:sid,startRowIndex:1,endRowIndex:2,startColumnIndex:1,endColumnIndex:15},destination:{sheetId:sid,startRowIndex:2,endRowIndex:367,startColumnIndex:1,endColumnIndex:15},pasteType:'PASTE_FORMULA'}});
+    }
+  });
+  if(req.length)await gFetch('https://sheets.googleapis.com/v4/spreadsheets/'+id+':batchUpdate',{method:'POST',body:JSON.stringify({requests:req})});
+}
+const gTabProps=(t,i)=>({title:t.title,index:i,hidden:!!t.hidden,gridProperties:{frozenRowCount:1,rowCount:t.title==='日別集計'?367:1000,columnCount:Math.max(26,(t.rows[0]||[]).length)}});
+// 記録シートを見つける（このアプリが前に作ったもの）。なければテンプレートと同じ形で作る
 let gTabsP=null;
 async function gEnsureSheet(){
   if(gSheet){if(!gTabsP)gTabsP=gEnsureTabs(gSheet).catch(()=>{gTabsP=null;});return gSheet;}
@@ -630,36 +619,39 @@ async function gEnsureSheet(){
   const found=await gFetch('https://www.googleapis.com/drive/v3/files?q='+q+'&orderBy=createdTime&fields=files(id)&pageSize=1');
   let id=found.files&&found.files[0]&&found.files[0].id;
   if(!id){
-    const cell=v=>({userEnteredValue:typeof v==='number'?{numberValue:v}:{stringValue:String(v)}});
+    const tpl=await gTemplate();
     const made=await gFetch('https://sheets.googleapis.com/v4/spreadsheets',{method:'POST',body:JSON.stringify({
-      properties:{title:G_TITLE,locale:'ja_JP',timeZone:'Asia/Tokyo'},
-      sheets:G_TABS.map(([title,rows])=>({properties:{title,gridProperties:{frozenRowCount:1}},
-        data:[{startRow:0,startColumn:0,rowData:rows.map((r,i)=>({values:r.map(v=>Object.assign(cell(v),i===0?{userEnteredFormat:{textFormat:{bold:true},backgroundColor:{red:.96,green:.96,blue:.97}}}:{}))}))}]}))})});
+      properties:{title:G_TITLE,locale:'ja_JP',timeZone:'Asia/Tokyo'},sheets:tpl.map((t,i)=>({properties:gTabProps(t,i)}))})});
     id=made.spreadsheetId;
+    const sids={};(made.sheets||[]).forEach(x=>{sids[x.properties.title]=x.properties.sheetId;});
+    await gFillTabs(id,tpl.map(t=>({t,sid:sids[t.title],from:0})));
+    try{localStorage.setItem(LS_TABS,id+':'+G_TABS_VER);}catch(_){}
   }
   gSheet=id;try{localStorage.setItem(LS_SHEET,id);}catch(_){}
   showSheetLink();
-  gTabsP=gEnsureTabs(id).catch(()=>{gTabsP=null;}); // タブを足すのは裏で。足りなくても記録の表示は止めない
+  if(!gTabsP)gTabsP=gEnsureTabs(id).catch(()=>{gTabsP=null;});
   return id;
 }
-// Museが使うタブ（Muse基本指示・運用仕様・監査ログなど）がなければ足す。前に作ったシートにも足す
-// 「Muse基本指示」は muse.txt（見出し<TAB>本文）に、このシートのIDとURLを入れて作る
-const G_TABS_VER='muse1',LS_TABS='pn.app.tabs';
+// 前に作ったシート（タブが8つの版）には、足りないタブと設定の続きを足す。記録はそのまま
+const G_TABS_VER='tpl1',LS_TABS='pn.app.tabs';
 async function gEnsureTabs(id){
   try{if(localStorage.getItem(LS_TABS)===id+':'+G_TABS_VER)return;}catch(_){}
-  const meta=await gFetch('https://sheets.googleapis.com/v4/spreadsheets/'+id+'?fields=sheets.properties.title');
-  const have=new Set((meta.sheets||[]).map(x=>x.properties.title));
-  const add=G_TABS.filter(([t])=>!have.has(t));
-  if(!have.has('Muse基本指示')){
-    const r=await fetch('muse.txt',{cache:'no-cache'});if(!r.ok)throw new Error('muse.txt');
-    const app=location.origin+location.pathname.replace(/[^/]*$/,'');
-    const txt=(await r.text()).split('{{SHEET_ID}}').join(id).split('{{SHEET_URL}}').join('https://docs.google.com/spreadsheets/d/'+id+'/edit').split('{{APP_URL}}').join(app);
-    add.push(['Muse基本指示',txt.split('\n').filter(l=>l.trim()).map(l=>{const i=l.indexOf('\t');return i<0?[l,'']:[l.slice(0,i),l.slice(i+1)];})]);
+  const tpl=await gTemplate();
+  const meta=await gFetch('https://sheets.googleapis.com/v4/spreadsheets/'+id+'?fields=sheets.properties(title,sheetId)');
+  const have={};(meta.sheets||[]).forEach(x=>{have[x.properties.title]=x.properties.sheetId;});
+  const miss=tpl.filter(t=>!(t.title in have));
+  const list=[];
+  if(miss.length){
+    const r=await gFetch('https://sheets.googleapis.com/v4/spreadsheets/'+id+':batchUpdate',{method:'POST',body:JSON.stringify({requests:miss.map(t=>({addSheet:{properties:Object.assign(gTabProps(t,0),{index:undefined})}}))})});
+    (r.replies||[]).forEach((x,i)=>list.push({t:miss[i],sid:x.addSheet.properties.sheetId,from:0}));
   }
-  if(add.length){
-    await gFetch('https://sheets.googleapis.com/v4/spreadsheets/'+id+':batchUpdate',{method:'POST',body:JSON.stringify({requests:add.map(([title])=>({addSheet:{properties:{title,gridProperties:{frozenRowCount:1}}}}))})});
-    await gFetch('https://sheets.googleapis.com/v4/spreadsheets/'+id+'/values:batchUpdate',{method:'POST',body:JSON.stringify({valueInputOption:'RAW',data:add.map(([t,rows])=>({range:"'"+t+"'!A1",values:rows}))})});
+  // 設定は7行目（集計開始日）から下がなければ足す
+  const st=tpl.find(t=>t.title==='設定');
+  if(st&&('設定' in have)){
+    const cur=await gGet(id,[['設定','A7:A30']]);
+    if(!(cur['設定']||[]).some(r=>r&&r[0]))list.push({t:st,sid:have['設定'],from:6});
   }
+  await gFillTabs(id,list);
   try{localStorage.setItem(LS_TABS,id+':'+G_TABS_VER);}catch(_){}
 }
 // 記録は1年に1ファイル。今年のファイル（gSheet）はURLを変えずに使い続け、年が明けたら前の年の行を
@@ -807,12 +799,15 @@ function gSheetUrl(){return gSheet?'https://docs.google.com/spreadsheets/d/'+gSh
 // ログインボタン（最初の1回）
 function gStart(){document.getElementById('keyErr').textContent='Googleに移動しています…';gRedirect('select_account');}
 function showSheetLink(){const a=document.getElementById('sheetLink');if(a&&gSheet){a.hidden=false;document.getElementById('museLink').hidden=false;document.getElementById('museOpen').hidden=false;document.getElementById('setLink').hidden=false;}}
-// Muse に送る短い指示文。詳しい指示は記録シートの「Muse基本指示」タブ（muse.txt から作る）にある
-const MUSE_START='次の記録シートの「Muse基本指示」タブの全文と、「運用仕様」「設定」のタブを今読み、以後も毎回参照してください。保存先はID {{SHEET_ID}} のシートだけです。まず、読み取り・書き込み・監査ログの同時保存・読み戻しができるかを伝え、記録はまだ追加しないでください。\n{{SHEET_URL}}';
-function openMuse(){
-  const box=document.getElementById('musePanel'),ta=document.getElementById('museText');
-  document.getElementById('museErr').textContent='';box.hidden=false;
-  ta.value=MUSE_START.split('{{SHEET_ID}}').join(gSheet||'（あなたの記録シートのID）').split('{{SHEET_URL}}').join(gSheetUrl()||'https://docs.google.com/spreadsheets/d/（あなたの記録シート）/edit');
+// Muse に送る指示文（muse.txt）に、この人の記録シートのURLとIDを入れて出す。詳しいルールは記録シートの「Muse基本指示」タブにある
+let museTpl=null;
+async function openMuse(){
+  const box=document.getElementById('musePanel'),ta=document.getElementById('museText'),err=document.getElementById('museErr');
+  err.textContent='';box.hidden=false;
+  try{
+    if(!museTpl){const r=await fetch('muse.txt',{cache:'no-cache'});if(!r.ok)throw 0;museTpl=await r.text();}
+    ta.value=museTpl.split('{{SHEET_ID}}').join(gSheet||'（あなたの記録シートのID）').split('{{SHEET_URL}}').join(gSheetUrl()||'https://docs.google.com/spreadsheets/d/（あなたの記録シート）/edit');
+  }catch(_){err.textContent='指示文を読み込めませんでした。通信を確認してもう一度開いてください';}
 }
 document.getElementById('museLink').addEventListener('click',openMuse);
 // 「Muse」ボタン：設定したチャットがあればそこへ、なければ Muse を開く

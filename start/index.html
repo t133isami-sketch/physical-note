@@ -222,7 +222,7 @@ section:not(.alt) .loginway{background:var(--alt)}
           <span class="go" aria-hidden="true">›</span></a></li>
         <li><a class="choice" href="guide.html">
           <span class="cn">2</span>
-          <span class="ct"><b>Museの設定を見る</b><span>Museに記録を頼めるようにする手順を、画面つきで説明します。</span></span>
+          <span class="ct"><b>Museの設定を見る</b><span>Museに記録を頼めるようにする手順を、順番に説明します。</span></span>
           <span class="go" aria-hidden="true">›</span></a></li>
         <li><a class="choice" href="features.html">
           <span class="cn">3</span>
@@ -332,18 +332,7 @@ section:not(.alt) .loginway{background:var(--alt)}
         <details><summary>お金はかかりますか？</summary><div><p>かかりません。Googleスプレッドシート、Apps Script、このアプリはすべて無料です。</p></div></details>
         <details><summary>記録はどこに保存されますか？</summary><div><p>自分のGoogleドライブにあるスプレッドシートだけです。アプリはシートを直接読みに行くので、間にほかのサーバーはありません。読めるのは、自分のGoogleアカウントでログインしたとき（または自分だけが知っている合言葉があるとき）だけです。</p></div></details>
         <details><summary>iPhoneでもAndroidでも使えますか？</summary><div><p>どちらでも使えます。ブラウザで開いてホーム画面に追加すると、アプリとして使えます。パソコンでも見られます。</p></div></details>
-        <details><summary>記録はどうやってしますか？</summary><div><p>Museに「朝の体重は68.5kg」「昼にカレーを食べた」のように話しかけると、Museが記録シートに書き込みます。<a href="guide.html">導入ガイド</a>の順に、最初に1回だけ設定します。</p><p>記録シートは、Googleスプレッドシートのアプリで直接書き直すこともできます。書き方はシートの「使い方」タブにあります。Muse以外のAI（ChatGPTなど）に頼む場合は、最初に下の文を渡しておくと、決まった形で書き込んでくれます。</p>
-          <pre class="prompt" id="aiPrompt">あなたは私の記録係です。Googleドライブの「Physical Note」というスプレッドシートに、私の食事・体重・トレーニングを書き込んでください。
-
-・1件を1行で、各タブの最後の行の下に追加する。1行目の見出しと列の順番は変えない
-・食事タブ：B 日付（YYYY-MM-DD）、D 食事区分（朝食／昼食／夕食／間食 など）、E 内容・量、F kcal、G P g、H F g、I C g、J 根拠・メモ、K 確定状態（確定／推定）
-・体重タブ：B 日付、C 朝夜（朝／夜）、D 体重 kg
-・トレーニングタブ：B 日付、C 区分（トレーニング／オフ）、D 部位、E 時間 分、M セット数、N セット内訳
-・栄養がわからないときは、一般的な値やお店の公式の栄養情報から推定し、確定状態を「推定」にして根拠をJ列に書く
-・取り消すときは行を消さず、有効の列に FALSE と書く
-・書き込んだら、書いた内容を読み返して私に伝える</pre>
-          <p class="note">シートの名前を「Physical Note」に変えておくと、AIが見つけやすくなります。</p>
-          <div class="acts"><button class="btn ghost" type="button" id="copyPrompt">この文をコピー</button></div></div></details>
+        <details><summary>記録はどうやってしますか？</summary><div><p>Museに「朝の体重は68.5kg」「昼にカレーを食べた」のように話しかけると、Museが記録シートに書き込みます。<a href="guide.html">導入ガイド</a>の順に、最初に1回だけ設定します。</p><p>記録シートは、Googleスプレッドシートのアプリで直接書き直すこともできます。行の追加や取り消しのルールはシートの「使い方」タブにあります。見出しや列の順番は変えないでください。</p></div></details>
         <details><summary>「Google はこのアプリを確認していません」と出ました。</summary><div><p>自分で貼り付けたコードを初めて動かすときに出る画面です。「詳細」→「（安全ではないページ）に移動」→「許可」で進めてください。コードはシートを読むだけで、書き換えや外への送信はしません。</p></div></details>
         <details><summary>合言葉やリンクを人に知られたら？</summary><div><p>シートのメニュー <b>Physical Note → 合言葉を作り直す</b> で変えられます。古いリンクは使えなくなるので、新しいリンクでアプリを開き直してください。</p></div></details>
         <details><summary>コードを直したのに、アプリに反映されません。</summary><div><p>Apps Script で <b>デプロイ → デプロイを管理 → 鉛筆 → バージョン：新バージョン → デプロイ</b> にすると、URLを変えずに反映できます。</p></div></details>
@@ -390,7 +379,6 @@ $('codeBtn').addEventListener('click',async()=>{
   if(!codeText){try{codeText=await (await fetch('../setup/physical-note.gs',{cache:'no-cache'})).text();}catch(_){toast('読み込めませんでした。「中身を見る」から全部コピーしてください');return;}}
   copyText(codeText,'コードをコピーしました');
 });
-$('copyPrompt').addEventListener('click',()=>copyText($('aiPrompt').textContent,'コピーしました'));
 
 // 発行：つながるか確かめてから、接続リンクとQRコードを出す
 function linkOf(api,k){return APP_URL+'#api='+encodeURIComponent(api)+'&k='+encodeURIComponent(k);}
