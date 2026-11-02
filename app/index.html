@@ -292,25 +292,25 @@ body::before{top:var(--top,0px)}
     <p><a href="./?demo" style="color:var(--p600);font-weight:700">見本データで試す ›</a>　<a href="../start/#setup" style="color:var(--p600);font-weight:700">はじめかた ›</a>　<a href="../start/features.html" style="color:var(--p600);font-weight:700">使い方 ›</a></p>
   </form>
 </div>
-<div class="keyp" id="gemPanel" hidden>
+<div class="keyp" id="musePanel" hidden>
   <div class="keyc gemc">
-    <h2>Gemini用の指示文</h2>
-    <p>あなたの記録シートとアプリのURLを入れた指示文です。Gemini に貼ると、話しかけるだけで記録シートに書き込んでくれます。</p>
+    <h2>Muse用の指示文</h2>
+    <p>あなたの記録シートのURLとIDを入れた指示文です。Museに送ると、Museが記録シートの「Muse基本指示」「運用仕様」「設定」のタブを読んで、話しかけるだけで記録シートに書き込むようになります。</p>
     <ol>
       <li>下の「コピー」を押す</li>
-      <li><a href="https://gemini.google.com/gems/create" target="_blank" rel="noopener" style="color:var(--p600);font-weight:700">Gem を作るページ</a>を開き、「指示」の欄に貼り付けて保存</li>
-      <li>Gemini の「アプリ」で Google Workspace をオンにする（初回だけ）</li>
+      <li>Museで新しいチャットを開き、貼り付けて送る</li>
+      <li>Museが「読み取り・書き込みができる」と答えたら、ふだんどおり話しかける</li>
     </ol>
-    <textarea id="gemText" readonly aria-label="Gemini用の指示文"></textarea>
-    <button type="button" id="gemCopy">コピー</button>
-    <button type="button" class="sub" id="gemClose">閉じる</button>
-    <p class="kerr" id="gemErr"></p>
+    <textarea id="museText" readonly aria-label="Muse用の指示文"></textarea>
+    <button type="button" id="museCopy">コピー</button>
+    <button type="button" class="sub" id="museClose">閉じる</button>
+    <p class="kerr" id="museErr"></p>
   </div>
 </div>
 <div class="keyp" id="mngPanel" hidden>
   <div class="keyc gemc mngc">
     <h2>記録シート</h2>
-    <p>記録は1年に1つのファイルに分けて残します。今年のファイルはURLが変わらないので、Geminiの指示文は毎年貼り直さなくて大丈夫です。</p>
+    <p>記録は1年に1つのファイルに分けて残します。今年のファイルはURLが変わらないので、Museの指示文は毎年送り直さなくて大丈夫です。</p>
     <a class="open" id="mngOpen" target="_blank" rel="noopener">今年の記録シートを開く</a>
     <h3>見る年</h3>
     <p>アプリがふだん読むのは今年のファイルだけです。前の年は、選んだときだけ読み込みます。</p>
@@ -336,10 +336,10 @@ body::before{top:var(--top,0px)}
 <div class="keyp" id="setPanel" hidden>
   <div class="keyc gemc">
     <h2>設定</h2>
-    <h3 style="font-size:14px;margin-top:16px">「Gemini」ボタンで開くチャット</h3>
-    <p>いつも使う Gemini のチャット（または Gem）のリンクを貼り付けると、「Gemini」ボタンでそのチャットが開きます。空欄なら Gemini アプリが開きます。</p>
-    <p>リンクは、ブラウザで Gemini のチャットを開いたときのアドレス（https://gemini.google.com/ で始まるもの）です。</p>
-    <input id="setGem" type="url" inputmode="url" autocapitalize="off" autocorrect="off" spellcheck="false" placeholder="https://gemini.google.com/app/…" aria-label="Geminiのチャットのリンク">
+    <h3 style="font-size:14px;margin-top:16px">「Muse」ボタンで開くチャット</h3>
+    <p>いつも使う Muse のチャットのリンクを貼り付けると、「Muse」ボタンでそのチャットが開きます。空欄なら Muse アプリが開きます。</p>
+    <p>リンクは、ブラウザで Muse のチャットを開いたときのアドレス（https://muse.ai/ で始まるもの）です。</p>
+    <input id="setMuse" type="url" inputmode="url" autocapitalize="off" autocorrect="off" spellcheck="false" placeholder="https://muse.ai/chat/…" aria-label="Museのチャットのリンク">
     <button type="button" id="setSave">保存</button>
     <button type="button" class="sub" id="setClose">閉じる</button>
     <p class="kerr" id="setErr"></p>
@@ -350,7 +350,7 @@ body::before{top:var(--top,0px)}
 <!-- 日ごと -->
 <section id="v-day">
   <div class="top">
-    <div class="trow"><span class="t">Physical Note</span><span class="links"><a class="sheetlink" id="gemOpen" hidden href="https://gemini.google.com/app" rel="noopener">Gemini</a><button class="sheetlink" id="gemLink" hidden>指示文</button><button class="sheetlink" id="sheetLink" hidden>記録シート</button><button class="sheetlink gear" id="setLink" hidden aria-label="設定"><svg width="15" height="15" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.2" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><circle cx="12" cy="12" r="3"/><path d="M19.4 15a1.7 1.7 0 0 0 .3 1.8l.1.1a2 2 0 1 1-2.8 2.8l-.1-.1a1.7 1.7 0 0 0-1.8-.3 1.7 1.7 0 0 0-1 1.5V21a2 2 0 1 1-4 0v-.1a1.7 1.7 0 0 0-1.1-1.5 1.7 1.7 0 0 0-1.8.3l-.1.1a2 2 0 1 1-2.8-2.8l.1-.1a1.7 1.7 0 0 0 .3-1.8 1.7 1.7 0 0 0-1.5-1H3a2 2 0 1 1 0-4h.1a1.7 1.7 0 0 0 1.5-1.1 1.7 1.7 0 0 0-.3-1.8l-.1-.1a2 2 0 1 1 2.8-2.8l.1.1a1.7 1.7 0 0 0 1.8.3H9a1.7 1.7 0 0 0 1-1.5V3a2 2 0 1 1 4 0v.1a1.7 1.7 0 0 0 1 1.5 1.7 1.7 0 0 0 1.8-.3l.1-.1a2 2 0 1 1 2.8 2.8l-.1.1a1.7 1.7 0 0 0-.3 1.8V9a1.7 1.7 0 0 0 1.5 1H21a2 2 0 1 1 0 4h-.1a1.7 1.7 0 0 0-1.5 1z"/></svg></button></span></div>
+    <div class="trow"><span class="t">Physical Note</span><span class="links"><a class="sheetlink" id="museOpen" hidden href="https://muse.ai/chat" rel="noopener">Muse</a><button class="sheetlink" id="museLink" hidden>指示文</button><button class="sheetlink" id="sheetLink" hidden>記録シート</button><button class="sheetlink gear" id="setLink" hidden aria-label="設定"><svg width="15" height="15" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.2" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><circle cx="12" cy="12" r="3"/><path d="M19.4 15a1.7 1.7 0 0 0 .3 1.8l.1.1a2 2 0 1 1-2.8 2.8l-.1-.1a1.7 1.7 0 0 0-1.8-.3 1.7 1.7 0 0 0-1 1.5V21a2 2 0 1 1-4 0v-.1a1.7 1.7 0 0 0-1.1-1.5 1.7 1.7 0 0 0-1.8.3l-.1.1a2 2 0 1 1-2.8-2.8l.1-.1a1.7 1.7 0 0 0 .3-1.8 1.7 1.7 0 0 0-1.5-1H3a2 2 0 1 1 0-4h.1a1.7 1.7 0 0 0 1.5-1.1 1.7 1.7 0 0 0-.3-1.8l-.1-.1a2 2 0 1 1 2.8-2.8l.1.1a1.7 1.7 0 0 0 1.8.3H9a1.7 1.7 0 0 0 1-1.5V3a2 2 0 1 1 4 0v.1a1.7 1.7 0 0 0 1 1.5 1.7 1.7 0 0 0 1.8-.3l.1-.1a2 2 0 1 1 2.8 2.8l-.1.1a1.7 1.7 0 0 0-.3 1.8V9a1.7 1.7 0 0 0 1.5 1H21a2 2 0 1 1 0 4h-.1a1.7 1.7 0 0 0-1.5 1z"/></svg></button></span></div>
     <div class="datebar">
       <button class="round" id="prevDay" aria-label="前の日">‹</button>
       <div class="d num" id="dayTitle">—</div>
@@ -577,45 +577,82 @@ async function gFetch(url,opt){
   return res.json();
 }
 function gForget(){gSheet='';try{localStorage.removeItem(LS_SHEET);}catch(_){}}
-const G_TABS=[
-  ['使い方',[['項目','書き方'],
-    ['このシート','Physical Note の記録帳です。ここに書いた記録を、アプリが読み込んで表示します。1行に1件ずつ書いてください。'],
-    ['食事','日付・食事区分・内容・kcal と P / F / C（g）を書きます。わからない値は空欄で大丈夫です。'],
-    ['体重','日付・朝か夜・体重（kg）を書きます。'],
-    ['トレーニング','日付・区分（トレーニング／オフ）・部位・時間（分）・セット数を書きます。'],
-    ['月曜体組成','体組成計の値を週に1回まとめて書けます（任意）。'],
-    ['日次確認','その日の食事を書き終えたら、日付と「完了」に TRUE を書きます（任意）。'],
-    ['レシピ','よく作る料理の名前・食数と、全量の kcal / P / F / C を書くと、1食分の値が出ます（任意）。'],
-    ['設定','1日の目標（kcal・P・F・C）と目標体重を書きます。'],
-    ['記録ID・有効','空欄で大丈夫です。取り消すときは「有効」に FALSE と書きます。'],
-    ['日付の書き方','2026-10-26 や 2026/10/26 のように書きます。'],
-    ['見出しの行','1行目の見出しや列の順番は変えないでください。'],
-    ['年の切り替え','このシートには今年の記録を書きます。年が明けたら、アプリの「記録シート」から前の年の記録を「Physical Note 記録シート（2026年）」のような年ごとのファイルに移せます。このシートのURLは変わりません。']]],
-  ['食事',[['記録ID','日付','時刻','食事区分','内容・量','kcal','P g','F g','C g','根拠・メモ','確定状態','有効','登録日時','更新日時']]],
-  ['体重',[['記録ID','日付','朝夜','体重 kg','測定条件','有効','登録日時','更新日時']]],
-  ['トレーニング',[['記録ID','日付','区分','部位','時間 分','時間','開始時刻','メモ','有効','登録日時','更新日時','入力根拠','セット数','セット内訳']]],
-  ['月曜体組成',[['記録ID','対象月曜','測定日','体重 kg','体脂肪率 %','筋肉量 kg','骨格筋量 kg','内臓脂肪レベル','基礎代謝 kcal','体水分率 %','腹囲 cm','機器・備考','提出状態','有効','登録日時','更新日時']]],
-  ['日次確認',[['日付','完了','備考']]],
-  ['レシピ',[['レシピID','名前','版','食数','完成全量 g','1食 g','全量 kcal','全量 P','全量 F','全量 C','1食 kcal','1食 P','1食 F','1食 C','状態','作り方','備考','有効','作成日時','更新日時']]],
-  ['設定',[['項目','値','説明'],['kcal目標',2200,'1日の目標カロリー'],['P目標 g',110,'たんぱく質の目標（g）'],['F目標 g',60,'脂質の目標（g）'],['C目標 g',300,'炭水化物の目標（g）'],['体重目標 kg',65,'目標体重']]],
-];
-// 記録シートを見つける（このアプリが前に作ったもの）。なければ作る
+// 記録シートの形は、配布元の「フィジカルノート｜テンプレート」と同じ（template.json に写してある）。
+// タブ・見出し・設定・数式・ルール（Muse基本指示・運用仕様）をそのまま作る。個人の記録とレシピは入れない
+let gTpl=null;
+async function gTemplate(){
+  if(!gTpl){const r=await fetch('template.json',{cache:'no-cache'});if(!r.ok)throw new Error('記録シートのひな形を読み込めませんでした。通信を確認してください');gTpl=await r.json();}
+  return gTpl;
+}
+const G_DATE_COLS={'体重':[1],'食事':[1],'トレーニング':[1],'月曜体組成':[1,2],'日次確認':[0],'日別集計':[0]};
+// テンプレートの中身に、この人のシートのID・URLと今年を入れる
+function gTplRows(t,id){
+  const url='https://docs.google.com/spreadsheets/d/'+id+'/edit',y=gThisYear();
+  return t.rows.map(r=>r.map(v=>{
+    if(typeof v!=='string')return v;
+    if(t.title==='設定'&&/^\d{4}-01-01$/.test(v))return y+'-01-01';
+    return v.split('ID（ここに自分のスプレッドシートIDを記入）').join('ID '+id).split('（ここに自分のシートのURLを貼る）').join(url);
+  }));
+}
+// 作ったタブに中身を書く。sheetId はタブの番号
+async function gFillTabs(id,list){
+  if(!list.length)return;
+  await gFetch('https://sheets.googleapis.com/v4/spreadsheets/'+id+'/values:batchUpdate',{method:'POST',body:JSON.stringify({valueInputOption:'USER_ENTERED',
+    data:list.map(({t,from})=>({range:"'"+t.title+"'!A"+(from+1),values:gTplRows(t,id).slice(from)}))})});
+  const req=[];
+  list.forEach(({t,sid,from})=>{
+    if(from===0)req.push({repeatCell:{range:{sheetId:sid,startRowIndex:0,endRowIndex:1},cell:{userEnteredFormat:{textFormat:{bold:true},backgroundColor:{red:.96,green:.96,blue:.97}}},fields:'userEnteredFormat(textFormat,backgroundColor)'}});
+    (G_DATE_COLS[t.title]||[]).forEach(c=>req.push({repeatCell:{range:{sheetId:sid,startRowIndex:1,startColumnIndex:c,endColumnIndex:c+1},cell:{userEnteredFormat:{numberFormat:{type:'DATE',pattern:'yyyy-mm-dd'}}},fields:'userEnteredFormat.numberFormat'}}));
+    if(t.title==='日別集計'){ // 2行目の式を、1年分（367行目まで）に広げる
+      req.push({copyPaste:{source:{sheetId:sid,startRowIndex:2,endRowIndex:3,startColumnIndex:0,endColumnIndex:1},destination:{sheetId:sid,startRowIndex:3,endRowIndex:367,startColumnIndex:0,endColumnIndex:1},pasteType:'PASTE_FORMULA'}});
+      req.push({copyPaste:{source:{sheetId:sid,startRowIndex:1,endRowIndex:2,startColumnIndex:1,endColumnIndex:15},destination:{sheetId:sid,startRowIndex:2,endRowIndex:367,startColumnIndex:1,endColumnIndex:15},pasteType:'PASTE_FORMULA'}});
+    }
+  });
+  if(req.length)await gFetch('https://sheets.googleapis.com/v4/spreadsheets/'+id+':batchUpdate',{method:'POST',body:JSON.stringify({requests:req})});
+}
+const gTabProps=(t,i)=>({title:t.title,index:i,hidden:!!t.hidden,gridProperties:{frozenRowCount:1,rowCount:t.title==='日別集計'?367:1000,columnCount:Math.max(26,(t.rows[0]||[]).length)}});
+// 記録シートを見つける（このアプリが前に作ったもの）。なければテンプレートと同じ形で作る
+let gTabsP=null;
 async function gEnsureSheet(){
-  if(gSheet)return gSheet;
+  if(gSheet){if(!gTabsP)gTabsP=gEnsureTabs(gSheet).catch(()=>{gTabsP=null;});return gSheet;}
   const q=encodeURIComponent("name='"+G_TITLE+"' and mimeType='application/vnd.google-apps.spreadsheet' and trashed=false");
   const found=await gFetch('https://www.googleapis.com/drive/v3/files?q='+q+'&orderBy=createdTime&fields=files(id)&pageSize=1');
   let id=found.files&&found.files[0]&&found.files[0].id;
   if(!id){
-    const cell=v=>({userEnteredValue:typeof v==='number'?{numberValue:v}:{stringValue:String(v)}});
+    const tpl=await gTemplate();
     const made=await gFetch('https://sheets.googleapis.com/v4/spreadsheets',{method:'POST',body:JSON.stringify({
-      properties:{title:G_TITLE,locale:'ja_JP',timeZone:'Asia/Tokyo'},
-      sheets:G_TABS.map(([title,rows])=>({properties:{title,gridProperties:{frozenRowCount:1}},
-        data:[{startRow:0,startColumn:0,rowData:rows.map((r,i)=>({values:r.map(v=>Object.assign(cell(v),i===0?{userEnteredFormat:{textFormat:{bold:true},backgroundColor:{red:.96,green:.96,blue:.97}}}:{}))}))}]}))})});
+      properties:{title:G_TITLE,locale:'ja_JP',timeZone:'Asia/Tokyo'},sheets:tpl.map((t,i)=>({properties:gTabProps(t,i)}))})});
     id=made.spreadsheetId;
+    const sids={};(made.sheets||[]).forEach(x=>{sids[x.properties.title]=x.properties.sheetId;});
+    await gFillTabs(id,tpl.map(t=>({t,sid:sids[t.title],from:0})));
+    try{localStorage.setItem(LS_TABS,id+':'+G_TABS_VER);}catch(_){}
   }
   gSheet=id;try{localStorage.setItem(LS_SHEET,id);}catch(_){}
   showSheetLink();
+  if(!gTabsP)gTabsP=gEnsureTabs(id).catch(()=>{gTabsP=null;});
   return id;
+}
+// 前に作ったシート（タブが8つの版）には、足りないタブと設定の続きを足す。記録はそのまま
+const G_TABS_VER='tpl1',LS_TABS='pn.app.tabs';
+async function gEnsureTabs(id){
+  try{if(localStorage.getItem(LS_TABS)===id+':'+G_TABS_VER)return;}catch(_){}
+  const tpl=await gTemplate();
+  const meta=await gFetch('https://sheets.googleapis.com/v4/spreadsheets/'+id+'?fields=sheets.properties(title,sheetId)');
+  const have={};(meta.sheets||[]).forEach(x=>{have[x.properties.title]=x.properties.sheetId;});
+  const miss=tpl.filter(t=>!(t.title in have));
+  const list=[];
+  if(miss.length){
+    const r=await gFetch('https://sheets.googleapis.com/v4/spreadsheets/'+id+':batchUpdate',{method:'POST',body:JSON.stringify({requests:miss.map(t=>({addSheet:{properties:Object.assign(gTabProps(t,0),{index:undefined})}}))})});
+    (r.replies||[]).forEach((x,i)=>list.push({t:miss[i],sid:x.addSheet.properties.sheetId,from:0}));
+  }
+  // 設定は7行目（集計開始日）から下がなければ足す
+  const st=tpl.find(t=>t.title==='設定');
+  if(st&&('設定' in have)){
+    const cur=await gGet(id,[['設定','A7:A30']]);
+    if(!(cur['設定']||[]).some(r=>r&&r[0]))list.push({t:st,sid:have['設定'],from:6});
+  }
+  await gFillTabs(id,list);
+  try{localStorage.setItem(LS_TABS,id+':'+G_TABS_VER);}catch(_){}
 }
 // 記録は1年に1ファイル。今年のファイル（gSheet）はURLを変えずに使い続け、年が明けたら前の年の行を
 // 「Physical Note 記録シート（2026年）」のような年別ファイルへ移す。アプリがふだん読むのは今年のファイルだけ
@@ -719,7 +756,7 @@ async function gReset(withRecipes){
   const now=new Date(),st=now.getFullYear()+'-'+pad(now.getMonth()+1)+'-'+pad(now.getDate())+' '+pad(now.getHours())+':'+pad(now.getMinutes());
   const bk=await gCopy(main,G_TITLE+' バックアップ（'+st+'）',{pnKind:'backup'});
   if(!bk||!bk.id)throw new Error('バックアップを作れなかったので、記録は消していません');
-  const tabs=G_REC.map(([t])=>t).concat(withRecipes?['レシピ']:[]);
+  const tabs=G_REC.map(([t])=>t).concat(['監査ログ','テスト専用'],withRecipes?['レシピ','レシピ材料']:[]);
   await gFetch('https://sheets.googleapis.com/v4/spreadsheets/'+main+'/values:batchClear',{method:'POST',body:JSON.stringify({ranges:tabs.map(t=>"'"+t+"'!A2:Z")})});
 }
 function gMonth(R,ym){
@@ -761,60 +798,47 @@ async function gLoad(ym){
 function gSheetUrl(){return gSheet?'https://docs.google.com/spreadsheets/d/'+gSheet+'/edit':'';}
 // ログインボタン（最初の1回）
 function gStart(){document.getElementById('keyErr').textContent='Googleに移動しています…';gRedirect('select_account');}
-function showSheetLink(){const a=document.getElementById('sheetLink');if(a&&gSheet){a.hidden=false;document.getElementById('gemLink').hidden=false;document.getElementById('gemOpen').hidden=false;document.getElementById('setLink').hidden=false;}}
-// Gemini に貼る指示文（gemini.txt）に、この人の記録シートとアプリのURLを入れて出す
-let gemTpl=null;
-async function openGem(){
-  const box=document.getElementById('gemPanel'),ta=document.getElementById('gemText'),err=document.getElementById('gemErr');
+function showSheetLink(){const a=document.getElementById('sheetLink');if(a&&gSheet){a.hidden=false;document.getElementById('museLink').hidden=false;document.getElementById('museOpen').hidden=false;document.getElementById('setLink').hidden=false;}}
+// Muse に送る指示文（muse.txt）に、この人の記録シートのURLとIDを入れて出す。詳しいルールは記録シートの「Muse基本指示」タブにある
+let museTpl=null;
+async function openMuse(){
+  const box=document.getElementById('musePanel'),ta=document.getElementById('museText'),err=document.getElementById('museErr');
   err.textContent='';box.hidden=false;
   try{
-    if(!gemTpl){const r=await fetch('gemini.txt',{cache:'no-cache'});if(!r.ok)throw 0;gemTpl=await r.text();}
-    const app=location.origin+location.pathname.replace(/[^/]*$/,'');
-    ta.value=gemTpl.split('{{SHEET_URL}}').join(gSheetUrl()).split('{{APP_URL}}').join(app);
+    if(!museTpl){const r=await fetch('muse.txt',{cache:'no-cache'});if(!r.ok)throw 0;museTpl=await r.text();}
+    ta.value=museTpl.split('{{SHEET_ID}}').join(gSheet||'（あなたの記録シートのID）').split('{{SHEET_URL}}').join(gSheetUrl()||'https://docs.google.com/spreadsheets/d/（あなたの記録シート）/edit');
   }catch(_){err.textContent='指示文を読み込めませんでした。通信を確認してもう一度開いてください';}
 }
-document.getElementById('gemLink').addEventListener('click',openGem);
-// 「Gemini」ボタン：設定したチャットがあればそこへ、なければ Gemini アプリを開く（アプリがなければウェブ版）
-const LS_GEMURL='pn.app.gemurl',GEM_RE=/^https:\/\/(gemini\.google\.com|g\.co\/gemini)\//;
-function gemUrl(){try{const u=localStorage.getItem(LS_GEMURL)||'';return GEM_RE.test(u)?u:'';}catch(_){return '';}}
-document.getElementById('gemOpen').addEventListener('click',e=>{
+document.getElementById('museLink').addEventListener('click',openMuse);
+// 「Muse」ボタン：設定したチャットがあればそこへ、なければ Muse を開く
+// muse.ai のトップではアプリが開かないので、アプリが受け取る /chat を開く（入っていなければウェブ版）
+const LS_MUSEURL='pn.app.museurl',MUSE_RE=/^https:\/\/([a-z0-9-]+\.)*muse\.ai\//;
+function museUrl(){try{const u=localStorage.getItem(LS_MUSEURL)||'';return MUSE_RE.test(u)?u:'';}catch(_){return '';}}
+document.getElementById('museOpen').addEventListener('click',e=>{
   e.preventDefault();
-  const chat=gemUrl(),web=chat||'https://gemini.google.com/app',ua=navigator.userAgent;
-  if(/Android/i.test(ua)){
-    // Android は Gemini アプリ（com.google.android.apps.bard）で開き、入っていなければブラウザで開く
-    location.href='intent://'+web.replace(/^https:\/\//,'')+'#Intent;scheme=https;package=com.google.android.apps.bard;S.browser_fallback_url='+encodeURIComponent(web)+';end';
-    return;
-  }
-  if(/iPhone|iPad|iPod/i.test(ua)||(/Macintosh/.test(ua)&&navigator.maxTouchPoints>1)){
-    if(chat){location.href=chat;return;} // チャットのリンクは、入っていれば Gemini アプリが受け取る
-    // アプリを開く。入っていなくて画面が残ったままなら、ウェブ版へ
-    let gone=false;const off=()=>{if(document.hidden)gone=true;};
-    document.addEventListener('visibilitychange',off);
-    setTimeout(()=>{document.removeEventListener('visibilitychange',off);if(!gone&&!document.hidden)location.href=web;},1500);
-    location.href='googlegemini://';
-    return;
-  }
-  window.open(web,'_blank','noopener');
+  const url=museUrl()||'https://muse.ai/chat',ua=navigator.userAgent;
+  if(/Android|iPhone|iPad|iPod/i.test(ua)||(/Macintosh/.test(ua)&&navigator.maxTouchPoints>1)){location.href=url;return;}
+  window.open(url,'_blank','noopener');
 });
 // 設定
-function openSet(){document.getElementById('setGem').value=gemUrl();document.getElementById('setErr').textContent='';document.getElementById('setPanel').hidden=false;}
+function openSet(){document.getElementById('setMuse').value=museUrl();document.getElementById('setErr').textContent='';document.getElementById('setPanel').hidden=false;}
 document.getElementById('setLink').addEventListener('click',openSet);
-document.getElementById('setGem').addEventListener('input',()=>{document.getElementById('setErr').textContent='';});
+document.getElementById('setMuse').addEventListener('input',()=>{document.getElementById('setErr').textContent='';});
 document.getElementById('setClose').addEventListener('click',()=>{document.getElementById('setPanel').hidden=true;});
 document.getElementById('setSave').addEventListener('click',()=>{
-  const v=document.getElementById('setGem').value.trim(),err=document.getElementById('setErr');
-  if(v&&!GEM_RE.test(v)){err.textContent='https://gemini.google.com/ で始まるリンクを貼り付けてください';return;}
-  try{v?localStorage.setItem(LS_GEMURL,v):localStorage.removeItem(LS_GEMURL);}catch(_){}
+  const v=document.getElementById('setMuse').value.trim(),err=document.getElementById('setErr');
+  if(v&&!MUSE_RE.test(v)){err.textContent='https://muse.ai/ で始まるリンクを貼り付けてください';return;}
+  try{v?localStorage.setItem(LS_MUSEURL,v):localStorage.removeItem(LS_MUSEURL);}catch(_){}
   document.getElementById('setPanel').hidden=true;
 });
 ['touchstart','touchmove','touchend'].forEach(t=>document.getElementById('setPanel').addEventListener(t,e=>e.stopPropagation(),{passive:true}));
-document.getElementById('gemClose').addEventListener('click',()=>{document.getElementById('gemPanel').hidden=true;});
-document.getElementById('gemCopy').addEventListener('click',async()=>{
-  const ta=document.getElementById('gemText'),b=document.getElementById('gemCopy');if(!ta.value)return;
+document.getElementById('museClose').addEventListener('click',()=>{document.getElementById('musePanel').hidden=true;});
+document.getElementById('museCopy').addEventListener('click',async()=>{
+  const ta=document.getElementById('museText'),b=document.getElementById('museCopy');if(!ta.value)return;
   try{await navigator.clipboard.writeText(ta.value);}catch(_){ta.select();document.execCommand('copy');}
   b.textContent='コピーしました';setTimeout(()=>{b.textContent='コピー';},2000);
 });
-['touchstart','touchmove','touchend'].forEach(t=>['gemPanel','mngPanel'].forEach(id=>document.getElementById(id).addEventListener(t,e=>e.stopPropagation(),{passive:true})));
+['touchstart','touchmove','touchend'].forEach(t=>['musePanel','mngPanel'].forEach(id=>document.getElementById(id).addEventListener(t,e=>e.stopPropagation(),{passive:true})));
 // ---------- 記録シートの管理：見る年・年の切り替え・リセット ----------
 let mngBusy=false;
 function mngMsg(ok,err){document.getElementById('mngOk').textContent=ok||'';document.getElementById('mngErr').textContent=err||'';}
@@ -1311,7 +1335,7 @@ window.addEventListener('resize',()=>{placeWeek(false);if(sheetShown){sheetH=she
     bar.style.height=(d>.5?d+top0:0)+'px'; // 見本の帯がある時はその分も埋める
     if(!busy){icon.style.opacity=d>=GO?1:Math.min(.45,d/GO*.45);icon.style.transform='rotate('+(Math.min(d,GO)/GO*270)+'deg) scale('+(d>=GO?1.15:1)+')';}
   });
-  const free=()=>window.scrollY<=0&&!sheetShown&&$('keyPanel').hidden&&$('gemPanel').hidden&&$('setPanel').hidden&&$('mngPanel').hidden;
+  const free=()=>window.scrollY<=0&&!sheetShown&&$('keyPanel').hidden&&$('musePanel').hidden&&$('setPanel').hidden&&$('mngPanel').hidden;
   document.addEventListener('touchstart',e=>{
     y0=null;lock=false;
     if(busy||e.touches.length!==1||!free())return;
