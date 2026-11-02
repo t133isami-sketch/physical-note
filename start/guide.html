@@ -287,7 +287,7 @@ footer span a+a{margin-left:16px}
         <li><a href="#intro"><span class="n" aria-hidden="true">0</span><span class="sm">はじめに</span></a></li>
         <li data-s="1"><a href="#s1"><span class="n">1</span><span class="sm">記録シートを作る</span></a></li>
         <li data-s="2"><a href="#s2"><span class="n">2</span><span class="sm">記録シートを確かめる</span></a></li>
-        <li data-s="3"><a href="#s3"><span class="n">3</span><span class="sm">MuseとGoogleをつなぐ</span></a></li>
+        <li data-s="3"><a href="#s3"><span class="n">3</span><span class="sm">Museを用意する</span></a></li>
         <li data-s="4"><a href="#s4"><span class="n">4</span><span class="sm">Museに指示文を送る</span></a></li>
         <li data-s="5"><a href="#s5"><span class="n">5</span><span class="sm">書き込みテスト</span></a></li>
         <li data-s="6"><a href="#s6"><span class="n">6</span><span class="sm">日常の記録を始める</span></a></li>
@@ -321,8 +321,8 @@ footer span a+a{margin-left:16px}
       <ol>
         <li>アプリでGoogleにログインして、記録シートを作る</li>
         <li>記録シートのタブと目標を確かめる</li>
-        <li>MuseからGoogleスプレッドシートを使えるようにする</li>
-        <li>アプリの「指示文」をMuseに送る</li>
+        <li>Museを用意する</li>
+        <li>アプリの「指示文」をMuseのサイドチャットに送る</li>
         <li>テストの記録を1件書いてもらう</li>
         <li>ふだんの記録を始める</li>
       </ol>
@@ -371,22 +371,18 @@ footer span a+a{margin-left:16px}
     </section>
 
     <!-- ===== STEP 3 ===== -->
-    <section class="part" id="s3" data-step="3" data-title="MuseとGoogleをつなぐ">
-      <header><div class="num" aria-hidden="true">3</div><div><span class="kicker">STEP 3</span><h2>MuseとGoogleをつなぐ</h2></div></header>
-      <p>Museが記録シートを読んだり書いたりできるように、MuseからGoogleスプレッドシートを使えるようにします。</p>
-      <div class="blk where">
-        <span class="lbl"><svg viewBox="0 0 24 24" aria-hidden="true"><path d="M12 21s-7-6.2-7-11.5A7 7 0 0 1 19 9.5C19 14.8 12 21 12 21z"/><circle cx="12" cy="9.5" r="2.5"/></svg>操作する場所：Muse</span>
-        <ol>
-          <li>Museを開き、STEP 1と同じGoogleアカウントでGoogleドライブ（スプレッドシート）との接続を許可します。</li>
-          <li>許可の画面では、スプレッドシートの読み取りと編集ができる権限を選びます。</li>
-        </ol>
-      </div>
+    <section class="part" id="s3" data-step="3" data-title="Museを用意する">
+      <header><div class="num" aria-hidden="true">3</div><div><span class="kicker">STEP 3</span><h2>Museを用意する</h2></div></header>
+      <ol>
+        <li>スマホにMuseのアプリを入れて、ログインします。</li>
+        <li>Museが記録シートを読み書きするには、MuseからGoogleを使える必要があります。次のSTEP 4で指示文を送ったときに、Googleへの接続や許可を求められたら、STEP 1と同じGoogleアカウントで許可します。</li>
+      </ol>
       <figure class="shot" data-shot="s3-connect" hidden></figure>
-      <div class="blk check">
-        <span class="lbl"><svg viewBox="0 0 24 24" aria-hidden="true"><circle cx="12" cy="12" r="9"/><path d="M8 12.5l2.7 2.7L16 10"/></svg>できたかの確かめ方</span>
-        <p>次のSTEP 4で指示文を送ったとき、Museが「読み取り・書き込みができる」と答えれば、つながっています。</p>
+      <div class="blk warn">
+        <span class="lbl"><svg viewBox="0 0 24 24" aria-hidden="true"><path d="M12 3l10 18H2z"/><path d="M12 10v5M12 18h.01"/></svg>注意</span>
+        <p>記録シートを作ったGoogleアカウントと、Museで許可するアカウントは同じにしてください。違うと、Museが記録シートを見つけられません。</p>
       </div>
-      <p class="note">接続の画面や名前は、Museの更新で変わることがあります。</p>
+      <p class="note">画面や名前は、Museの更新で変わることがあります。</p>
       <div class="pfoot" data-nav></div>
     </section>
 
@@ -395,12 +391,17 @@ footer span a+a{margin-left:16px}
       <header><div class="num" aria-hidden="true">4</div><div><span class="kicker">STEP 4</span><h2>Museに指示文を送る</h2></div></header>
       <div class="blk where">
         <span class="lbl"><svg viewBox="0 0 24 24" aria-hidden="true"><path d="M12 21s-7-6.2-7-11.5A7 7 0 0 1 19 9.5C19 14.8 12 21 12 21z"/><circle cx="12" cy="9.5" r="2.5"/></svg>操作する場所：アプリ → Muse</span>
-        <ol class="path" aria-label="押す順番"><li><span class="k app">アプリ</span></li><li><span class="ar" aria-hidden="true"></span></li><li><span class="k">指示文</span></li><li><span class="ar" aria-hidden="true"></span></li><li><span class="k">コピー</span></li><li><span class="ar" aria-hidden="true"></span></li><li><span class="k">Muse</span></li><li><span class="ar" aria-hidden="true"></span></li><li><span class="k go">新しいチャットに貼って送る</span></li></ol>
+        <ol class="path" aria-label="アプリで押す順番"><li><span class="k app">アプリ</span></li><li><span class="ar" aria-hidden="true"></span></li><li><span class="k">指示文</span></li><li><span class="ar" aria-hidden="true"></span></li><li><span class="k go">コピー</span></li></ol>
+        <ol class="path" aria-label="Museで押す順番"><li><span class="k app">Muse</span></li><li><span class="ar" aria-hidden="true"></span></li><li><span class="k">左上の ≡</span></li><li><span class="ar" aria-hidden="true"></span></li><li><span class="k">下の鉛筆ボタン</span></li><li><span class="ar" aria-hidden="true"></span></li><li><span class="k go">貼り付けて送る</span></li></ol>
         <ol>
           <li>アプリの上の「指示文」を押します。あなたの記録シートのURLとIDが入った指示文が出ます。</li>
           <li>「コピー」を押します。</li>
-          <li>アプリの上の「Muse」を押してMuseを開き、新しいチャットに貼り付けて送ります。</li>
+          <li>アプリの上の「Muse」を押してMuseを開きます。</li>
+          <li>左上の「≡」を押してメニューを開き、下の鉛筆ボタンを押して新しいサイドチャットを作ります。</li>
+          <li>入力欄に貼り付けて送ります。</li>
         </ol>
+        <p>このサイドチャットを、記録専用のチャットとして使います。メニューの「サイドチャット」に並ぶので、名前を「Physical Note」などにしておくと見つけやすくなります。</p>
+</ol>
       </div>
       <div class="blk check">
         <span class="lbl"><svg viewBox="0 0 24 24" aria-hidden="true"><circle cx="12" cy="12" r="9"/><path d="M8 12.5l2.7 2.7L16 10"/></svg>成功したときの確認</span>
@@ -464,7 +465,7 @@ footer span a+a{margin-left:16px}
       <h3>6-6．目標を相談する</h3>
       <div class="cp"><div class="cp-h"><span>例</span><button class="copy" type="button" data-copy="e-goal">コピー</button></div><pre id="e-goal">筋肉を増やしたいので、増量用のカロリーとPFCを設定したいです。必要な情報を順番に質問してください。</pre></div>
       <p>納得して決めた目標は、Museが「設定」タブに保存します。</p>
-      <p class="note">チャットが長くなったら、週ごとなどで新しいチャットに切り替えます。新しいチャットでも、最初に「指示文」を送り直す必要はありません。うまく記録されないときだけ送り直します。</p>
+      <p class="note">チャットが長くなったら、週ごとなどで新しいサイドチャットに切り替え、最初に「指示文」を送ります。</p>
       <div class="pfoot" data-nav></div>
     </section>
 
@@ -508,7 +509,7 @@ footer span a+a{margin-left:16px}
       <p class="lead">当てはまる質問を開いてください。</p>
       <div class="faq">
         <details><summary>Q1．Museが「書き込みできない」と答える</summary><div>
-          <p><a href="#s3">STEP 3</a>の接続を確かめます。記録シートを作ったGoogleアカウントと、Museにつないだアカウントが同じか確認してください。</p>
+          <p>記録シートを作ったGoogleアカウントと、Museで許可したアカウントが同じか確認してください（<a href="#s3">STEP 3</a>）。</p>
           <p>書き込みできないあいだは、Museは「未保存」と答え、書き写せる内容を出します。</p>
         </div></details>
         <details><summary>Q2．Museが記録シートを見つけられない</summary><div>
@@ -534,8 +535,8 @@ footer span a+a{margin-left:16px}
       <ul class="chk" id="chk">
         <li><label><input type="checkbox" value="sheet"><span>アプリでログインして、記録シートができた</span></label></li>
         <li><label><input type="checkbox" value="tabs"><span>記録シートに「Muse基本指示」のタブがある</span></label></li>
-        <li><label><input type="checkbox" value="connect"><span>MuseとGoogleをつないだ</span></label></li>
-        <li><label><input type="checkbox" value="prompt"><span>指示文を送り、読み取り・書き込みができると答えた</span></label></li>
+        <li><label><input type="checkbox" value="connect"><span>Museを入れてログインした</span></label></li>
+        <li><label><input type="checkbox" value="prompt"><span>サイドチャットに指示文を送り、読み取り・書き込みができると答えた</span></label></li>
         <li><label><input type="checkbox" value="test"><span>テスト専用タブにTESTの行が保存された</span></label></li>
         <li><label><input type="checkbox" value="app"><span>アプリで記録を確認できた</span></label></li>
       </ul>
