@@ -220,6 +220,7 @@ svg text{font-family:inherit}
 body::before{top:var(--top,0px)}
 .ptr,.load{top:calc(env(safe-area-inset-top) + var(--top,0px))}
 </style>
+<link rel="stylesheet" href="../training-entry/module/training-entry-Dc3kB_Lo.css">
 </head>
 <body>
 <script>
@@ -385,6 +386,7 @@ body::before{top:var(--top,0px)}
     <div class="card">
       <h3><span>トレーニング</span></h3>
       <div id="train"></div>
+      <div id="trainEntrySlot"></div>
     </div>
     <div class="card">
       <h3><span id="mealTitle">食事</span><button class="a" id="toList">一覧で見る ›</button></h3>
@@ -1018,7 +1020,7 @@ function Pager(box,pane,o){
     const x=sp.x;drop();
     if(RM.matches){(mut||o.step)(dir);o.paint();sp.set(0);fade(pane);return;}
     ghost=pane.cloneNode(true);ghost.removeAttribute('id');ghost.querySelectorAll('[id]').forEach(n=>n.removeAttribute('id'));
-    ghost.classList.add('ghost');ghost._dir=dir;box.appendChild(ghost);
+    ghost.classList.add('ghost');ghost.inert=true;ghost.setAttribute('aria-hidden','true');ghost._dir=dir;box.appendChild(ghost);
     (mut||o.step)(dir);o.paint();
     sp.set(x+dir*W());
     sp.to(0,{velocity:v||0,damping:1,response:.4},drop);
@@ -1384,5 +1386,8 @@ document.addEventListener('visibilitychange',()=>{if(document.visibilityState===
   if('serviceWorker' in navigator&&location.protocol==='https:')addEventListener('load',()=>navigator.serviceWorker.register('sw.js').catch(()=>{}));
 })();
 </script>
+<div id="trainingEntryRoot"></div>
+<script>window.pnTrainingBridge={selectedDate:()=>S.date,mode:DEMO?'preview':'personal',allowedYear:gThisYear()};</script>
+<script type="module" src="../training-entry/module/training-entry-67tKzgq6.js"></script>
 </body>
 </html>
