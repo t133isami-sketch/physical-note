@@ -1,23 +1,52 @@
-// アプリ本体（画面のファイル）を端末に保存しておき、開いたらすぐ表示する。
-// 裏で新しい版を取りにいき、次に開いたときに反映される。記録データ（Apps Script）は扱わない。
-const CACHE='physicalnote-app-v11';
-self.addEventListener('install',e=>{
-  self.skipWaiting();
-  e.waitUntil(caches.open(CACHE).then(c=>c.addAll(['./','../icon-180.png'])).catch(()=>{}));
+// Physical Note（app/ のGoogleログイン版）の service worker（v12：トレーニング入力モジュールを追加）。
+// personal-release-20261108 で検証したロジックを再利用し、キャッシュ名と precache だけをGoogle版に合わせた。
+// - install：必要な資産（ハッシュ付きの入力モジュールを含む）をすべて取れたときだけ skipWaiting する。
+//   1つでも取れなければ install は失敗し、新しい service worker は破棄されて旧版がそのまま動く。
+// - activate：Google版の旧キャッシュ（physicalnote-app-v11）だけを消す。他のキャッシュや localStorage には触れない。
+// - fetch：同じ origin の GET だけを扱う。このアプリの新しいキャッシュ（CACHE）にあればそれを返し、
+//   裏で最新を取りに行って更新する。他のキャッシュは参照しない。
+//   ok かつリダイレクトでない応答だけを保存する。外部URL・GET以外は扱わない（ブラウザに任せる）。
+// - 画面の自動再読み込みはしない（入力中の下書きを守る）。
+const CACHE = 'physicalnote-app-v12-training-20261108';
+const OLD_CACHES = ['physicalnote-app-v11'];
+const PRECACHE = [
+  './',
+  'index.html',
+  '../icon-180.png',
+  '../training-entry/module/training-entry-67tKzgq6.js',
+  '../training-entry/module/training-entry-Dc3kB_Lo.css',
+];
+
+self.addEventListener('install', (e) => {
+  e.waitUntil(
+    caches
+      .open(CACHE)
+      .then((c) => c.addAll(PRECACHE))
+      .then(() => self.skipWaiting()),
+  );
 });
-self.addEventListener('activate',e=>{
-  e.waitUntil(caches.keys().then(ks=>Promise.all(ks.filter(k=>k!==CACHE).map(k=>caches.delete(k)))).then(()=>self.clients.claim()));
+
+self.addEventListener('activate', (e) => {
+  e.waitUntil(Promise.all(OLD_CACHES.map((k) => caches.delete(k))).then(() => self.clients.claim()));
 });
-self.addEventListener('fetch',e=>{
-  const req=e.request,url=new URL(req.url);
-  if(req.method!=='GET'||url.origin!==location.origin)return;
-  e.respondWith(caches.open(CACHE).then(async c=>{
-    const hit=await c.match(req);
-    const net=fetch(req.url,{cache:'no-cache',credentials:'same-origin'}).then(res=>{
-      if(res.ok&&!res.redirected)c.put(req,res.clone());
-      return res;
-    });
-    if(hit){e.waitUntil(net.catch(()=>{}));return hit;}
-    return net;
-  }));
+
+self.addEventListener('fetch', (e) => {
+  const req = e.request;
+  if (req.method !== 'GET') return;
+  if (new URL(req.url).origin !== self.location.origin) return;
+  const net = fetch(req.url, { cache: 'no-cache', credentials: 'same-origin' });
+  const update = net
+    .then((res) => {
+      if (!res.ok || res.redirected) return undefined;
+      const copy = res.clone();
+      return caches.open(CACHE).then((c) => c.put(req, copy));
+    })
+    .catch(() => {});
+  e.waitUntil(update);
+  e.respondWith(
+    caches
+      .open(CACHE)
+      .then((c) => c.match(req))
+      .then((hit) => hit || net),
+  );
 });
