@@ -205,6 +205,22 @@ body{overscroll-behavior-y:none;min-height:100vh}
 svg text{font-family:inherit}
 .legend2{display:flex;gap:14px;font-size:11.5px;color:var(--sub);margin-top:6px}
 .legend2 span::before{content:"";display:inline-block;width:12px;height:3px;border-radius:2px;margin-right:4px;vertical-align:middle;background:var(--c)}
+/* RM計算表 */
+.rmin{display:flex;gap:12px;margin-top:8px}
+.rmin label{flex:1;min-width:0;font-size:13px;color:var(--sub);font-weight:600}
+.rmin .u{display:flex;align-items:center;gap:6px;margin-top:6px;color:var(--ink);font-weight:600}
+.rmin input{flex:1;min-width:0;width:100%;font-family:inherit;font-size:20px;font-weight:600;padding:10px 12px;border-radius:14px;border:1px solid #d9cfe9;background:var(--bg);color:var(--ink);text-align:right}
+.rmin input:focus{outline:2px solid var(--p600);outline-offset:1px}
+.rmres{display:flex;align-items:baseline;justify-content:center;gap:6px;margin:16px 0 4px;color:var(--p800);font-weight:700}
+.rmres b{font-size:40px;line-height:1.1}
+.rmstep{display:flex;align-items:center;flex-wrap:wrap;gap:7px;margin-top:12px;font-size:13px;color:var(--sub);font-weight:600}
+.rmstep button{min-height:36px;padding:6px 12px;border-radius:999px;background:var(--p100);color:var(--p800);font-size:13px;font-weight:600}
+.rmstep button.on{background:var(--p800);color:#fff}
+.rmt{width:100%;border-collapse:collapse;font-variant-numeric:tabular-nums}
+.rmt th,.rmt td{padding:9px 4px;border-top:1px solid var(--line);text-align:right;font-size:15px}
+.rmt th:first-child,.rmt td:first-child{text-align:left;color:var(--sub);font-weight:600}
+.rmt thead th{border-top:0;font-size:12px;color:var(--sub);font-weight:600}
+.rmt td.empty{text-align:center;color:var(--sub);font-size:14px;font-weight:400;border-top:0}
 .hide{display:none!important}
 
 @media (prefers-reduced-motion: reduce){
@@ -266,7 +282,7 @@ svg text{font-family:inherit}
 body::before{top:var(--top,0px)}
 .ptr,.load{top:calc(env(safe-area-inset-top) + var(--top,0px))}
 </style>
-<link rel="stylesheet" href="../training-entry/module/training-entry-PdoMl-dv.css">
+<link rel="stylesheet" href="../training-entry/module/training-entry-C9GpuNhv.css">
 </head>
 <body>
 <script>
@@ -501,12 +517,32 @@ body::before{top:var(--top,0px)}
     <div class="card"><h3><span>この月の平均（記録がある日）</span><span class="num" id="gN"></span></h3><div id="gAvg"></div></div>
   </div></div>
 </section>
+
+<!-- RM計算表 -->
+<section id="v-rm" class="hide">
+  <div class="top">
+    <div class="trow"><span class="t">RM計算表</span></div>
+  </div>
+  <div class="card">
+    <h3><span>推定1RM</span></h3>
+    <div class="rmin">
+      <label>重量<span class="u"><input id="rmW" type="text" inputmode="decimal" autocomplete="off" placeholder="100" aria-label="重量（kg）">kg</span></label>
+      <label>回数<span class="u"><input id="rmR" type="text" inputmode="numeric" autocomplete="off" placeholder="5" aria-label="回数">rep</span></label>
+    </div>
+    <div class="rmres" aria-live="polite"><b class="num" id="rmOut">—</b><span>kg</span></div>
+    <div class="note" id="rmNote"></div>
+    <div class="rmstep" role="group" aria-label="表の重量の刻み">刻み<button type="button" data-rmstep="0.5">0.5kg</button><button type="button" data-rmstep="1">1kg</button><button type="button" data-rmstep="2.5" class="on">2.5kg</button></div>
+  </div>
+  <div class="card"><h3><span>%表</span></h3><table class="rmt" id="rmPct"></table></div>
+  <div class="card"><h3><span>回数表</span><span class="num">目安</span></h3><table class="rmt" id="rmReps"></table></div>
+</section>
 </div>
 
 <nav class="nav">
   <button data-v="day" class="on"><svg width="22" height="22" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><rect x="3" y="4" width="18" height="17" rx="3"/><path d="M3 9h18M8 2v4M16 2v4"/></svg>今日</button>
   <button data-v="list"><svg width="22" height="22" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M8 6h13M8 12h13M8 18h13"/><circle cx="3.5" cy="6" r="1.2"/><circle cx="3.5" cy="12" r="1.2"/><circle cx="3.5" cy="18" r="1.2"/></svg>記録一覧</button>
   <button data-v="graph"><svg width="22" height="22" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M3 20h18"/><path d="M5 16l5-6 4 3 6-8"/></svg>グラフ</button>
+  <button data-v="rm"><svg width="22" height="22" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round"><path d="M6.5 6.5v11M17.5 6.5v11M3.5 9v6M20.5 9v6M6.5 12h11"/></svg>RM計算</button>
 </nav>
 
 <div class="dim" id="dim"></div>
@@ -1845,7 +1881,8 @@ function trRM(w,r){const a=parseFloat(String(w).replace(/kg$/,'')),b=Number(Stri
 // セットのメモ（内訳の「／メモ …」。最後の項目）
 const trMemo=x=>{const m=String(x).match(/(?:^|／)メモ (.+)$/);return m?m[1]:'';};
 const TR_MEMO_ICON='<svg viewBox="0 0 24 24" width="16" height="16" role="img" aria-label="メモ"><path d="M4 5h16v11H10l-5 4v-4H4z" fill="none" stroke="currentColor" stroke-width="2" stroke-linejoin="round"/></svg>';
-function trSetText(ex,x){
+function trSetText(ex,x){const rp=(String(x).match(/(?:^|／)RPE ([^／]+)/)||[])[1];return trSetBase(ex,x)+(rp&&rp!=='—'?' RPE '+rp:'');}
+function trSetBase(ex,x){
   const v=l=>{const m=x.match(new RegExp('(?:^|／)'+l+' ([^／]+)'));return m&&m[1]!=='—'?m[1]:'';};
   if(ex.mode==='時間制'){
     const t=(v('分')||v('秒'))?Number(v('分')||0)+':'+String(Number(v('秒')||0)).padStart(2,'0'):'—';
@@ -1933,14 +1970,60 @@ function axes(n,x,H,B,L,W,lo,hi,y,lab){
   return s;
 }
 
+// ---------- RM計算表（ここから） ----------
+// 重量×回数から推定1RMを出す（Epley式：重量 ×（1 + 回数 ÷ 30）。1回なら重量。入力モジュール・記録一覧と同じ式）。
+// %表は 100%〜50%（5%刻み）、回数表は 1〜12回で挙げられる重量の目安（同じ式の逆算）。表の重量は選んだ刻みに丸める。
+// 計算はこの画面の中だけ（通信・保存はしない）
+const RM_PCT=[100,95,90,85,80,75,70,65,60,55,50],RM_REPS=[1,2,3,4,5,6,7,8,9,10,11,12];
+let rmStep=2.5;
+const rmText=v=>String(v==null?'':v).normalize('NFKC').trim();
+// 推定1RM（0.1kg単位）。重量が0より大きく1000以下、回数が1〜30の整数のときだけ。
+// 0.1kg単位に丸めて0以下になる小さすぎる重量（0.01kg など）も null（表の % が計算できないため）
+function rmEstimate(w,r){
+  const ws=rmText(w),rs=rmText(r),a=Number(ws),b=Number(rs);
+  if(ws===''||rs===''||!Number.isFinite(a)||a<=0||a>1000||!Number.isInteger(b)||b<1||b>30)return null;
+  const v=Math.round((b===1?a:a*(1+b/30))*10)/10;
+  return v>0?v:null;
+}
+const rmRound=(v,step)=>Math.round(Math.round(v/step)*step*10)/10;
+const rmForReps=(rm,r)=>r===1?rm:rm/(1+r/30);
+// 表の中身（純粋な関数）：pct は [%, kg]、reps は [回数, kg, %]
+function rmTables(rm,step){
+  return {
+    pct:RM_PCT.map(p=>[p,rmRound(rm*p/100,step)]),
+    reps:RM_REPS.map(r=>{const v=rmForReps(rm,r);return [r,rmRound(v,step),Math.round(v/rm*100)];}),
+  };
+}
+const rmKg=v=>String(v);
+function paintRM(){
+  const rm=rmEstimate($('rmW').value,$('rmR').value);
+  document.querySelectorAll('#v-rm [data-rmstep]').forEach(b=>b.classList.toggle('on',+b.dataset.rmstep===rmStep));
+  $('rmOut').textContent=rm==null?'—':rmKg(rm);
+  const filled=rmText($('rmW').value)!==''||rmText($('rmR').value)!=='';
+  $('rmNote').textContent=rm==null
+    ?(filled?'重量（kg）と回数（1〜30回の整数）を入れてください':'重量と回数を入れると、推定1RMと表が出ます')
+    :'Epley式で計算した目安です（1回ならその重量）。表の重量は'+rmStep+'kg刻みに丸めています';
+  if(rm==null){
+    const none='<tbody><tr><td class="empty" colspan="3">—</td></tr></tbody>';
+    $('rmPct').innerHTML=none;$('rmReps').innerHTML=none;return;
+  }
+  const t=rmTables(rm,rmStep);
+  $('rmPct').innerHTML='<thead><tr><th>%</th><th>重量</th></tr></thead><tbody>'+t.pct.map(([p,kg])=>'<tr><td>'+p+'%</td><td>'+rmKg(kg)+'kg</td></tr>').join('')+'</tbody>';
+  $('rmReps').innerHTML='<thead><tr><th>回数</th><th>重量</th><th>%</th></tr></thead><tbody>'+t.reps.map(([r,kg,p])=>'<tr><td>'+r+'rep</td><td>'+rmKg(kg)+'kg</td><td>'+p+'%</td></tr>').join('')+'</tbody>';
+}
+$('rmW').addEventListener('input',paintRM);
+$('rmR').addEventListener('input',paintRM);
+$('v-rm').addEventListener('click',e=>{const b=e.target.closest('button[data-rmstep]');if(!b)return;rmStep=+b.dataset.rmstep;paintRM();});
+// ---------- RM計算表（ここまで） ----------
+
 // ---------- 画面切り替え ----------
 function show(v){
-  S.view=v;['day','list','graph'].forEach(x=>$('v-'+x).classList.toggle('hide',x!==v));
+  S.view=v;['day','list','graph','rm'].forEach(x=>$('v-'+x).classList.toggle('hide',x!==v));
   document.querySelectorAll('.nav button').forEach(b=>b.classList.toggle('on',b.dataset.v===v));
   window.scrollTo(0,0);paintAll();
 }
 function paintAll(){
-  if(S.view==='day')paintDay();else if(S.view==='list')paintList();else paintGraph();
+  if(S.view==='day')paintDay();else if(S.view==='list')paintList();else if(S.view==='rm')paintRM();else paintGraph();
   if(sheetShown)drawCal();
 }
 
@@ -2042,6 +2125,6 @@ document.addEventListener('visibilitychange',()=>{if(document.visibilityState===
 </script>
 <div id="trainingEntryRoot"></div>
 <script>window.pnTrainingBridge={selectedDate:()=>S.date,mode:DEMO?'preview':'personal',allowedYear:gEntryYear(),destination:gExDest,prepare:gTrainingPrepare,save:gTrainingSave,check:gTrainingCheck};</script>
-<script type="module" src="../training-entry/module/training-entry-O2LHFS7R.js"></script>
+<script type="module" src="../training-entry/module/training-entry-CIx3e4gZ.js"></script>
 </body>
 </html>

@@ -1,20 +1,20 @@
-// Physical Note（app/ のGoogleログイン版）の service worker（v13：既存の記録シートへの接続を追加）。
+// Physical Note（app/ のGoogleログイン版）の service worker（v14：RM計算表の画面を追加）。
 // personal-release-20261108 で検証したロジックを再利用し、キャッシュ名と precache だけをGoogle版に合わせた。
 // - install：必要な資産（ハッシュ付きの入力モジュールを含む）をすべて取れたときだけ skipWaiting する。
 //   1つでも取れなければ install は失敗し、新しい service worker は破棄されて旧版がそのまま動く。
-// - activate：Google版の旧キャッシュ（physicalnote-app-v12-training-20261108）だけを消す。他のキャッシュや localStorage には触れない。
+// - activate：Google版の旧キャッシュ（physicalnote-app-v13-existing-20261108）だけを消す。他のキャッシュや localStorage には触れない。
 // - fetch：同じ origin の GET だけを扱う。このアプリの新しいキャッシュ（CACHE）にあればそれを返し、
 //   裏で最新を取りに行って更新する。他のキャッシュは参照しない。
 //   ok かつリダイレクトでない応答だけを保存する。外部URL・GET以外は扱わない（ブラウザに任せる）。
 // - 画面の自動再読み込みはしない（入力中の下書きを守る）。
-const CACHE = 'physicalnote-app-v13-existing-20261108';
-const OLD_CACHES = ['physicalnote-app-v12-training-20261108'];
+const CACHE = 'physicalnote-app-v14-rm-20261109';
+const OLD_CACHES = ['physicalnote-app-v13-existing-20261108'];
 const PRECACHE = [
   './',
   'index.html',
   '../icon-180.png',
-  '../training-entry/module/training-entry-O2LHFS7R.js',
-  '../training-entry/module/training-entry-PdoMl-dv.css',
+  '../training-entry/module/training-entry-CIx3e4gZ.js',
+  '../training-entry/module/training-entry-C9GpuNhv.css',
 ];
 
 self.addEventListener('install', (e) => {
