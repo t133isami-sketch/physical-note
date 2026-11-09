@@ -10,6 +10,33 @@
 <meta name="apple-mobile-web-app-title" content="Physical Note">
 <meta name="theme-color" content="#4b2e83">
 <meta name="referrer" content="no-referrer">
+<script>
+// Googleからの戻り（OAuth）の情報は、描画・通信より前にURLから取り除き、ここで受け取った値だけを後で確かめる。
+// 値はログ・画面には出さない。認証に関係しない部分（?demo や #api= など）はそのまま残す。
+// URLから取り除けなかったときは、ページの読み込みを止め、取り除いたURLへ移る（受け取った値は使わない）。
+const PN_AUTH_CB=(()=>{
+  const KEYS=['access_token','token_type','expires_in','scope','state','error','error_description','error_uri','error_subtype','code','id_token','picked_file_ids','authuser','prompt','hd','session_state','iss'];
+  const DETECT=['access_token','state','error','code','id_token','picked_file_ids'];
+  const has=(q,h)=>DETECT.some(k=>q.has(k)||h.has(k));
+  let q,h;try{q=new URLSearchParams(location.search);h=new URLSearchParams(location.hash.slice(1));}catch(_){return null;}
+  if(!has(q,h))return null;
+  const take=p=>{const o=[];p.forEach((v,k)=>{if(KEYS.includes(k))o.push(Object.freeze([k,v]));});KEYS.forEach(k=>p.delete(k));return Object.freeze(o);};
+  const cb=Object.freeze({q:take(q),h:take(h),failed:false});
+  const qs=q.toString(),hs=h.toString(),clean=location.pathname+(qs?'?'+qs:'')+(hs?'#'+hs:'');
+  let ok=false;
+  try{history.replaceState(null,'',clean);ok=!has(new URLSearchParams(location.search),new URLSearchParams(location.hash.slice(1)));}catch(_){}
+  if(!ok){
+    // ページ全体を止める：通信を拒む fetch に替え、connect-src を閉じる（stop・replace が両方失敗しても通信しない）
+    const deny=()=>Promise.reject(new Error('stopped'));
+    try{Object.defineProperty(globalThis,'fetch',{value:deny,writable:false,configurable:false});}catch(_){try{globalThis.fetch=deny;}catch(__){}}
+    try{const m=document.createElement('meta');m.httpEquiv='Content-Security-Policy';m.content="connect-src 'none'";document.head.appendChild(m);}catch(_){}
+    try{window.stop();}catch(_){}
+    try{location.replace(clean);}catch(_){}
+    return Object.freeze({q:Object.freeze([]),h:Object.freeze([]),failed:true});
+  }
+  return cb;
+})();
+</script>
 <link rel="preconnect" href="https://script.google.com" crossorigin>
 <link rel="preconnect" href="https://sheets.googleapis.com" crossorigin>
 <link rel="preconnect" href="https://script.googleusercontent.com" crossorigin>
@@ -22,7 +49,8 @@
   --o700:#a3410a; --o500:#d55e00; --o100:#fdebdd; --b700:#0b4f80; --b100:#dcebf7; --y700:#7a5200; --y100:#fff3cf;
 }
 *{box-sizing:border-box;margin:0;padding:0;-webkit-tap-highlight-color:transparent}
-html{-webkit-text-size-adjust:100%;background:var(--bg);overscroll-behavior-y:none}
+html{-webkit-text-size-adjust:100%;background:var(--bg);overscroll-behavior-y:none;overflow-x:hidden;overflow-x:clip}
+body{overflow-x:hidden;overflow-x:clip;overscroll-behavior-x:none}
 body{background:var(--bg);color:var(--ink);font:15px/1.5 -apple-system,BlinkMacSystemFont,"Hiragino Sans","Hiragino Kaku Gothic ProN","Noto Sans JP","Yu Gothic UI",Meiryo,system-ui,sans-serif;padding-bottom:calc(78px + env(safe-area-inset-bottom))}
 button{font:inherit;border:0;background:none;color:inherit;cursor:pointer;touch-action:manipulation;-webkit-user-select:none;user-select:none;transition:transform .1s ease-out,background-color .1s ease-out}
 button:active{transform:scale(.96)}
@@ -92,6 +120,24 @@ button:disabled{opacity:.35;transform:none;cursor:default}
 .tag{flex:none;font-size:11px;font-weight:700;padding:3px 8px;border-radius:10px;background:var(--o100);color:var(--o700);letter-spacing:.02em}
 .tag.p{background:var(--p200);color:var(--p800)} .tag.b{background:var(--b100);color:var(--b700)} .tag.y{background:var(--y100);color:var(--y700)}
 .empty{color:var(--sub);font-size:13px;padding:4px 0}
+/* トレーニング記録（記録一覧）：大きめの文字で、日ごとのカードと種目ごとのセット */
+.trstats{display:grid;grid-template-columns:repeat(3,1fr);gap:8px}
+.trstats div{display:flex;flex-direction:column;gap:2px}
+.trstats b{font-size:20px;color:var(--p800);line-height:1.2}
+.trstats span{font-size:12px;color:var(--sub)}
+.trchips{display:flex;flex-wrap:wrap;gap:6px;margin-top:10px}
+.trchip{font-size:13px;padding:4px 10px;border-radius:12px;background:var(--p100);color:var(--p800)}
+.trhead{display:flex;align-items:center;justify-content:space-between;gap:8px;font-size:16px}
+.trmeta{font-size:14px;color:var(--sub);margin-top:4px}
+.trex{margin-top:12px;border-top:1px solid var(--line);padding-top:10px}
+.trexname{font-size:15px;font-weight:700;overflow-wrap:anywhere}
+.trexname small{font-size:12px;font-weight:400;color:var(--sub);margin-left:4px}
+.trsets{margin:6px 0 0;padding:0;list-style:none;font-size:15px;line-height:1.7}
+.trsets li{display:flex;flex-direction:column;margin-bottom:4px}
+.trnote{display:flex;align-items:flex-start;gap:6px;color:var(--sub);font-size:14px;overflow-wrap:anywhere}
+.trnote svg{flex:none;margin-top:3px;color:var(--p600)}
+.trdetail,.trmemo{font-size:14px;margin-top:10px;overflow-wrap:anywhere;white-space:pre-wrap}
+.trmemo{color:var(--sub);border-left:3px solid var(--p200);padding-left:10px}
 .kv{display:flex;justify-content:space-between;padding:9px 0;border-top:1px solid var(--line);font-size:13px}
 .kv:first-child{border-top:none;padding-top:2px}
 .kv b{color:var(--p800)}
@@ -220,7 +266,7 @@ svg text{font-family:inherit}
 body::before{top:var(--top,0px)}
 .ptr,.load{top:calc(env(safe-area-inset-top) + var(--top,0px))}
 </style>
-<link rel="stylesheet" href="../training-entry/module/training-entry-Dc3kB_Lo.css">
+<link rel="stylesheet" href="../training-entry/module/training-entry-PdoMl-dv.css">
 </head>
 <body>
 <script>
@@ -284,6 +330,7 @@ body::before{top:var(--top,0px)}
       <p>Googleでログインすると、あなたのGoogleドライブに記録シートができて、すぐに使えます。アプリが触れるのは、このアプリが作ったシートだけです。<a href="../start/privacy.html" style="color:var(--p600)">プライバシーポリシー</a></p>
       <button type="button" id="gBtn" class="gbtn"><svg width="18" height="18" viewBox="0 0 48 48" aria-hidden="true"><path fill="#FFC107" d="M43.6 20.5H42V20H24v8h11.3C33.7 32.7 29.2 36 24 36c-6.6 0-12-5.4-12-12s5.4-12 12-12c3.1 0 5.8 1.2 7.9 3.1l5.7-5.7C34 6.1 29.3 4 24 4 12.9 4 4 12.9 4 24s8.9 20 20 20 20-8.9 20-20c0-1.3-.1-2.4-.4-3.5z"/><path fill="#FF3D00" d="M6.3 14.7l6.6 4.8C14.7 15.1 19 12 24 12c3.1 0 5.8 1.2 7.9 3.1l5.7-5.7C34 6.1 29.3 4 24 4 16.3 4 9.7 8.3 6.3 14.7z"/><path fill="#4CAF50" d="M24 44c5.2 0 9.9-2 13.4-5.2l-6.2-5.2C29.2 35.1 26.7 36 24 36c-5.2 0-9.6-3.3-11.3-7.9l-6.5 5C9.5 39.6 16.2 44 24 44z"/><path fill="#1976D2" d="M43.6 20.5H42V20H24v8h11.3c-.8 2.2-2.2 4.2-4.1 5.6l6.2 5.2C37 39.2 44 34 44 24c0-1.3-.1-2.4-.4-3.5z"/></svg>Googleでログインしてはじめる</button>
       <p class="kerr" id="gWarn"></p>
+      <button type="button" class="sub" id="exOpenKey">いつもの記録シートにつなぐ</button>
       <p class="or">接続リンクをお持ちの方は、下に貼り付けてください。</p>
     </div>
     <p id="linkHint">最初の1回だけ、発行ページで作った接続リンクを貼り付けてください。</p>
@@ -316,6 +363,8 @@ body::before{top:var(--top,0px)}
     <h3>見る年</h3>
     <p>アプリがふだん読むのは今年のファイルだけです。前の年は、選んだときだけ読み込みます。</p>
     <div class="yrs" id="mngYears"></div>
+    <p id="exInfo" hidden></p>
+    <div id="mngWrite">
     <h3>年の切り替え</h3>
     <p id="rollText"></p>
     <button type="button" id="rollBtn" hidden></button>
@@ -328,10 +377,38 @@ body::before{top:var(--top,0px)}
       <input id="rsIn" type="text" autocomplete="off" aria-label="確認の文字">
       <button type="button" class="danger" id="rsGo" disabled>バックアップを残して記録を消す</button>
     </div>
+    </div>
     <div class="bk" id="mngBk"></div>
     <p class="kerr ok" id="mngOk"></p>
     <p class="kerr" id="mngErr"></p>
     <button type="button" class="sub" id="mngClose">閉じる</button>
+  </div>
+</div>
+<div class="keyp" id="exPanel" hidden>
+  <div class="keyc gemc">
+    <h2>いつもの記録シートにつなぐ</h2>
+    <p id="exNow"></p>
+    <p><a id="exOpen" target="_blank" rel="noopener" hidden>接続中の記録シートを開く</a></p>
+    <p>いつも使っている記録シートのURL（またはID）を貼り付けます。アプリはタブ名と見出しだけを読んで確かめます。つないだ後、アプリが書き込むのはトレーニングの追加だけで、ほかの記録は今までどおりMuseで保存します。</p>
+    <input id="exUrl" type="url" inputmode="url" autocapitalize="off" autocorrect="off" spellcheck="false" placeholder="https://docs.google.com/spreadsheets/d/…" aria-label="いつもの記録シートのURLまたはID">
+    <input id="exYear" type="text" inputmode="numeric" maxlength="4" autocomplete="off" placeholder="年（シート名に年がないときだけ）" aria-label="対象の年">
+    <button type="button" id="exGo">確かめてつなぐ</button>
+    <p class="kerr" id="exErr"></p>
+    <div id="exPickBox" hidden>
+    <h3 style="font-size:14px;margin-top:16px">読めないとき</h3>
+    <p>Googleの選択画面で、このシートだけをアプリに許可します。この戻り方は、まだ実際には確かめていません（Google側の設定も確認中）。合わないときはつなぎません。</p>
+    <button type="button" class="sub" id="exPick">Googleでこのシートだけを許可する</button>
+    </div>
+    <h3 style="font-size:14px;margin-top:16px">Museの保存先</h3>
+    <p id="exMuse"></p>
+    <button type="button" class="sub" id="exMuseBtn" hidden>Muse用の指示文を開く</button>
+    <div id="exCreateBox" hidden>
+    <h3 style="font-size:14px;margin-top:16px">いつものシートがないとき</h3>
+    <p>このアプリが作る記録シートを使います（前に作っていれば、それを使います）。押したときだけ、ドライブを探して、なければ作ります。</p>
+    <button type="button" class="sub" id="exCreate">このアプリの記録シートを使う</button>
+    </div>
+    <button type="button" class="sub" id="exCancel" hidden>確かめ中の選択をやめる</button>
+    <button type="button" class="sub" id="exClose">閉じる</button>
   </div>
 </div>
 <div class="keyp" id="setPanel" hidden>
@@ -344,6 +421,8 @@ body::before{top:var(--top,0px)}
     <button type="button" id="setSave">保存</button>
     <button type="button" class="sub" id="setClose">閉じる</button>
     <p class="kerr" id="setErr"></p>
+    <h3 style="font-size:14px;margin-top:16px">いつもの記録シート</h3>
+    <button type="button" class="sub" id="exOpenSet">いつもの記録シートにつなぐ</button>
   </div>
 </div>
 <div class="wrap">
@@ -384,7 +463,7 @@ body::before{top:var(--top,0px)}
       <div class="wt"><div class="am">朝<b class="num" id="wAm">—</b></div><div class="pm">夜<b class="num" id="wPm">—</b></div></div>
     </div>
     <div class="card">
-      <h3><span>トレーニング</span></h3>
+      <h3><span>トレーニング</span><button class="a" id="toTrList">記録を見る ›</button></h3>
       <div id="train"></div>
       <div id="trainEntrySlot"></div>
     </div>
@@ -507,6 +586,7 @@ function demoMonth(ym){
   return {ym,today,settings,meals,weights,training,body,days,recipes};
 }
 async function apiLoad(ym){
+  if(PN_STOP())throw new Error(G_STOP_MSG);
   if(DEMO){const d=demoMonth(ym);return {d,text:JSON.stringify(d)};}
   if(GMODE()){
     if(!gSheet&&!gCached()){askKey();throw new Error('Googleでログインしてください');}
@@ -532,32 +612,488 @@ const G_SCOPE='https://www.googleapis.com/auth/drive.file';
 const G_TITLE='Physical Note 記録シート';
 const LS_GTOK='pn.app.gtok',LS_SHEET='pn.app.sheet';
 let gSheet='';try{gSheet=localStorage.getItem(LS_SHEET)||'';}catch(_){}
-const GMODE=()=>!DEMO&&!!GCLIENT&&(!!gSheet||!API);
+const GMODE=()=>!DEMO&&!!GCLIENT&&(!!gSheet||!API||gExLock());
 // ログインは別ウィンドウを使わず、Googleの画面へ移って戻ってくる方式（スマホのブラウザやLINEから開いても止まらない）
 const G_BACK=location.origin+location.pathname.replace(/index\.html$/,''); // OAuth クライアントの「承認済みのリダイレクト URI」に登録するURL
 const SS_GSTATE='pn.app.gstate';
-function gRedirect(prompt){
-  const st=Math.random().toString(36).slice(2)+Date.now().toString(36);
-  try{sessionStorage.setItem(SS_GSTATE,st);}catch(_){}
+function gRedirect(prompt,cont){
+  // 続きの確かめ（cont）は、開始時の選択（ID・年・nonce）を記録に固定する
+  let st;try{st=gNewTx(cont?{purpose:'login',then:'verify',id:cont.id,year:cont.year,n:cont.n}:{purpose:'login'});}catch(e){return Promise.reject(e);}
   const q=new URLSearchParams({client_id:GCLIENT,redirect_uri:G_BACK,response_type:'token',scope:G_SCOPE,include_granted_scopes:'true',state:st});
   if(prompt)q.set('prompt',prompt);
   location.href='https://accounts.google.com/o/oauth2/v2/auth?'+q;
   return new Promise(()=>{}); // ページを離れるので、そのまま待つ
 }
 function gCached(){try{const o=JSON.parse(localStorage.getItem(LS_GTOK)||'null');return o&&o.exp>Date.now()?o.t:'';}catch(_){return '';}}
-// Googleから戻ってきたとき（#access_token=…）にトークンを受け取る
-let gBackErr='';
-if(GCLIENT&&!DEMO&&/[#&](access_token|error)=/.test(location.hash)){
-  const h=new URLSearchParams(location.hash.slice(1));
-  let st='';try{st=sessionStorage.getItem(SS_GSTATE)||'';sessionStorage.removeItem(SS_GSTATE);}catch(_){}
-  history.replaceState(null,'',location.pathname+location.search);
-  if(h.get('access_token')&&(!st||h.get('state')===st)){
-    try{
-      localStorage.setItem(LS_GTOK,JSON.stringify({t:h.get('access_token'),exp:Date.now()+(+h.get('expires_in')||3600)*1000-60000}));
-      if(!gSheet){API='';localStorage.removeItem(LS_API);localStorage.removeItem(LS_KEY);localStorage.removeItem('pn.app.months');}
-    }catch(_){}
-  }else if(!/^(interaction|login|consent|account_selection)_required$/.test(h.get('error')||'')) // 自動の再ログインが通らなかっただけなら黙って戻る
-    gBackErr=h.get('error')==='access_denied'?'ログインがキャンセルされました':'Googleにログインできませんでした';
+// ---------- 既存の記録シートにつなぐ（ここから） ----------
+// いつも使っている記録シート（正本）に、URLかIDでつなぐ。つないだ後のアプリからの書き込みは、トレーニング1行と監査ログ1行の追加だけ。
+// - 状態はこの端末の1つのキー（pn.app.exstate = {v:1, bind, intent}）だけで決める。ページを開いたときに1回だけ読み、
+//   その世代のあいだは別のタブが書き換えても追随しない。書くときは、開いたときの値と同じであることを確かめてから1回で書く。
+// - intent（本人が選んだ、まだ確かめていないシート）があれば、bind（前に確かめたシート）より優先する。確かめが終わるまで、
+//   記録の読み込み・記録文の保存先・Muse指示文を止め、選んだシートのタブ名と見出し（1行目）を読む GET だけを通す。
+//   前の接続に戻るのは、本人が「やめる」を押したときだけ。読めない状態（壊れた値）なら、すべて止める。
+// - 選択を変えたら、保存してからページを読み直す（前のシートの表示・読み込み中の応答・保存タイマーを持ち込まない）。
+//   月の保存分は接続先ごとのキーに分け、確かめ中は使わない。
+// - この端末にまだ記録シートがなければ、本人が選ぶまで、名前の検索・作成・タブの補完をしない。
+// - Googleへの移動（ログイン・選択画面）は、目的・暗号学的な nonce・期限つきの一度限りの記録（transaction）を使う。
+const LS_EXSTATE='pn.app.exstate',LS_EXCREATE='pn.app.excreate',SS_GTX='pn.app.gtx',SS_EXGO='pn.app.exgo';
+// URLから認証の戻りを取り除けなかったページは止める：読み込み・Googleへの移動・通信をすべて断る
+const PN_STOP=()=>!!(PN_AUTH_CB&&PN_AUTH_CB.failed);
+const G_STOP_MSG='Googleからの戻りを安全に処理できなかったため、このページを止めました。アプリを開き直してください';
+const G_EX_HEAD={
+  '設定':['項目','値','説明'],
+  '食事':['記録ID','日付','時刻JST','食事区分','内容・量','kcal','P g','F g','C g','根拠','確定状態','有効','登録日時JST','更新日時JST'],
+  '体重':['記録ID','日付','朝夜','体重kg','測定条件','有効','登録日時JST','更新日時JST'],
+  'トレーニング':['記録ID','日付JST','区分','部位','時間分','時間','開始時刻','メモ','有効','作成JST','更新JST','入力根拠','セット数','セット内訳'],
+  '月曜体組成':['記録ID','対象月曜','測定日','体重kg','体脂肪率%','筋肉量kg','骨格筋量kg','内臓脂肪レベル','基礎代謝kcal','体水分率%','腹囲cm','機器・備考','提出状態','有効','登録日時JST','更新日時JST'],
+  '日次確認':['日付','食事記録完了','備考'],
+  'レシピ':['レシピID','名前','版','食数','完成全量g','1食g','全量kcal','全量P','全量F','全量C','1食kcal','1食P','1食F','1食C','状態','作り方','備考','有効','作成JST','更新JST']};
+const gExCol=n=>{let s='';for(n++;n>0;n=Math.floor((n-1)/26))s=String.fromCharCode(65+(n-1)%26)+s;return s;};
+// 見出しの比べ方：空白・JST の有無と、末尾の「登録／作成」「日時」の違いだけを許す。列の位置と意味は同じでなければならない
+const gExNorm=v=>{const s=String(v==null?'':v).replace(/[\s　]+/g,'').replace(/JST/gi,'');return /^(登録|作成)(日時)?$/.test(s)?'作成':/^更新(日時)?$/.test(s)?'更新':s;};
+const G_EX_ID=/^[A-Za-z0-9_-]{25,100}$/;
+// シートのURL（https://docs.google.com/spreadsheets/d/ID…）かIDだけを受け付ける。それ以外は空文字
+function gParseSheetRef(v){
+  const s=String(v==null?'':v).trim();
+  if(G_EX_ID.test(s))return s;
+  const m=s.match(/^https:\/\/docs\.google\.com\/spreadsheets\/d\/([A-Za-z0-9_-]+)(?:[\/?#][^\s]*)?$/);
+  return m&&G_EX_ID.test(m[1])?m[1]:'';
+}
+const gExYearOk=y=>Number.isInteger(y)&&y>=2000&&y<=2099;
+const gExHex=n=>{const a=new Uint8Array(n);crypto.getRandomValues(a);return Array.from(a,b=>('0'+b.toString(16)).slice(-2)).join('');};
+const gExTitleOk=t=>typeof t==='string'&&t.trim()!==''&&t.length<=200&&!/[\u0000-\u001f\u007f]/.test(t);
+// 保存した状態を読む（純粋な関数）。ないときは空、形が合わないときは broken（すべて止める）
+function gExParseState(raw){
+  if(raw==null)return {bind:null,intent:null,broken:false};
+  try{
+    const o=JSON.parse(raw);if(!o||o.v!==1)throw 0;
+    const b=o.bind,i=o.intent;
+    const bind=b==null?null:(b&&gParseSheetRef(b.id)===b.id&&gExYearOk(b.year)&&gExTitleOk(b.title)?{id:b.id,year:b.year,title:b.title}:undefined);
+    const intent=i==null?null:(i&&gParseSheetRef(i.id)===i.id&&typeof i.year==='string'&&/^(20\d{2})?$/.test(i.year)&&typeof i.n==='string'&&/^[0-9a-f]{32}$/.test(i.n)?{id:i.id,year:i.year,n:i.n}:undefined);
+    if(bind===undefined||intent===undefined)throw 0;
+    return {bind,intent,broken:false};
+  }catch(_){return {bind:null,intent:null,broken:true};}
+}
+let gExRaw=null,gExBoot;
+try{gExRaw=localStorage.getItem(LS_EXSTATE);gExBoot=gExParseState(gExRaw);}catch(_){gExBoot={bind:null,intent:null,broken:true};}
+const gExIntent=gExBoot.intent,gExBroken=gExBoot.broken;
+const gExBind=gExBoot.bind&&!gExIntent&&!gExBroken?gExBoot.bind:null; // 読み取りに使う接続（確かめ中でないときだけ）
+let gExCreateOk=false;try{gExCreateOk=localStorage.getItem(LS_EXCREATE)==='1';}catch(_){}
+if(gExBind)gSheet=gExBind.id;else if(gExIntent||gExBroken)gSheet='';
+const gExLock=()=>!!gExBoot.bind||!!gExIntent||gExBroken;
+// この端末にまだ記録シートがなく、本人が選んでいない（検索・作成をしない）
+const gExWait=()=>!gSheet&&!gExLock()&&!gExCreateOk;
+// 月の保存分のキー：接続先ごとに分け、確かめ中・読めない状態では使わない
+function gExCacheKey(){if(gExIntent||gExBroken)return null;return gExBind?'pn.app.months.ex.'+gExBind.id:'pn.app.months';}
+const gExRowOne=url=>{try{const r=new URL(url).searchParams.getAll('ranges');return r.length>0&&r.every(x=>/!A1:[A-Z]{1,2}1$/.test(x));}catch(_){return false;}};
+// アプリが書き込むのは、つないだシートへの「トレーニング1行と監査ログ1行」の追加だけ。
+// - 1つの spreadsheets.batchUpdate（appendCells 2件・fields は userEnteredValue,userEnteredFormat.numberFormat）で
+//   両方を同時に追加する（片方だけにはならない）。既存の行・列の書式を変える request は出さない。
+// - 値は型を明示する：文字列は stringValue、数は有限の numberValue、TRUE は boolValue、日付・日時は日付の数値（serial）。
+//   日付・日時のセルだけ、追加するセルに表示形式（DATE／DATE_TIME）を付ける。式（formulaValue）は送らない。「=」で始まる文章も文字列のまま。
+// - 書き込みは gTrainingSave が持つ一度限りの許可（URLと本文が完全に一致し、本文の形も正しい）のときだけ通す。
+const G_TR_TAB='トレーニング',G_AU_TAB='監査ログ',G_TR_ID=/^TR-\d{8}-[A-Z0-9]{8}$/;
+const G_AU_HEAD=['イベントID','日時JST','操作','対象タブ','記録ID','変更前JSON','変更後JSON','実行元','結果'];
+let gWriteTicket=null;
+const gSsBase=id=>'https://sheets.googleapis.com/v4/spreadsheets/'+id;
+const gKeys=(o,ks)=>!!o&&typeof o==='object'&&!Array.isArray(o)&&Object.keys(o).sort().join()===ks;
+// 日付・日時の表示形式（追加するセルだけに付ける）
+const G_FMT={d:{type:'DATE',pattern:'yyyy-mm-dd'},t:{type:'DATE_TIME',pattern:'yyyy-mm-dd hh:mm:ss'}};
+// 列ごとの種類：d＝日付、t＝日時（トレーニング B・J・K、監査 B）
+const G_TR_KIND={1:'d',9:'t',10:'t'},G_AU_KIND={1:'t'};
+// セル1つの形：空（{}）か、userEnteredValue に stringValue・有限の numberValue・boolValue のどれか1つだけ。
+// 日付・日時の列は numberValue と、その列の表示形式だけ（ほかの列は表示形式を持たない）
+const gCellOk=(c,kind)=>{
+  if(kind)return gKeys(c,'userEnteredFormat,userEnteredValue')&&gKeys(c.userEnteredValue,'numberValue')&&typeof c.userEnteredValue.numberValue==='number'&&Number.isFinite(c.userEnteredValue.numberValue)
+    &&gKeys(c.userEnteredFormat,'numberFormat')&&gKeys(c.userEnteredFormat.numberFormat,'pattern,type')&&c.userEnteredFormat.numberFormat.type===G_FMT[kind].type&&c.userEnteredFormat.numberFormat.pattern===G_FMT[kind].pattern;
+  if(!c||typeof c!=='object'||Array.isArray(c))return false;
+  const k=Object.keys(c);if(k.length===0)return true;
+  if(k.length!==1||k[0]!=='userEnteredValue')return false;
+  const v=c.userEnteredValue;if(!v||typeof v!=='object')return false;
+  const vk=Object.keys(v);if(vk.length!==1)return false;
+  return (vk[0]==='stringValue'&&typeof v.stringValue==='string'&&v.stringValue.length<=50000)||(vk[0]==='numberValue'&&typeof v.numberValue==='number'&&Number.isFinite(v.numberValue))||(vk[0]==='boolValue'&&typeof v.boolValue==='boolean');
+};
+const G_FIELDS='userEnteredValue,userEnteredFormat.numberFormat';
+// batchUpdate の本文：appendCells が2件だけ（トレーニング14列・監査9列を各1行）、決めた sheetId へ
+function gBatchOk(b,tk){
+  try{
+    if(!gKeys(b,'requests')||!Array.isArray(b.requests)||b.requests.length!==2)return false;
+    const want=[[tk.tr,14,G_TR_KIND],[tk.au,9,G_AU_KIND]];
+    return b.requests.every((q,i)=>{
+      if(!gKeys(q,'appendCells'))return false;
+      const a=q.appendCells;
+      return gKeys(a,'fields,rows,sheetId')&&a.sheetId===want[i][0]&&a.fields===G_FIELDS&&Array.isArray(a.rows)&&a.rows.length===1&&gKeys(a.rows[0],'values')&&Array.isArray(a.rows[0].values)&&a.rows[0].values.length===want[i][1]&&a.rows[0].values.every((c,j)=>gCellOk(c,want[i][2][j]));
+    });
+  }catch(_){return false;}
+}
+const gExGuard=(url,opt)=>{
+  if(PN_STOP())throw new Error(G_STOP_MSG);
+  if(!gExLock())return;
+  url=String(url);
+  const method=String(opt&&opt.method||'GET').toUpperCase();
+  if(method!=='GET'){
+    const tk=gWriteTicket;gWriteTicket=null; // 許可は一度だけ（通っても通らなくても消す）
+    let ok=false;
+    try{ok=!!tk&&!!gExBind&&tk.sid===gExBind.id&&method==='POST'&&url===gSsBase(gExBind.id)+':batchUpdate'&&String(opt.body)===tk.body&&gBatchOk(JSON.parse(String(opt.body)),tk);}catch(_){}
+    if(!ok)throw new Error('既存の記録シートには、トレーニングと監査ログの追加のほかはアプリから書き込みません');
+    return;
+  }
+  const id=gExIntent?gExIntent.id:gExBind?gExBind.id:'';
+  const base=gSsBase(id);
+  const ok=!!id&&(url.startsWith(base+'?')||(url.startsWith(base+'/values:batchGet?')&&(!gExIntent||gExRowOne(url))));
+  if(!ok)throw new Error('既存の記録シートを使う設定のため、ほかのファイルや記録は読みません');
+};
+// 日付・日時 ⇔ シートの日付の数値（1899-12-30 からの日数）。日本時間の壁時計の値をそのまま数にする（UTCへ変えない）
+const gSerialDate=s=>{
+  const m=/^(\d{4})-(\d{2})-(\d{2})$/.exec(String(s));if(!m)return NaN;
+  const t=Date.UTC(+m[1],+m[2]-1,+m[3]),d=new Date(t);
+  return d.getUTCFullYear()===+m[1]&&d.getUTCMonth()===+m[2]-1&&d.getUTCDate()===+m[3]?t/86400000+25569:NaN;
+};
+const gSerialTime=s=>{
+  const m=/^(\d{4}-\d{2}-\d{2}) (\d{2}):(\d{2}):(\d{2})$/.exec(String(s));
+  if(!m||+m[2]>23||+m[3]>59||+m[4]>59)return NaN;
+  return gSerialDate(m[1])+(+m[2]*3600+ +m[3]*60+ +m[4])/86400;
+};
+const gSerialText=(n,time)=>{
+  if(typeof n!=='number'||!Number.isFinite(n)||(!time&&!Number.isInteger(n)))return null;
+  const iso=new Date(Math.round((n-25569)*86400)*1000).toISOString();
+  return time?iso.slice(0,10)+' '+iso.slice(11,19):iso.slice(0,10);
+};
+const gAuId=id=>'EV-'+String(id).slice(3); // 監査のイベントID（記録IDから決める）
+const gSum=s=>{let h=0x811c9dc5;for(let i=0;i<s.length;i++){h^=s.charCodeAt(i);h=Math.imul(h,0x01000193)>>>0;}return ('0000000'+h.toString(16)).slice(-8);};
+const gPaySum=p=>gSum(JSON.stringify([p.v,p.sid,p.tr,p.au,p.id,p.row,p.eventId]));
+// 確定した送信内容の形を確かめる。正しければそのまま、違えば null（壊れた・書き換えられた内容は送らない）
+function gTrPayload(p,noSum){
+  try{
+    if(!gKeys(p,noSum?'au,eventId,id,row,sid,tr,v':'au,eventId,id,row,sid,sum,tr,v')||p.v!==1)return null;
+    const id=p.id,row=p.row;
+    if(typeof id!=='string'||!G_TR_ID.test(id)||!Array.isArray(row)||row.length!==14||row[0]!==id)return null;
+    if(!row.every(v=>(typeof v==='string'&&v.length<=50000)||(typeof v==='number'&&Number.isFinite(v))||typeof v==='boolean'))return null;
+    if(typeof row[1]!=='string'||!Number.isFinite(gSerialDate(row[1]))||row[1].replace(/-/g,'')!==id.slice(3,11))return null;
+    if(typeof row[9]!=='string'||!Number.isFinite(gSerialTime(row[9]))||row[10]!==row[9]||row[8]!==true)return null;
+    if(p.eventId!==gAuId(id)||typeof p.sid!=='string'||gParseSheetRef(p.sid)!==p.sid)return null;
+    if(!Number.isInteger(p.tr)||!Number.isInteger(p.au)||p.tr<0||p.au<0||p.tr===p.au)return null;
+    if(!noSum&&p.sum!==gPaySum(p))return null;
+    return p;
+  }catch(_){return null;}
+}
+const gCV=v=>v===''?{}:typeof v==='string'?{userEnteredValue:{stringValue:v}}:typeof v==='number'?{userEnteredValue:{numberValue:v}}:{userEnteredValue:{boolValue:v}};
+const gDV=(n,kind)=>({userEnteredValue:{numberValue:n},userEnteredFormat:{numberFormat:Object.assign({},G_FMT[kind])}});
+// 送るセル：トレーニング（B=日付、J・K=日時）と監査（B=日時、G=変更後の行）
+const gTrCells=p=>p.row.map((v,i)=>G_TR_KIND[i]==='d'?gDV(gSerialDate(v),'d'):G_TR_KIND[i]==='t'?gDV(gSerialTime(v),'t'):gCV(v));
+const gAuCells=p=>[gCV(p.eventId),gDV(gSerialTime(p.row[9]),'t'),gCV('追加'),gCV(G_TR_TAB),gCV(p.id),{},gCV(JSON.stringify(p.row)),gCV('アプリ'),gCV('成功')];
+// 両タブを読む（spreadsheets.get の userEnteredValue）。先に各タブの列数（gridProperties.columnCount）を読み、
+// その列数の範囲（A列〜最後の列）だけを読む。タブ名ごとに sheetId・列数・行（セルの並び）を返す。末尾の空の行は除く
+const gHas=c=>!!(c&&c.userEnteredValue&&typeof c.userEnteredValue==='object'&&Object.keys(c.userEnteredValue).length);
+const gStrOf=c=>gHas(c)&&typeof c.userEnteredValue.stringValue==='string'?c.userEnteredValue.stringValue:'';
+async function gTrRead(sid){
+  const meta=await gFetch(gSsBase(sid)+'?fields='+encodeURIComponent('sheets.properties(sheetId,title,gridProperties.columnCount)'));
+  const props=t=>{const x=(meta&&Array.isArray(meta.sheets)?meta.sheets:[]).map(s=>s&&s.properties).filter(q=>q&&q.title===t);return x.length===1?x[0]:null;};
+  const pt=props(G_TR_TAB),pa=props(G_AU_TAB);
+  if(!pt||!pa)return {tr:null,au:null};
+  const cols=q=>{const n=q.gridProperties&&q.gridProperties.columnCount;if(!Number.isInteger(n)||n<1||n>702)throw new Error('タブの列数を確かめられませんでした');return n;};
+  const ct=cols(pt),ca=cols(pa);
+  if(ct<14||ca<9)return {tr:null,au:null,narrow:true};
+  const f='sheets(properties(sheetId,title),data(startRow,startColumn,rowData(values(userEnteredValue,userEnteredFormat.numberFormat))))';
+  const r=await gFetch(gSsBase(sid)+'?ranges='+encodeURIComponent("'"+G_TR_TAB+"'!A1:"+gExCol(ct-1))+'&ranges='+encodeURIComponent("'"+G_AU_TAB+"'!A1:"+gExCol(ca-1))+'&fields='+encodeURIComponent(f));
+  const tab=(t,q,n)=>{
+    const x=(r&&Array.isArray(r.sheets)?r.sheets:[]).filter(s=>s&&s.properties&&s.properties.title===t);
+    if(x.length!==1)return null;
+    const d=Array.isArray(x[0].data)?x[0].data:[];
+    if(d.length>1)throw new Error('読み取りの形が想定と違います');
+    const g=d[0]||{};
+    if((g.startRow||0)!==0||(g.startColumn||0)!==0)throw new Error('読み取りの形が想定と違います');
+    const rows=(Array.isArray(g.rowData)?g.rowData:[]).map(rd=>rd&&Array.isArray(rd.values)?rd.values:[]);
+    while(rows.length&&!rows[rows.length-1].some(gHas))rows.pop();
+    if(x[0].properties.sheetId!==q.sheetId||rows.some(rw=>rw.length>n))throw new Error('読み取りの形が想定と違います');
+    return {sheetId:q.sheetId,cols:n,rows};
+  };
+  return {tr:tab(G_TR_TAB,pt,ct),au:tab(G_AU_TAB,pa,ca)};
+}
+// 追加してよいシートか：両タブがあり、見出しが同じで、どちらも最後の行に記録ID（イベントID）がある（そのすぐ下に追加される）
+function gTrSheetIssue(s,p){
+  if(s.narrow)return 'タブの列が足りないため、保存していません（列の追加はしません）';
+  if(!s.tr||!s.au)return '「'+G_TR_TAB+'」と「'+G_AU_TAB+'」のタブが見つからないため、保存していません';
+  const head=(t,want)=>{const h=t.rows[0]||[];return want.every((w,i)=>gExNorm(gStrOf(h[i]))===gExNorm(w));};
+  if(!head(s.tr,G_EX_HEAD[G_TR_TAB])||!head(s.au,G_AU_HEAD))return 'タブの見出し（1行目）が想定と違うため、保存していません';
+  const lastOk=t=>t.rows.length>=1&&(t.rows.length===1||gStrOf(t.rows[t.rows.length-1][0])!=='');
+  if(!lastOk(s.tr)||!lastOk(s.au))return 'タブの最後の行に記録IDがないため（ID列とほかの列の最終行が合わないため）、保存していません';
+  const day=gTrSameDay(s,p);
+  if(day)return '同じ日（'+p.row[1]+'）に'+(p.row[2]==='オフ'?'トレーニングの記録':'オフ（休養日）の記録')+'がシートにあります（'+day+'）。シートを確かめてください（保存していません。自動で消したり直したりしません）';
+  return '';
+}
+// 同じ日の有効な行に、反対の区分（オフ ⇔ 実施）があれば、その記録IDを返す。日付は日付の数値・文字列のどちらも日付にそろえて比べる
+const gCellDay=c=>{if(!gHas(c))return '';const v=c.userEnteredValue;if(typeof v.numberValue==='number')return gSerialText(Math.floor(v.numberValue),false)||'';return typeof v.stringValue==='string'?gKey(v.stringValue):'';};
+const gCellOn=c=>{if(!gHas(c))return false;const v=c.userEnteredValue;return v.boolValue===true||(typeof v.stringValue==='string'&&v.stringValue.trim().toUpperCase()==='TRUE');};
+function gTrSameDay(s,p){
+  const off=p.row[2]==='オフ';
+  const hit=s.tr.rows.slice(1).find(r=>gStrOf(r[0])!==p.id&&gCellOn(r[8])&&gCellDay(r[1])===p.row[1]&&(off?gStrOf(r[2]).trim()!==''&&gStrOf(r[2]).trim()!=='オフ':gStrOf(r[2]).trim()==='オフ'));
+  return hit?gStrOf(hit[0])||'IDなし':'';
+}
+// 読み戻したセルが送ったセルと同じか。日付・日時の列は同じ日本時間の日付・日時の数値であること（文字列の日付は違うものとする）
+function gCellSame(got,want,kind,text){
+  const g=gHas(got)?got.userEnteredValue:null,w=want.userEnteredValue||null;
+  if(!w)return !g;
+  if(!g||Object.keys(g).length!==1)return false;
+  if(kind){const nf=got.userEnteredFormat&&got.userEnteredFormat.numberFormat;return typeof g.numberValue==='number'&&gSerialText(g.numberValue,kind==='t')===text&&!!nf&&nf.type===G_FMT[kind].type;}
+  const k=Object.keys(w)[0];
+  return Object.keys(g)[0]===k&&g[k]===w[k];
+}
+const gRowSame=(got,want,kinds,texts)=>want.every((w,i)=>gCellSame(got[i],w,kinds[i],texts[i]))&&got.slice(want.length).every(c=>!gHas(c));
+// 送った内容がシートにあるか：none（両方なし）／same（各1行で全部同じ）／conflict（片方だけ・重複・違う内容・別のタブ）
+function gTrMatch(s,p){
+  if(!s.tr||!s.au)return 'conflict';
+  const tr=s.tr.rows.slice(1).filter(r=>gStrOf(r[0])===p.id);
+  const au=s.au.rows.slice(1).filter(r=>gStrOf(r[0])===p.eventId||gStrOf(r[4])===p.id);
+  if(!tr.length&&!au.length)return s.tr.sheetId===p.tr&&s.au.sheetId===p.au?'none':'conflict';
+  if(s.tr.sheetId!==p.tr||s.au.sheetId!==p.au||tr.length!==1||au.length!==1)return 'conflict';
+  return gRowSame(tr[0],gTrCells(p),G_TR_KIND,p.row)&&gRowSame(au[0],gAuCells(p),G_AU_KIND,{1:p.row[9]})?'same':'conflict';
+}
+const G_TR_UNK='保存できたか確かめられませんでした。「Check」でシートを確かめます（送り直しはしません）';
+const G_TR_CONFLICT={kind:'conflict',message:'同じ記録IDで別の内容（または片方だけ）がシートにあります。シートを確かめてください（送り直しはしません）'};
+const gTrSaved=m=>{try{gRowsC={};if(typeof refresh==='function')refresh();}catch(_){}return {kind:'saved',message:m};};
+// 読み戻して照らし合わせる（GETだけ）
+async function gTrReadBack(p){
+  let s;try{s=await gTrRead(p.sid);}catch(_){return {kind:'unknown',message:G_TR_UNK};}
+  if(!s.tr||!s.au)return {kind:'unknown',message:'「'+G_TR_TAB+'」「'+G_AU_TAB+'」のタブを確かめられませんでした。シートを直接確かめてください（送り直しはしません）'};
+  const m=gTrMatch(s,p);
+  if(m==='same')return gTrSaved('スプレッドシートに保存しました（トレーニングと監査ログを読み戻して確かめました）');
+  if(m==='none')return {kind:'unknown',message:'',notFound:true};
+  return G_TR_CONFLICT;
+}
+const gTrLocks=()=>typeof navigator!=='undefined'&&navigator.locks&&typeof navigator.locks.request==='function'?navigator.locks:null;
+// 送る内容を確定する（通信は読み取りだけ）：両タブの sheetId・見出し・最後の行を確かめ、監査のIDを決める
+async function gTrainingPrepare(req){
+  const ng=m=>({kind:'failed',message:m});
+  if(PN_STOP())return ng(G_STOP_MSG);
+  if(!gExBind)return ng('いつもの記録シートにつないでから保存してください（確かめ中・未接続のシートには書きません）');
+  const id=req&&req.id,row=req&&req.row;
+  if(!gTrPayload({v:1,sid:gExBind.id,tr:0,au:1,id,row,eventId:gAuId(id)},true))return ng('保存する内容の形が合わないため、保存していません');
+  if(+row[1].slice(0,4)!==gExBind.year)return ng('この記録シートの年（'+gExBind.year+'年）と日付が合わないため、保存していません');
+  let s;
+  try{s=await gTrRead(gExBind.id);}catch(e){return ng('シートを読めなかったため、保存していません（'+(e&&e.status===400?'「'+G_TR_TAB+'」「'+G_AU_TAB+'」のタブを確かめてください':e&&e.message||'通信を確認してください')+'）');}
+  if(s.narrow||!s.tr||!s.au)return ng(gTrSheetIssue(s,null));
+  const p={v:1,sid:gExBind.id,tr:s.tr.sheetId,au:s.au.sheetId,id,row:row.slice(),eventId:gAuId(id)};
+  if(!gTrPayload(p,true))return ng('タブの番号を確かめられなかったため、保存していません');
+  const bad=gTrSheetIssue(s,p);if(bad)return ng(bad);
+  if(gTrMatch(s,p)!=='none')return ng('同じ記録IDがすでにシートにあるため、保存していません');
+  p.sum=gPaySum(p);
+  return {kind:'ok',payload:p};
+}
+const gTrSent=new Set(); // この画面で送った記録ID（同じ画面では二度と送らない）
+// 確定した内容を送る。送る直前にもう一度読み、すでにあれば送らない。届いたか分からなければ unknown（送り直さない）
+async function gTrainingSave(payload){
+  const ng=m=>({kind:'failed',message:m});
+  if(PN_STOP())return ng(G_STOP_MSG);
+  const p=gTrPayload(payload);
+  if(!gExBind||!p||p.sid!==gExBind.id||+p.row[1].slice(0,4)!==gExBind.year)return ng('保存先のシートか保存する内容が、確定したときと合わないため、送っていません');
+  const locks=gTrLocks();
+  if(!locks)return ng('このブラウザーでは同時の保存を防げないため、送っていません');
+  if(gTrSent.has(p.id))return {kind:'unknown',message:G_TR_UNK};
+  try{return await locks.request('pn-bridge-save:'+p.sid,{mode:'exclusive'},()=>gTrSaveLocked(p));}
+  catch(_){return gTrSent.has(p.id)?{kind:'unknown',message:G_TR_UNK}:ng('保存の準備ができなかったため、送っていません');}
+}
+async function gTrSaveLocked(p){
+  const ng=m=>({kind:'failed',message:m});
+  if(gTrSent.has(p.id))return {kind:'unknown',message:G_TR_UNK};
+  let s;
+  try{s=await gTrRead(p.sid);}catch(e){return ng('シートを読めなかったため、送っていません（'+(e&&e.message||'通信を確認してください')+'）');}
+  if(s.narrow||!s.tr||!s.au)return ng(gTrSheetIssue(s,null));
+  if(s.tr.sheetId!==p.tr||s.au.sheetId!==p.au)return ng('タブが確定したときと違うため、送っていません。シートを確かめてください');
+  const m=gTrMatch(s,p);
+  if(m==='same')return gTrSaved('スプレッドシートに保存済みでした（読み戻して確かめました）');
+  if(m==='conflict')return G_TR_CONFLICT;
+  const bad=gTrSheetIssue(s,p);if(bad)return ng(bad);
+  const body=JSON.stringify({requests:[
+    {appendCells:{sheetId:p.tr,rows:[{values:gTrCells(p)}],fields:G_FIELDS}},
+    {appendCells:{sheetId:p.au,rows:[{values:gAuCells(p)}],fields:G_FIELDS}}]});
+  gTrSent.add(p.id);
+  gWriteTicket={sid:p.sid,tr:p.tr,au:p.au,body};
+  try{await gFetch(gSsBase(p.sid)+':batchUpdate',{method:'POST',body});}
+  catch(e){
+    gWriteTicket=null;
+    const st=e&&e.status;
+    // 断られた（認証切れ・4xx）：batchUpdate は全体が適用されないので、どちらも追加されていない
+    if((e&&e.relogin)||(st&&st>=400&&st<500&&st!==408&&st!==429)||(!st&&e&&e.blocked)){gTrSent.delete(p.id);return ng('保存できませんでした（'+(e&&e.message||st)+'）。入力はこの端末に残っています');}
+    return gTrReadBack(p); // 届いたか分からない：読み戻すだけ（見つからなくても送り直さない）
+  }
+  gWriteTicket=null;
+  return gTrReadBack(p);
+}
+// 送った内容がシートにあるかを GET だけで確かめる（送り直さない）
+async function gTrainingCheck(payload){
+  const unk=m=>({kind:'unknown',message:m});
+  if(PN_STOP())return unk(G_STOP_MSG);
+  const p=gTrPayload(payload);
+  if(!gExBind||!p||p.sid!==gExBind.id)return unk('保存先のシートが確定したときと違うため、確かめられません。シートを直接確かめてください（送り直しはしません）');
+  const locks=gTrLocks();
+  try{return locks?await locks.request('pn-bridge-save:'+p.sid,{mode:'exclusive'},()=>gTrReadBack(p)):await gTrReadBack(p);}
+  catch(_){return unk(G_TR_UNK);}
+}
+// 保存先（入力モジュールの記録文に入れる）。確かめた接続があればそのシート。確かめ中・選択待ちは分からない（null）
+function gExDest(){
+  if(gExBind)return {title:gExBind.title,url:'https://docs.google.com/spreadsheets/d/'+gExBind.id+'/edit'};
+  if(gExLock()||!gSheet)return null;
+  return {title:G_TITLE,url:'https://docs.google.com/spreadsheets/d/'+gSheet+'/edit'};
+}
+// 状態を書く：開いたときの値と同じことを確かめてから1回で書き、読み戻す。合わなければ元に戻して例外
+function gExWrite(next){
+  let cur;try{cur=localStorage.getItem(LS_EXSTATE);}catch(_){throw new Error('この端末の接続情報を読めませんでした。変えていません');}
+  if(cur!==gExRaw)throw new Error('別の画面で接続情報が変わったため、変えていません。読み直してからもう一度お試しください');
+  let ok=false;
+  try{if(next==null)localStorage.removeItem(LS_EXSTATE);else localStorage.setItem(LS_EXSTATE,next);ok=localStorage.getItem(LS_EXSTATE)===next;}catch(_){}
+  if(ok)return;
+  let back=false;
+  try{if(gExRaw==null)localStorage.removeItem(LS_EXSTATE);else localStorage.setItem(LS_EXSTATE,gExRaw);back=localStorage.getItem(LS_EXSTATE)===gExRaw;}catch(_){}
+  throw new Error(back?'この端末に接続情報を保存できませんでした。変えていません':'この端末の接続情報を保存できませんでした。読み直すと、もう一度確かめる画面になります（別のシートは作りません）');
+}
+// Googleへ移動する前の一度限りの記録。sessionStorage に保存して読み戻せなければ、移動しない
+function gNewTx(o){
+  if(PN_STOP())throw new Error(G_STOP_MSG);
+  const s=gExHex(32),rec=JSON.stringify(Object.assign({},o,{s,exp:Date.now()+600000}));
+  try{sessionStorage.setItem(SS_GTX,rec);if(sessionStorage.getItem(SS_GTX)!==rec)throw 0;}
+  catch(_){throw new Error('この端末で一時的な確認情報を保存できないため、Googleへ移動しませんでした');}
+  return s;
+}
+// 戻りの記録を1回だけ取り出す。読めない・消せないときは受け付けない（ok:false）
+function gTakeTx(){
+  let raw;
+  try{raw=sessionStorage.getItem(SS_GTX);}catch(_){return {ok:false,tx:null};}
+  try{sessionStorage.removeItem(SS_GTX);if(sessionStorage.getItem(SS_GTX)!==null)return {ok:false,tx:null};}catch(_){return {ok:false,tx:null};}
+  if(raw==null)return {ok:true,tx:null};
+  try{const t=JSON.parse(raw);return {ok:true,tx:t&&typeof t==='object'?t:null};}catch(_){return {ok:true,tx:null};}
+}
+// 戻りを確かめる（純粋な関数）。受け付けるのは implicit 方式の fragment の Bearer トークンだけ
+const G_CB_ONE=['access_token','token_type','expires_in','scope','state','error','code','id_token','picked_file_ids'];
+function gCheckCallback(cb,tx,now){
+  const purpose=tx&&(tx.purpose==='login'||tx.purpose==='pick')?tx.purpose:'';
+  const no=(msg,silent)=>({ok:false,purpose,msg,silent:!!silent});
+  if(!cb||cb.failed)return no('Googleからの戻りをURLから取り除けなかったため、受け付けませんでした');
+  const all=k=>cb.q.filter(p=>p[0]===k).map(p=>p[1]).concat(cb.h.filter(p=>p[0]===k).map(p=>p[1]));
+  if(G_CB_ONE.some(k=>all(k).length>1))return no('Googleからの戻りに重なった情報があったため、受け付けませんでした');
+  if(all('code').length||all('id_token').length||cb.q.some(p=>p[0]==='access_token'))return no('この戻り方には対応していないため、受け付けませんでした');
+  const st=all('state');
+  if(!purpose||typeof tx.s!=='string'||!/^[0-9a-f]{64}$/.test(tx.s)||st.length!==1||st[0]!==tx.s)return no('Googleからの戻りを確かめられませんでした');
+  if(typeof tx.exp!=='number'||!Number.isFinite(tx.exp)||tx.exp<=now||tx.exp>now+600000)return no('時間が過ぎたため、受け付けませんでした');
+  const cont=purpose==='pick'||tx.then==='verify';
+  if(cont&&!(gParseSheetRef(tx.id)===tx.id&&typeof tx.year==='string'&&/^(20\d{2})?$/.test(tx.year)&&typeof tx.n==='string'&&/^[0-9a-f]{32}$/.test(tx.n)))return no('Googleからの戻りを確かめられませんでした');
+  const err=all('error')[0];
+  if(err){
+    if(purpose==='login'&&!cont&&/^(interaction|login|consent|account_selection)_required$/.test(err))return no('',true); // 自動の再ログインが通らなかっただけ
+    if(purpose==='pick')return no(err==='access_denied'?'選択がキャンセルされました':'Googleでシートを選べませんでした');
+    return no(err==='access_denied'?'ログインがキャンセルされました':'Googleにログインできませんでした');
+  }
+  const tok=cb.h.filter(p=>p[0]==='access_token').map(p=>p[1])[0]||'';
+  const tt=all('token_type')[0]||'',ex=all('expires_in')[0]||'';
+  const sc=(all('scope')[0]||'').split(/\s+/).filter(Boolean);
+  if(!tok||tt.toLowerCase()!=='bearer'||!/^[1-9]\d{0,5}$/.test(ex))return no('この戻り方には対応していないため、受け付けませんでした');
+  if(purpose==='pick'){
+    if(sc.length!==1||sc[0]!==G_SCOPE)return no('Googleから返った権限の範囲が想定と違うため、受け付けませんでした');
+    const picked=all('picked_file_ids');
+    if(picked.length!==1)return no('選んだシートを確かめられませんでした（この戻り方には対応していません）');
+    const ids=picked[0].split(',').map(v=>v.trim()).filter(Boolean);
+    if(ids.length!==1||ids[0]!==tx.id)return no('選んだシートが、入れたシートと違います');
+  }else{
+    if(all('picked_file_ids').length)return no('この戻り方には対応していないため、受け付けませんでした');
+    if(!sc.includes(G_SCOPE))return no('Googleにログインできませんでした');
+  }
+  return {ok:true,purpose,cont,token:tok,expires:+ex,id:cont?tx.id:'',year:cont?tx.year:'',n:cont?tx.n:''};
+}
+function gExFail(e){
+  if(e&&e.relogin)return e;
+  if(e&&(e.status===403||e.status===404))return new Error('このシートを読めませんでした（見つからないか、アプリに許可されていません）。選んだシートは覚えたままです。下の「Googleでこのシートだけを許可する」から許可できます');
+  return new Error('Googleで確かめられませんでした（'+(e&&e.status?'通信エラー '+e.status:'通信を確認してください')+'）。選んだシートは覚えたままです');
+}
+// この世代の選択（intent）のタブ名と見出しだけを読んで確かめる。合わなければ例外（何も保存しない）
+async function gExVerify(){
+  const it=gExIntent;
+  if(!it)throw new Error('確かめるシートが選ばれていません');
+  let meta,head;
+  try{meta=await gFetch('https://sheets.googleapis.com/v4/spreadsheets/'+it.id+'?fields='+encodeURIComponent('properties.title,sheets.properties.title'));}catch(e){throw gExFail(e);}
+  const tabs=new Set((meta&&meta.sheets||[]).map(s=>s&&s.properties&&s.properties.title));
+  const miss=Object.keys(G_EX_HEAD).filter(t=>!tabs.has(t));
+  if(miss.length)throw new Error('記録シートのタブが足りません（'+miss.join('・')+'）。つないでいません');
+  const title=String(meta&&meta.properties&&meta.properties.title||'').trim();
+  if(!gExTitleOk(title))throw new Error('シートの名前を確かめられませんでした。つないでいません');
+  const ys=[...new Set((title.match(/(?:^|\D)20\d{2}(?!\d)/g)||[]).map(s=>s.slice(-4)))];
+  let year=ys.length===1?+ys[0]:0;
+  if(it.year){if(year&&year!==+it.year)throw new Error('シート名の年（'+year+'年）と、入れた年（'+it.year+'年）が違います。つないでいません');year=+it.year;}
+  if(!gExYearOk(year))throw new Error('シート名から年が分かりません。対象の年を入れてください');
+  try{head=await gGet(it.id,Object.keys(G_EX_HEAD).map(t=>[t,'A1:'+gExCol(G_EX_HEAD[t].length-1)+'1']));}catch(e){throw gExFail(e);}
+  const bad=Object.keys(G_EX_HEAD).filter(t=>{const row=(head[t]||[])[0]||[];return G_EX_HEAD[t].some((w,i)=>gExNorm(row[i])!==gExNorm(w));});
+  if(bad.length)throw new Error('見出しが記録シートの形と合いません（'+bad.join('・')+'）。つないでいません');
+  return {id:it.id,year,title};
+}
+// 確かめたシートにつなぐ：bind を確定して intent を消す（1回の書き込み）。成功したときだけページを読み直す（ログインは残す）
+function gExCommit(r){
+  if(!gExIntent||r.id!==gExIntent.id)throw new Error('確かめたシートが選択と違うため、つないでいません');
+  gExWrite(JSON.stringify({v:1,bind:{id:r.id,year:r.year,title:r.title},intent:null}));
+  try{localStorage.removeItem(LS_EXCREATE);}catch(_){} // 前に選んだ「このアプリの記録シート」は、もう使わない
+  location.reload();
+}
+// 新しい選択を保存し、読み直してその世代で確かめる（press 済みの印を sessionStorage に1回だけ残す）
+function gExChoose(id,year){
+  const n=gExHex(16);
+  gExWrite(JSON.stringify({v:1,bind:gExBroken?null:gExBoot.bind,intent:{id,year,n}}));
+  try{localStorage.removeItem(LS_EXCREATE);}catch(_){}
+  try{sessionStorage.setItem(SS_EXGO,n);}catch(_){} // 保存できなければ、読み直した後にもう一度押してもらう
+  location.reload();
+}
+// 確かめ中の選択をやめ、前に確かめた接続へ戻る。前の接続がないとき・読めない状態のときは受け付けない
+// （補助の pn.app.sheet や古い選択を接続の根拠にして、読み取りだけの制限を外さない。直すのはURLの選び直しだけ）
+function gExCanCancel(){return !!gExIntent&&!!gExBoot.bind&&!gExBroken;}
+function gExCancel(){
+  if(!gExCanCancel())throw new Error('前に確かめた接続がないため、やめられません。いつもの記録シートのURLを入れ直してください');
+  gExWrite(JSON.stringify({v:1,bind:gExBoot.bind,intent:null}));
+  location.reload();
+}
+// Googleの選択画面で、このシートだけをアプリに許可してもらう（drive.file だけ・include_granted_scopes=false。範囲・クライアントは変えない）
+function gExPickStart(){
+  const it=gExIntent;
+  if(!it)throw new Error('先に「確かめてつなぐ」を押してください');
+  const st=gNewTx({purpose:'pick',id:it.id,year:it.year,n:it.n});
+  const q=new URLSearchParams({client_id:GCLIENT,redirect_uri:G_BACK,response_type:'token',scope:G_SCOPE,include_granted_scopes:'false',state:st,
+    prompt:'consent',trigger_onepick:'true',mimetypes:'application/vnd.google-apps.spreadsheet',file_ids:it.id});
+  location.href='https://accounts.google.com/o/oauth2/v2/auth?'+q;
+}
+// 起動時に見る年と日付：つないだシートの年。今年なら今日、前の年なら今日と同じ月日（なければ2月28日）。S.today は変えない
+function gExInitView(today){
+  const ty=+String(today).slice(0,4);
+  if(!gExBind||gExBind.year===ty)return {year:ty,date:today};
+  const y=gExBind.year,md=String(today).slice(5),leap=y%4===0&&(y%100!==0||y%400===0);
+  return {year:y,date:y+'-'+(md==='02-29'&&!leap?'02-28':md)};
+}
+// 新しい端末へ選択を渡すリンク（#existing=ID）。入力欄に入れるだけで、保存・確かめ・ログイン・作成は本人が押すまでしない
+let gExLink='';
+if(!PN_AUTH_CB&&GCLIENT&&!DEMO){const m=location.hash.match(/^#existing=([A-Za-z0-9_-]{25,100})$/);if(m){gExLink=m[1];history.replaceState(null,'',location.pathname+location.search);}}
+// ---------- 既存の記録シートにつなぐ（ここまで） ----------
+// Googleから戻ってきたとき：先頭のスクリプトがURLから取り除いた値（PN_AUTH_CB）を、保存した一度限りの記録と照らす。
+// 記録を取り出せない・トークンを保存して読み戻せないときは、成功として扱わない（前からあるトークンで補わない）
+let gBackErr='',gExMsg='',gExAuto='';
+try{sessionStorage.removeItem(SS_GSTATE);}catch(_){} // 以前の形式の state は使わない
+if(PN_AUTH_CB&&GCLIENT&&!DEMO){
+  const t=gTakeTx(),tx=t.tx;
+  const r=t.ok?gCheckCallback(PN_AUTH_CB,tx,Date.now()):{ok:false,purpose:'',msg:'この端末で確認情報を扱えないため、Googleからの戻りを受け付けませんでした',silent:false};
+  const cont=!!tx&&(tx.purpose==='pick'||tx.then==='verify');
+  let msg='';
+  if(r.ok){
+    const rec=JSON.stringify({t:r.token,exp:Date.now()+r.expires*1000-60000});
+    let saved=false;try{localStorage.setItem(LS_GTOK,rec);saved=localStorage.getItem(LS_GTOK)===rec;}catch(_){}
+    if(!saved)msg='この端末にログインを保存できませんでした';
+    else{
+      try{if(!gSheet&&!gExLock()){API='';localStorage.removeItem(LS_API);localStorage.removeItem(LS_KEY);localStorage.removeItem('pn.app.months');}}catch(_){}
+      // 続きの確かめは、開始したときの選択（ID・年・nonce）とこの世代の選択が同じときだけ
+      if(r.cont){if(gExIntent&&r.id===gExIntent.id&&r.year===gExIntent.year&&r.n===gExIntent.n)gExAuto=r.purpose;else msg='選んだシートが変わったため、確かめに進みませんでした';}
+    }
+  }else if(PN_STOP())msg=G_STOP_MSG;
+  else if(!r.silent)msg=r.msg||'Googleからの戻りを受け付けませんでした';
+  // 確かめ中の世代では、目的が分からない失敗も接続パネルに出す（どの場合も受け付けない）
+  if(msg){if(cont||r.purpose==='pick'||gExIntent)gExMsg=msg+'。つないでいません';else gBackErr=msg;}
+}
+// 「確かめてつなぐ」を押して読み直したときだけ、この世代の選択を1回だけ確かめに進む
+if(!gExAuto&&gExIntent&&!PN_AUTH_CB){
+  let go=null;try{go=sessionStorage.getItem(SS_EXGO);sessionStorage.removeItem(SS_EXGO);if(sessionStorage.getItem(SS_EXGO)!==null)go=null;}catch(_){go=null;}
+  if(go===gExIntent.n)gExAuto='verify';
 }
 // トークン（約1時間）が切れていたら、まず画面を出さずにGoogleへ取りに行く（ログイン済みなら一瞬で戻る）。
 // それが通らなかったときだけ、「再読み込み」を押してもらってGoogleの確認へ移る
@@ -571,14 +1107,16 @@ function gToken(){
   return gRedirect('');
 }
 async function gFetch(url,opt){
+  gExGuard(url,opt);
   const t=await gToken();
   const res=await fetch(url,Object.assign({},opt,{headers:Object.assign({Authorization:'Bearer '+t},opt&&opt.body?{'Content-Type':'application/json'}:{})}));
   if(res.status===401){try{localStorage.removeItem(LS_GTOK);}catch(_){}throw Object.assign(new Error('Googleへの接続が切れました。「再読み込み」を押してください'),{relogin:true});}
+  if(res.status===404&&gExLock())throw Object.assign(new Error('記録シートを読めませんでした（見つからないか、アプリに許可されていません）'),{status:404});
   if(res.status===404&&gSheet&&url.includes('spreadsheets/'+gSheet)){gForget();throw new Error('記録シートが見つかりません。もう一度読み込むと作り直します');}
-  if(!res.ok)throw new Error('Googleとの通信エラー（'+res.status+'）');
+  if(!res.ok)throw Object.assign(new Error('Googleとの通信エラー（'+res.status+'）'),{status:res.status});
   return res.json();
 }
-function gForget(){gSheet='';try{localStorage.removeItem(LS_SHEET);}catch(_){}}
+function gForget(){if(gExLock())return;gSheet='';try{localStorage.removeItem(LS_SHEET);}catch(_){}}
 // 記録シートの形は、配布元の「フィジカルノート｜テンプレート」と同じ（template.json に写してある）。
 // タブ・見出し・設定・数式・ルール（Muse基本指示・運用仕様）をそのまま作る。個人の記録とレシピは入れない
 let gTpl=null;
@@ -616,6 +1154,9 @@ const gTabProps=(t,i)=>({title:t.title,index:i,hidden:!!t.hidden,gridProperties:
 // 記録シートを見つける（このアプリが前に作ったもの）。なければテンプレートと同じ形で作る
 let gTabsP=null;
 async function gEnsureSheet(){
+  if(gExIntent||gExBroken)throw new Error('いつもの記録シートの確かめが終わっていません。「いつもの記録シートにつなぐ」から確かめてください（別のシートは読まず、作りません）');
+  if(gExBind)return gExBind.id;
+  if(!gSheet&&!gExCreateOk)throw new Error('記録シートがまだ選ばれていません。「いつもの記録シートにつなぐ」から選んでください（自動では作りません）');
   if(gSheet){if(!gTabsP)gTabsP=gEnsureTabs(gSheet).catch(()=>{gTabsP=null;});return gSheet;}
   const q=encodeURIComponent("name='"+G_TITLE+"' and mimeType='application/vnd.google-apps.spreadsheet' and trashed=false");
   const found=await gFetch('https://www.googleapis.com/drive/v3/files?q='+q+'&orderBy=createdTime&fields=files(id)&pageSize=1');
@@ -664,6 +1205,7 @@ const LS_YEARS='pn.app.years';
 let gYears={};try{gYears=JSON.parse(localStorage.getItem(LS_YEARS)||'{}')||{};}catch(_){}
 let gOld={}; // 今年のファイルに残っている前の年の行数 {2026: 120}
 const gThisYear=()=>+(S.today||'').slice(0,4)||new Date().getFullYear();
+const gEntryYear=()=>gExBind?gExBind.year:gThisYear(); // 入力モジュールが記録文を作れる年
 const gKey=v=>{const m=String(v==null?'':v).match(/(\d{4})[-\/年.](\d{1,2})[-\/月.](\d{1,2})/);return m?m[1]+'-'+('0'+m[2]).slice(-2)+'-'+('0'+m[3]).slice(-2):'';};
 const gRowYear=(cols,r)=>{for(const c of cols){const k=gKey(r[c]);if(k)return +k.slice(0,4);}return 0;};
 const gFilled=r=>r&&r.some(x=>x!==''&&x!=null);
@@ -686,11 +1228,11 @@ function gRows(y){
     const main=gTidy(await gGet(id,G_ALL));
     if(y===gThisYear()){
       const old={};G_REC.forEach(([t,cols])=>(main[t]||[]).forEach(r=>{const ry=gRowYear(cols,r);if(ry&&ry<y)old[ry]=(old[ry]||0)+1;}));
-      gOld=old;paintYearBar();
+      gOld=gExLock()?{}:old;paintYearBar();
       return main;
     }
     // 前の年：年別ファイルを読み、今年のファイルにまだ残っているその年の行も足す（同じ行は二重にしない）
-    if(!gYears[y])return main;
+    if(gExLock()||!gYears[y])return main;
     const R=gTidy(await gGet(gYears[y],G_ALL));
     G_REC.forEach(([t])=>{const have=new Set((R[t]||[]).map(gSig));R[t]=(R[t]||[]).concat((main[t]||[]).filter(r=>!have.has(gSig(r))));});
     return R;
@@ -701,6 +1243,7 @@ function gRows(y){
 // ドライブから、このアプリが作った年別ファイルとバックアップを探す
 let gBackups=[];
 async function gListFiles(){
+  if(gExLock()){gYears={};gBackups=[];return;}
   const q=k=>encodeURIComponent("appProperties has { key='pnKind' and value='"+k+"' } and trashed=false");
   const [ys,bs]=await Promise.all([
     gFetch('https://www.googleapis.com/drive/v3/files?q='+q('year')+'&orderBy=createdTime&fields=files(id,appProperties)&pageSize=100'),
@@ -727,6 +1270,7 @@ async function gDeleteRows(id,rows){
 }
 // y年の記録を、今年のファイルから年別ファイルへ移す。年別ファイルに入ったのを読み直して確かめた行だけを今年のファイルから消す
 async function gRollYear(y){
+  if(gExLock())throw new Error('既存の記録シートを使う設定のため、年の切り替えはしません');
   const main=await gEnsureSheet();
   await gListFiles();
   let arch=gYears[y];
@@ -754,6 +1298,7 @@ async function gRollYear(y){
 }
 // 今年のファイルの記録を消す。先にファイルを丸ごとコピーしてバックアップを残す
 async function gReset(withRecipes){
+  if(gExLock())throw new Error('既存の記録シートを使う設定のため、リセットはしません');
   const main=await gEnsureSheet();
   const now=new Date(),st=now.getFullYear()+'-'+pad(now.getMonth()+1)+'-'+pad(now.getDate())+' '+pad(now.getHours())+':'+pad(now.getMinutes());
   const bk=await gCopy(main,G_TITLE+' バックアップ（'+st+'）',{pnKind:'backup'});
@@ -774,7 +1319,7 @@ function gMonth(R,ym){
     allM.push({id:str(r[0])||'食事'+(i+2),date:d,time:str(r[2]).slice(0,5),kind:str(r[3]),content:str(r[4]),kcal:num(r[5]),p:num(r[6]),f:num(r[7]),c:num(r[8]),status:str(r[10])});});
   (R['体重']||[]).forEach(r=>{const d=key(r[1]);if(!inY(d)||!valid(r[5])||num(r[3])==null)return;allW.push({date:d,when:str(r[2])||'朝',kg:num(r[3]),note:str(r[4])});});
   (R['トレーニング']||[]).forEach(r=>{const d=key(r[1]);if(!inY(d)||!valid(r[8]))return;
-    allT.push({date:d,kind:str(r[2])||'トレーニング',part:str(r[3]),minutes:num(r[4]),memo:str(r[7]),sets:num(r[12]),detail:str(r[13])});});
+    allT.push({date:d,kind:str(r[2])||'トレーニング',part:str(r[3]),minutes:num(r[4]),hours:num(r[5]),start:str(r[6]).slice(0,5),memo:str(r[7]),sets:num(r[12]),detail:str(r[13])});});
   (R['月曜体組成']||[]).forEach(r=>{const d=key(r[1])||key(r[2]);if(!inYm(d)||!valid(r[13]))return;
     body.push({monday:d,measured:key(r[2]),weight:num(r[3]),fat:num(r[4]),muscle:num(r[5]),skeletal:num(r[6]),visceral:num(r[7]),bmr:num(r[8]),water:num(r[9]),waist:num(r[10]),status:str(r[12])});});
   (R['日次確認']||[]).forEach(r=>{const d=key(r[0]);const v=str(r[1]).trim().toUpperCase();if(d&&(r[1]===true||v==='TRUE'||v==='完了'))done[d]=true;});
@@ -799,13 +1344,14 @@ async function gLoad(ym){
 }
 function gSheetUrl(){return gSheet?'https://docs.google.com/spreadsheets/d/'+gSheet+'/edit':'';}
 // ログインボタン（最初の1回）
-function gStart(){document.getElementById('keyErr').textContent='Googleに移動しています…';gRedirect('select_account');}
+function gStart(){document.getElementById('keyErr').textContent='Googleに移動しています…';gRedirect('select_account').catch(e=>{document.getElementById('keyErr').textContent=e.message;});}
 function showSheetLink(){const a=document.getElementById('sheetLink');if(a&&gSheet){a.hidden=false;document.getElementById('museLink').hidden=false;document.getElementById('museOpen').hidden=false;document.getElementById('setLink').hidden=false;}}
 // Muse に送る指示文（muse.txt）に、この人の記録シートのURLとIDを入れて出す。詳しいルールは記録シートの「Muse基本指示」タブにある
 let museTpl=null;
 async function openMuse(){
   const box=document.getElementById('musePanel'),ta=document.getElementById('museText'),err=document.getElementById('museErr');
   err.textContent='';box.hidden=false;
+  if(PN_STOP()||(!gExBind&&(gExLock()||!gSheet))){ta.value='';err.textContent='記録シートの確かめが終わるまで、指示文は出しません';return;}
   try{
     if(!museTpl){const r=await fetch('muse.txt',{cache:'no-cache'});if(!r.ok)throw 0;museTpl=await r.text();}
     ta.value=museTpl.split('{{SHEET_ID}}').join(gSheet||'（あなたの記録シートのID）').split('{{SHEET_URL}}').join(gSheetUrl()||'https://docs.google.com/spreadsheets/d/（あなたの記録シート）/edit');
@@ -824,6 +1370,48 @@ document.getElementById('museOpen').addEventListener('click',e=>{
 });
 // 設定
 function openSet(){document.getElementById('setMuse').value=museUrl();document.getElementById('setErr').textContent='';document.getElementById('setPanel').hidden=false;}
+// 接続パネル：今の接続先・確かめ中の選択・Museの保存先の確認を出す
+function paintEx(){
+  const now=document.getElementById('exNow'),op=document.getElementById('exOpen');
+  now.textContent=gExBroken?'この端末の接続情報を読めません。いつもの記録シートのURLを入れ直してください（それまで記録は読み込まず、シートも作りません）。'
+    :gExIntent?'確かめ中のシートがあります。確かめが終わるまで、記録の読み込み・記録文・Muse用の指示文は止めています（別のシートは読まず、作りません）。'+(gExBoot.bind?'前の接続は「'+gExBoot.bind.title+'」です。':'')
+    :gExBind?'接続中：「'+gExBind.title+'」（'+gExBind.year+'年）。アプリが書き込むのはトレーニングの追加だけです。'
+    :gSheet?'今は、このアプリが作った記録シートを使っています。':'記録シートがまだ選ばれていません。';
+  op.hidden=!gExBind;if(gExBind)op.href='https://docs.google.com/spreadsheets/d/'+gExBind.id+'/edit';
+  document.getElementById('exMuse').textContent=gExBind?'Museのチャットが、この記録シートを保存先にしているとは限りません。下の指示文をMuseに送り、Museが保存先としてこのシートを確かめてから、食事・体重などを記録してください。トレーニングはこのアプリの「トレーニング終了」で保存します。':'つないだ後に、Museの保存先の確かめ方を表示します。';
+  document.getElementById('exMuseBtn').hidden=!gExBind;
+  document.getElementById('exPickBox').hidden=!gExIntent;
+  document.getElementById('exCancel').hidden=!gExCanCancel();
+  document.getElementById('exCreateBox').hidden=!gExWait();
+  if(gExIntent&&!document.getElementById('exUrl').value){document.getElementById('exUrl').value=gExIntent.id;document.getElementById('exYear').value=gExIntent.year;}
+}
+function openEx(){document.getElementById('keyPanel').hidden=true;document.getElementById('setPanel').hidden=true;paintEx();document.getElementById('exPanel').hidden=false;}
+let exBusy=false;
+// 確かめてつなぐ：この世代の選択と同じなら確かめ（ログインがなければログインしてから）、違えば保存して読み直す
+async function gExConnect(raw,yearIn){
+  const err=document.getElementById('exErr'),go=document.getElementById('exGo');if(exBusy)return;
+  exBusy=true;go.disabled=true;err.textContent='確かめています…';
+  try{
+    const id=gParseSheetRef(raw),year=String(yearIn==null?'':yearIn).trim();
+    if(!id)throw new Error('シートのURL（https://docs.google.com/spreadsheets/d/…）か、IDだけを貼り付けてください');
+    if(year&&!/^20\d{2}$/.test(year))throw new Error('年は 2026 のように4桁で入れてください');
+    if(!gExIntent||gExIntent.id!==id||gExIntent.year!==year){gExChoose(id,year);return;}
+    if(!gCached()){err.textContent='Googleでログインしてから確かめます…';await gRedirect('select_account',gExIntent);return;}
+    gExCommit(await gExVerify());err.textContent='確かめました。読み直しています…';
+  }catch(e){err.textContent=e&&e.message||String(e);exBusy=false;go.disabled=false;paintEx();}
+}
+document.getElementById('exGo').addEventListener('click',()=>gExConnect(document.getElementById('exUrl').value,document.getElementById('exYear').value));
+document.getElementById('exPick').addEventListener('click',()=>{try{gExPickStart();}catch(e){document.getElementById('exErr').textContent=e.message;}});
+document.getElementById('exMuseBtn').addEventListener('click',()=>{document.getElementById('exPanel').hidden=true;openMuse();});
+document.getElementById('exCancel').addEventListener('click',()=>{try{gExCancel();}catch(e){document.getElementById('exErr').textContent=e.message;}});
+document.getElementById('exCreate').addEventListener('click',()=>{
+  try{localStorage.setItem(LS_EXCREATE,'1');if(localStorage.getItem(LS_EXCREATE)!=='1')throw 0;}catch(_){document.getElementById('exErr').textContent='この端末に選択を保存できませんでした';return;}
+  location.reload();
+});
+document.getElementById('exClose').addEventListener('click',()=>{document.getElementById('exPanel').hidden=true;});
+document.getElementById('exOpenSet').addEventListener('click',openEx);
+document.getElementById('exOpenKey').addEventListener('click',openEx);
+['touchstart','touchmove','touchend'].forEach(t=>document.getElementById('exPanel').addEventListener(t,e=>e.stopPropagation(),{passive:true}));
 document.getElementById('setLink').addEventListener('click',openSet);
 document.getElementById('setMuse').addEventListener('input',()=>{document.getElementById('setErr').textContent='';});
 document.getElementById('setClose').addEventListener('click',()=>{document.getElementById('setPanel').hidden=true;});
@@ -845,7 +1433,9 @@ document.getElementById('museCopy').addEventListener('click',async()=>{
 let mngBusy=false;
 function mngMsg(ok,err){document.getElementById('mngOk').textContent=ok||'';document.getElementById('mngErr').textContent=err||'';}
 function paintMng(){
-  const ty=gThisYear(),yrs=[...new Set([ty].concat(Object.keys(gYears).map(Number),Object.keys(gOld).map(Number)))].filter(y=>y&&y<=ty).sort((a,b)=>b-a);
+  const ty=gThisYear(),yrs=gExBind?[gExBind.year]:gExLock()?[]:[...new Set([ty].concat(Object.keys(gYears).map(Number),Object.keys(gOld).map(Number)))].filter(y=>y&&y<=ty).sort((a,b)=>b-a);
+  const exi=document.getElementById('exInfo');exi.hidden=!gExLock();document.getElementById('mngWrite').hidden=gExLock();
+  if(gExLock())exi.textContent=(gExBind?'接続中：「'+gExBind.title+'」（'+gExBind.year+'年・既存の記録シート）。':'いつもの記録シートを確かめている途中です。')+'アプリが書き込むのはトレーニングの追加だけで、ほかの記録の保存はMuseで行います。年の切り替えとリセットは、既存のシートでは使えません。';
   document.getElementById('mngOpen').href=gSheetUrl();
   document.getElementById('mngYears').innerHTML=yrs.map(y=>`<button type="button" data-year="${y}" class="${y===S.year?'on':''}">${y}年${y===ty?'（今年）':''}</button>`).join('');
   const old=Object.keys(gOld).map(Number).sort((a,b)=>a-b),rb=document.getElementById('rollBtn');
@@ -905,13 +1495,17 @@ if(GCLIENT&&!DEMO){
   if(/ Line\/|FBAN|FBAV|Instagram/i.test(navigator.userAgent))document.getElementById('gWarn').textContent='LINEなどのアプリ内ではGoogleにログインできません。右上（または右下）のメニューから「ブラウザで開く」を選んでください。';
   if(gBackErr){askKey();document.getElementById('keyErr').textContent=gBackErr;}
   if(gSheet)showSheetLink();
+  if(gExMsg||gExAuto||gExLink||gExIntent||gExBroken||(gExWait()&&gCached()))openEx();
+  if(gExMsg)document.getElementById('exErr').textContent=gExMsg;
+  else if(gExAuto&&gExIntent)gExConnect(gExIntent.id,gExIntent.year);
+  else if(gExLink){document.getElementById('exUrl').value=gExLink;document.getElementById('exYear').value='';document.getElementById('exErr').textContent='リンクからシートのIDを受け取りました。内容を確かめてから「確かめてつなぐ」を押してください（まだつないでいません）';}
 }
 
 
 const TYPES=['選択日の食事','日別まとめ','食事','朝夜体重','月曜体組成','レシピ','トレーニング'];
 const WD='日月火水木金土';
 const LS_OLD='pn.app.month'; // 以前の保存形式（今月だけ）
-const LSM=DEMO?null:'pn.app.months'; // 読み込んだ月をすべて保存しておき、次に開いたときすぐ出す
+const LSM=DEMO?null:gExCacheKey(); // 読み込んだ月をすべて保存しておき、次に開いたときすぐ出す
 const LSORT='pn.app.sort';
 const S={view:'day',date:null,today:null,year:null,listYm:null,graphYm:null,calYm:null,type:'選択日の食事',desc:true,
   cache:{},raw:{},at:{},pending:{},jobs:{},failed:{},loading:0,lastFetch:0,touched:false,weekStart:null,suppressUntil:0};
@@ -1091,7 +1685,7 @@ function syncToday(d){
   if(!d.today||d.today===S.today)return false;
   const follow=S.date===S.today||!S.touched,wasThis=S.year===+String(S.today).slice(0,4);
   S.today=d.today;
-  if(wasThis||follow){S.year=+d.today.slice(0,4);applyDate(follow?d.today:S.date);} // 前の年を見ているときはそのまま
+  if((wasThis||follow)&&!(gExBind&&gExBind.year!==+d.today.slice(0,4))){S.year=+d.today.slice(0,4);applyDate(follow?d.today:S.date);} // 前の年を見ているときはそのまま
   return true;
 }
 function hasRecord(k){const d=S.cache[ymOf(k)];if(!d)return false;const r=d.days.find(x=>x.date===k);return !!(r&&(r.meals>0||r.am!=null||r.pm!=null||r.training));}
@@ -1224,11 +1818,71 @@ function paintList(){
   }else if(S.type==='レシピ'){
     html=card('レシピ（最新版）',d.recipes.length?d.recipes.map(r=>`<div class="item"><span class="tag y">v${esc(r.ver)}</span><div class="body">${esc(r.name)}<small class="num">${r.kcal!=null?'1食 '+fmt(r.kcal)+' kcal ・P '+fmt(r.p)+' / F '+fmt(r.f)+' / C '+fmt(r.c):'栄養未確定'} ・${esc(r.servings||'—')}食分<br>${esc(r.status)}</small></div></div>`).join(''):'<div class="empty">レシピはまだありません</div>');
   }else if(S.type==='トレーニング'){
-    const ts=d.training.slice().sort((a,b)=>byDate(a.date,b.date));
-    html=card('トレーニング',ts.length?ts.map(t=>`<div class="item"><div class="body"><b>${dayLabel(t.date)}</b>　${esc(t.kind==='オフ'?'オフ':(t.part||'部位未記入'))}<small>${t.minutes!=null?fmtH(t.minutes):'時間未記入'}${t.sets!=null?' ・'+esc(t.sets)+'セット':''}${t.detail?' ・'+esc(t.detail):''}${t.memo?' ・'+esc(t.memo):''}</small></div></div>`).join(''):none);
+    html=trListHtml(d,byDate);
   }
   body.innerHTML=html;
 }
+// ---------- トレーニング記録の表示（ここから） ----------
+// 記録一覧の「トレーニング」：月のまとめ（日数・オフの日数・記録された時間の合計・部位ごとの回数）と、日ごとのカード。
+// アプリが書いたセット内訳（「名前（区分・方式）：セット1 …、セット2 …」を「／」でつないだもの）は種目ごとの表にし、
+// 形が違う内訳（Museなどが書いたもの）はそのまま文で出す。表示する値はすべて esc で文字にする。
+const trMins=t=>t.minutes!=null?t.minutes:(t.hours!=null?Math.round(t.hours*60):null);
+const trDur=m=>{if(m==null)return '';const h=Math.floor(m/60),mm=m%60;return (h?h+'時間':'')+(mm||!h?mm+'分':'');};
+const trParts=p=>String(p||'').split(/[・、,，/／\s]+/).map(x=>x.trim()).filter(Boolean);
+const TR_EX=/([^／：]+?)（(通常|自重)・(回数制|時間制)）：(.*?)(?=／[^／：]+?（(?:通常|自重)・(?:回数制|時間制)）：|$)/g;
+function trParse(detail){
+  const s=String(detail||'');const out=[];let m,end=0;TR_EX.lastIndex=0;
+  while((m=TR_EX.exec(s))!==null){
+    if(m.index!==end&&!(out.length>0&&m.index===end+1&&s[end]==='／'))return null;
+    out.push({name:m[1],kind:m[2],mode:m[3],sets:m[4].split(/、(?=セット\d+ )/).map(x=>x.replace(/^セット\d+ /,''))});
+    end=TR_EX.lastIndex;if(m[0]==='')break;
+  }
+  return out.length&&end===s.length?out:null;
+}
+// 推定1RM（Epley式：重量 ×（1 + 回数 ÷ 30）。1回なら重量）。重量が正の数・回数が1〜30の整数のときだけ。表示だけ
+function trRM(w,r){const a=parseFloat(String(w).replace(/kg$/,'')),b=Number(String(r).replace(/回$/,''));
+  if(!(a>0)||!Number.isInteger(b)||b<1||b>30)return null;return Math.round((b===1?a:a*(1+b/30))*10)/10;}
+// セットのメモ（内訳の「／メモ …」。最後の項目）
+const trMemo=x=>{const m=String(x).match(/(?:^|／)メモ (.+)$/);return m?m[1]:'';};
+const TR_MEMO_ICON='<svg viewBox="0 0 24 24" width="16" height="16" role="img" aria-label="メモ"><path d="M4 5h16v11H10l-5 4v-4H4z" fill="none" stroke="currentColor" stroke-width="2" stroke-linejoin="round"/></svg>';
+function trSetText(ex,x){
+  const v=l=>{const m=x.match(new RegExp('(?:^|／)'+l+' ([^／]+)'));return m&&m[1]!=='—'?m[1]:'';};
+  if(ex.mode==='時間制'){
+    const t=(v('分')||v('秒'))?Number(v('分')||0)+':'+String(Number(v('秒')||0)).padStart(2,'0'):'—';
+    if(ex.kind==='通常')return v('重量')?v('重量')+'/'+t:t;
+    const w=x.match(/^体重 ([^（]+)（手入力）/),adj=v('加重・補助');
+    return (x.startsWith('自重のみ')||x.startsWith('体重')||adj)?(w&&w[1]!=='—'?'体重'+w[1]:'自重')+(adj||'')+'/'+t:t;}
+  if(ex.kind==='通常'){const rm=trRM(v('重量'),v('回数'));return (v('重量')||'—')+'/'+(v('回数')?v('回数').replace(/回$/,''):'—')+'rep'+(rm==null?'':'（1RM '+rm+'kg）');}
+  const w=x.match(/^体重 ([^（]+)（手入力）/),adj=v('加重・補助');
+  return (x.startsWith('自重のみ')?'自重':w&&w[1]!=='—'?'体重'+w[1]:'自重')+(adj||'')+'/'+(v('回数')?v('回数').replace(/回$/,''):'—')+'rep';
+}
+function trListHtml(d,byDate){
+  const ts=d.training.slice().sort((a,b)=>byDate(a.date,b.date));
+  if(!ts.length)return '<div class="card"><h3><span>トレーニング</span></h3><div class="empty">この月の記録はありません</div></div>';
+  const on=ts.filter(t=>t.kind!=='オフ'),off=ts.filter(t=>t.kind==='オフ');
+  const days=new Set(on.map(t=>t.date)).size,offDays=new Set(off.map(t=>t.date)).size;
+  const mins=on.map(trMins).filter(m=>m!=null),total=mins.reduce((a,m)=>a+m,0);
+  const cnt={};on.forEach(t=>new Set(trParts(t.part)).forEach(p=>{cnt[p]=(cnt[p]||0)+1;}));
+  const top=Object.keys(cnt).sort((a,b)=>cnt[b]-cnt[a]||a.localeCompare(b,'ja'));
+  let h='<div class="card trsum"><h3><span>この月のトレーニング</span></h3><div class="trstats">'
+    +'<div><b class="num">'+days+'</b><span>トレーニングした日</span></div>'
+    +'<div><b class="num">'+offDays+'</b><span>オフの日</span></div>'
+    +'<div><b class="num">'+(mins.length?esc(trDur(total)):'—')+'</b><span>記録された時間の合計</span></div></div>'
+    +(top.length?'<div class="trchips">'+top.map(p=>'<span class="trchip">'+esc(p)+' <b class="num">'+cnt[p]+'</b>回</span>').join('')+'</div>':'')+'</div>';
+  ts.forEach(t=>{
+    const isOff=t.kind==='オフ',m=trMins(t),ex=t.detail?trParse(t.detail):null;
+    const meta=[t.start?esc(t.start)+'〜':'',m!=null?esc(trDur(m)):'',t.sets!=null?esc(t.sets)+' sets':''].filter(Boolean).join(' ・ ');
+    h+='<div class="card trday"><div class="trhead"><b>'+dayLabel(t.date)+'</b><span class="tag '+(isOff?'':'p')+'">'+esc(isOff?'オフ':(t.kind||'トレーニング'))+'</span></div>'
+      +(meta?'<p class="trmeta num">'+meta+'</p>':'')
+      +(trParts(t.part).length?'<div class="trchips">'+trParts(t.part).map(p=>'<span class="trchip">'+esc(p)+'</span>').join('')+'</div>':'')
+      +(ex?ex.map(e=>'<div class="trex"><p class="trexname">'+esc(e.name)+' <small>'+esc(e.kind)+'・'+esc(e.mode)+'</small></p><ul class="trsets num">'
+        +e.sets.map((x,i)=>'<li><span>set '+(i+1)+'：'+esc(trSetText(e,x))+'</span>'+(trMemo(x)?'<span class="trnote">'+TR_MEMO_ICON+esc(trMemo(x))+'</span>':'')+'</li>').join('')+'</ul></div>').join('')
+        :(t.detail?'<p class="trdetail">'+esc(t.detail)+'</p>':''))
+      +(t.memo?'<p class="trmemo">'+esc(t.memo)+'</p>':'')+'</div>';
+  });
+  return h;
+}
+// ---------- トレーニング記録の表示（ここまで） ----------
 const avgDays=d=>d.days.filter(r=>r.kcal!=null).length;
 function avgRows(d){
   const rows=d.days.filter(r=>r.kcal!=null);const avg=f=>rows.length?rows.reduce((a,r)=>a+(r[f]||0),0)/rows.length:null;
@@ -1317,6 +1971,7 @@ document.addEventListener('click',e=>{
   if(b.id==='openCal')return openCal();
   if(b.id==='calToday'){closeCal();if(S.year!==+S.today.slice(0,4))return setYear(+S.today.slice(0,4));return jumpDay(S.today);}
   if(b.id==='toList'){S.type='選択日の食事';return show('list');}
+  if(b.id==='toTrList'){S.type='トレーニング';S.listYm=ymOf(S.date);return show('list');}
   if(b.dataset.k&&b.closest('#week'))return jumpDay(b.dataset.k);
   if(b.dataset.k&&b.closest('#cal')){closeCal();return jumpDay(b.dataset.k);}
   if(b.dataset.ym){if(b.dataset.ym!==S.calYm){const ym=b.dataset.ym;calPager.go(ym>S.calYm?1:-1,0,()=>{S.calYm=ym;});}return;}
@@ -1373,21 +2028,20 @@ document.addEventListener('visibilitychange',()=>{if(document.visibilityState===
 
 // 起動：前回の内容をすぐ表示し、裏で最新を読み込む
 (function init(){
-  const now=new Date();S.today=now.getFullYear()+'-'+pad(now.getMonth()+1)+'-'+pad(now.getDate());S.year=now.getFullYear();
-  applyDate(S.today);buildPfc();
+  const now=new Date();S.today=now.getFullYear()+'-'+pad(now.getMonth()+1)+'-'+pad(now.getDate());{const v=gExInitView(S.today);S.year=v.year;S.touched=v.year!==now.getFullYear();applyDate(v.date);}buildPfc();
   try{S.desc=localStorage.getItem(LSORT)!=='asc';}catch(_){}
   if(LSM){
     try{const o=JSON.parse(localStorage.getItem(LSM)||'null')||{};
       Object.keys(o).filter(inYear).forEach(ym=>{try{S.cache[ym]=JSON.parse(o[ym]);S.raw[ym]=o[ym];}catch(_){}});}catch(_){}
-    try{const t=localStorage.getItem(LS_OLD),c=t&&JSON.parse(t);if(c&&c.ym&&inYear(c.ym)&&!S.cache[c.ym]){S.cache[c.ym]=c;S.raw[c.ym]=t;}}catch(_){}
+    try{const t=gExLock()?null:localStorage.getItem(LS_OLD),c=t&&JSON.parse(t);if(c&&c.ym&&inYear(c.ym)&&!S.cache[c.ym]){S.cache[c.ym]=c;S.raw[c.ym]=t;}}catch(_){}
   }
   paintAll(); // ここで今月の最新読み込みも始まる
   // アプリ本体も端末に保存して、電波が弱くてもすぐ開けるようにする
-  if('serviceWorker' in navigator&&location.protocol==='https:')addEventListener('load',()=>navigator.serviceWorker.register('sw.js').catch(()=>{}));
+  if(!PN_STOP()&&'serviceWorker' in navigator&&location.protocol==='https:')addEventListener('load',()=>navigator.serviceWorker.register('sw.js').catch(()=>{}));
 })();
 </script>
 <div id="trainingEntryRoot"></div>
-<script>window.pnTrainingBridge={selectedDate:()=>S.date,mode:DEMO?'preview':'personal',allowedYear:gThisYear()};</script>
-<script type="module" src="../training-entry/module/training-entry-67tKzgq6.js"></script>
+<script>window.pnTrainingBridge={selectedDate:()=>S.date,mode:DEMO?'preview':'personal',allowedYear:gEntryYear(),destination:gExDest,prepare:gTrainingPrepare,save:gTrainingSave,check:gTrainingCheck};</script>
+<script type="module" src="../training-entry/module/training-entry-O2LHFS7R.js"></script>
 </body>
 </html>
