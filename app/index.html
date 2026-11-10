@@ -282,7 +282,7 @@ svg text{font-family:inherit}
 body::before{top:var(--top,0px)}
 .ptr,.load{top:calc(env(safe-area-inset-top) + var(--top,0px))}
 </style>
-<link rel="stylesheet" href="../training-entry/module/training-entry-C9GpuNhv.css">
+<link rel="stylesheet" href="../training-entry/module/training-entry---jH0SG0.css">
 </head>
 <body>
 <script>
@@ -1881,7 +1881,7 @@ function trRM(w,r){const a=parseFloat(String(w).replace(/kg$/,'')),b=Number(Stri
 // セットのメモ（内訳の「／メモ …」。最後の項目）
 const trMemo=x=>{const m=String(x).match(/(?:^|／)メモ (.+)$/);return m?m[1]:'';};
 const TR_MEMO_ICON='<svg viewBox="0 0 24 24" width="16" height="16" role="img" aria-label="メモ"><path d="M4 5h16v11H10l-5 4v-4H4z" fill="none" stroke="currentColor" stroke-width="2" stroke-linejoin="round"/></svg>';
-function trSetText(ex,x){const rp=(String(x).match(/(?:^|／)RPE ([^／]+)/)||[])[1];return trSetBase(ex,x)+(rp&&rp!=='—'?' RPE '+rp:'');}
+function trSetText(ex,x){const rp=(String(x).match(/(?:^|／)RPE ([^／]+)/)||[])[1];return trSetBase(ex,x).replace(/（1RM [^）]*）$/,'')+(rp&&rp!=='—'?' RPE '+rp:'');}
 function trSetBase(ex,x){
   const v=l=>{const m=x.match(new RegExp('(?:^|／)'+l+' ([^／]+)'));return m&&m[1]!=='—'?m[1]:'';};
   if(ex.mode==='時間制'){
@@ -2125,6 +2125,6 @@ document.addEventListener('visibilitychange',()=>{if(document.visibilityState===
 </script>
 <div id="trainingEntryRoot"></div>
 <script>window.pnTrainingBridge={selectedDate:()=>S.date,mode:DEMO?'preview':'personal',allowedYear:gEntryYear(),destination:gExDest,prepare:gTrainingPrepare,save:gTrainingSave,check:gTrainingCheck};</script>
-<script type="module" src="../training-entry/module/training-entry-CIx3e4gZ.js"></script>
+<script type="module" src="../training-entry/module/training-entry-DSgQEgr_.js"></script>
 </body>
 </html>
