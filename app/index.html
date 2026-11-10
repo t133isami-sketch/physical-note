@@ -282,7 +282,7 @@ svg text{font-family:inherit}
 body::before{top:var(--top,0px)}
 .ptr,.load{top:calc(env(safe-area-inset-top) + var(--top,0px))}
 </style>
-<link rel="stylesheet" href="../training-entry/module/training-entry---jH0SG0.css">
+<link rel="stylesheet" href="../training-entry/module/training-entry-nfpa-enb.css">
 </head>
 <body>
 <script>
@@ -1912,7 +1912,7 @@ function trListHtml(d,byDate){
     h+='<div class="card trday"><div class="trhead"><b>'+dayLabel(t.date)+'</b><span class="tag '+(isOff?'':'p')+'">'+esc(isOff?'オフ':(t.kind||'トレーニング'))+'</span></div>'
       +(meta?'<p class="trmeta num">'+meta+'</p>':'')
       +(trParts(t.part).length?'<div class="trchips">'+trParts(t.part).map(p=>'<span class="trchip">'+esc(p)+'</span>').join('')+'</div>':'')
-      +(ex?ex.map(e=>'<div class="trex"><p class="trexname">'+esc(e.name)+' <small>'+esc(e.kind)+'・'+esc(e.mode)+'</small></p><ul class="trsets num">'
+      +(ex?ex.map(e=>'<div class="trex"><p class="trexname">'+esc(e.name)+'</p><ul class="trsets num">'
         +e.sets.map((x,i)=>'<li><span>set '+(i+1)+'：'+esc(trSetText(e,x))+'</span>'+(trMemo(x)?'<span class="trnote">'+TR_MEMO_ICON+esc(trMemo(x))+'</span>':'')+'</li>').join('')+'</ul></div>').join('')
         :(t.detail?'<p class="trdetail">'+esc(t.detail)+'</p>':''))
       +(t.memo?'<p class="trmemo">'+esc(t.memo)+'</p>':'')+'</div>';
@@ -2125,6 +2125,6 @@ document.addEventListener('visibilitychange',()=>{if(document.visibilityState===
 </script>
 <div id="trainingEntryRoot"></div>
 <script>window.pnTrainingBridge={selectedDate:()=>S.date,mode:DEMO?'preview':'personal',allowedYear:gEntryYear(),destination:gExDest,prepare:gTrainingPrepare,save:gTrainingSave,check:gTrainingCheck};</script>
-<script type="module" src="../training-entry/module/training-entry-DSgQEgr_.js"></script>
+<script type="module" src="../training-entry/module/training-entry-C54xiVcN.js"></script>
 </body>
 </html>

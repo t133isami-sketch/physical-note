@@ -13,8 +13,8 @@ const PRECACHE = [
   './',
   'index.html',
   '../icon-180.png',
-  '../training-entry/module/training-entry-DSgQEgr_.js',
-  '../training-entry/module/training-entry---jH0SG0.css',
+  '../training-entry/module/training-entry-C54xiVcN.js',
+  '../training-entry/module/training-entry-nfpa-enb.css',
 ];
 
 self.addEventListener('install', (e) => {
